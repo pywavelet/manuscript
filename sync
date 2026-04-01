@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -e
+
+CMD=$1
+
+if [ "$CMD" = "pull" ]; then
+    echo "Pulling from GitHub..."
+    git pull --no-rebase origin main
+
+    echo "Pulling from Overleaf..."
+    git pull --no-rebase overleaf master || echo "Overleaf pull skipped or needs manual conflict resolution"
+
+elif [ "$CMD" = "push" ]; then
+    echo "Pushing to GitHub..."
+    git push origin main
+
+    echo "Pushing to Overleaf..."
+    git push overleaf HEAD:master
+
+else
+    echo "Usage:"
+    echo "  ./sync pull"
+    echo "  ./sync push"
+fi
