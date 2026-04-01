@@ -1,24 +1,38 @@
 #!/usr/bin/env bash
+
 set -e
 
 CMD=$1
+MSG=$2
 
 if [ "$CMD" = "pull" ]; then
-    echo "Pulling from GitHub..."
+    echo "🔽 Pulling from GitHub..."
     git pull --no-rebase origin main
 
-    echo "Pulling from Overleaf..."
-    git pull --no-rebase overleaf master || echo "Overleaf pull skipped or needs manual conflict resolution"
+    echo "🔽 Pulling from Overleaf..."
+    git pull --no-rebase overleaf master || echo "⚠️ Overleaf pull skipped"
 
 elif [ "$CMD" = "push" ]; then
-    echo "Pushing to GitHub..."
+    if [ -z "$MSG" ]; then
+        echo "❌ Please provide a commit message:"
+        echo "   sync push \"your message\""
+        exit 1
+    fi
+
+    echo "📦 Staging changes..."
+    git add .
+
+    echo "📝 Committing..."
+    git commit -m "$MSG" || echo "⚠️ Nothing to commit"
+
+    echo "🔼 Pushing to GitHub..."
     git push origin main
 
-    echo "Pushing to Overleaf..."
+    echo "🔼 Pushing to Overleaf..."
     git push overleaf HEAD:master
 
 else
     echo "Usage:"
-    echo "  ./sync pull"
-    echo "  ./sync push"
+    echo "  sync pull"
+    echo "  sync push \"message\""
 fi
