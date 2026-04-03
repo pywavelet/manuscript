@@ -468,15 +468,13 @@ As visible in Figure~\ref{fig:runtime_forward}, both implementations become slow
 
 Both benchmarked backends achieve reconstruction errors consistent with floating-point roundoff. In other words, the main runtime differences visible in Figure~\ref{fig:runtime_forward} are not coming from a loss of numerical fidelity in the transform itself.
 
-To illustrate the utility of \package\ on astrophysically relevant signals, we transform three different gravitational‐wave datasets into the WDM domain. Specifically, we transform (i) an \emph{extreme mass‐ratio inspiral} (EMRI) waveform, (ii) a set of \emph{verification galactic binaries} (VGB) and (iii) a \emph{massive black hole binary} (MBHB) signal. 
-The VGB and MBHB data are obtained from the Radler LISA Data Challenge (via \url{https://lisa-ldc.lal.in2p3.fr/challenge1a}). 
-The EMRI signal is generated using the \textsc{few} waveform model \textsc{Pn5AAKWaveform}.
-Figure~\ref{fig:wdm_real_waveforms} displays both the frequency-domain characteristic strain and the WDM-domain representations of these three signals. Each panel shows the time-frequency amplitude map obtained with the JAX implementation.
+To illustrate the utility of \package\ on astrophysically relevant signals, we apply the WDM transform to three synthetic gravitational‐wave signals representative of key LISA source classes: (i) an \emph{extreme mass‐ratio inspiral} (EMRI)‐like waveform with a slow power‐law frequency evolution, (ii) a superposition of \emph{verification galactic binary} (VGB)‐like quasi‐monochromatic signals at distinct frequencies, and (iii) a \emph{massive black hole binary} (MBHB)‐like signal with a rapid inspiral chirp and ringdown.
+Figure~\ref{fig:wdm_real_waveforms} shows the WDM-domain amplitude maps for each signal. Each panel displays the packed WDM coefficient magnitude $|W_{nm}|$ as a function of time bin $n$ and frequency channel $m$.
 
 \begin{figure*}[h]
     \centering
     \includegraphics[width=1\linewidth]{figures/example_transforms.pdf}
-    \caption{WDM‐domain representations of three astrophysical signals: (a) EMRI waveform; (b) verification binary ensemble; (c) massive black hole binary from the Radler LISA Data Challenge. All transforms computed with JAX on the GPU.}
+    \caption{WDM‐domain representations of three synthetic gravitational‐wave signals representative of LISA source classes: (a) EMRI‐like slowly chirping waveform; (b) VGB‐like superposition of quasi‐monochromatic binaries; (c) MBHB‐like rapid chirp with inspiral and ringdown. Each panel shows the packed WDM coefficient magnitude $|W_{nm}|$.}
     \label{fig:wdm_real_waveforms}
 \end{figure*}
 
