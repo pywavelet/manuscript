@@ -31,8 +31,10 @@ datasets:
 
 # Custom file dependencies
 dependencies:
-  # src/scripts/my_script.py:
-  #   - src/data/dataset_for_my_script.dat
+  src/scripts/benchmark_runtime_snapshot.py:
+    - src/static/benchmark_results.json
+  src/scripts/benchmark_error_snapshot.py:
+    - src/static/benchmark_results.json
   # src/tex/ms.tex:
   #   - src/tex/stylesheet.tex
 

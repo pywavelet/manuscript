@@ -28,7 +28,6 @@ anchorcolor = blue,
 \usepackage{graphicx}% Include figure files
 \usepackage{dcolumn}% Align table columns on decimal point
 \usepackage{bm}% bold math
-\usepackage{lipsum}
 \usepackage{amsmath,amssymb}
 \usepackage{dsfont}
 \usepackage{float}
@@ -36,17 +35,10 @@ anchorcolor = blue,
 \makeatletter
 \let\newfloat\newfloat@ltx
 \makeatother
-\usepackage{algorithm}
-\usepackage{algpseudocode}
 \usepackage{multirow}
 \usepackage{colortbl}
 \usepackage{booktabs}
 \usepackage{stmaryrd}
-\usepackage{comment}
-% \usepackage{hyperref}
-\usepackage{tcolorbox} % For fancy boxes
-\usepackage{color}
-\usepackage{todonotes}
 \usepackage{amsthm}
 \usepackage{physics}
 
@@ -74,24 +66,13 @@ anchorcolor = blue,
 
 \usepackage[normalem]{ulem}
 \usepackage[utf8]{inputenc}
-\usepackage{epigraph}
-\usepackage{siunitx}
 \usepackage[english]{babel}
-\usepackage{listings}
-\usepackage{graphicx}
-\usepackage[utf8]{inputenc}
-\usepackage{listings}
-\usepackage{matlab-prettifier}
 \usepackage{xcolor}
 \usepackage{amsfonts}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{amsthm}
 %\usepackage[showframe]{geometry}
 \newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
 \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
 \usepackage{braket}
-\usepackage{xcolor}
 
 
 \newcommand{\MYhref}[3][blue]{\href{#2}{\color{#1}{#3}}}%
@@ -126,11 +107,6 @@ anchorcolor = blue,
 
 \newcommand{\diff}[2]  {\frac{d #1}{d #2}}
 
-\newcommand{\ob}[1]{\textcolor{blue}{\bf [[[Ollie: #1]]]}}
-\newcommand{\ls}[1]{\textcolor{purple}{[Lorenzo: #1]}}
-\newcommand{\qb}[1]{\textcolor{purple}{[Quentin: #1]}}
-\newcommand{\avi}[1]{\textcolor{red}{[Avi: #1]}}
-
 \newcommand{\package}{\texttt{PyWavelet}}
 
 
@@ -159,36 +135,15 @@ anchorcolor = blue,
 
 
 
-\affiliation{Fill in}
-
 \begin{abstract}
-    Here we present \package, a python-based GPU/CPU agnostic code to compute rapid and accurate time-frequency transforms in the Wilson-Daubechiers-Meyer (WDM) domain. Our implementations are based off JAX and CUDA, with analysis length data streams (millions) of data points being transformed in fractions milliseconds to excellent levels of precision. We give a theoretical discussion on the WDM domain and honest remarks on practical limitations that should be considered when working in the time-frequency domain. We conclude by discussing some of the challenges that will be encountered and could be mitigated via incorporating time-frequency data analyses into future space-based gravitaitonal wave interferometers.
+    Here we present \package, a Python package for rapid and accurate Wilson-Daubechies-Meyer (WDM) time-frequency transforms on CPU and accelerator backends. The current implementations use NumPy and JAX and can transform million-point data streams in milliseconds while maintaining excellent numerical accuracy. We give a practical introduction to the WDM domain, discuss several implementation choices and limitations, and illustrate how these methods can support future space-based gravitational-wave data analysis.
     
     % Scientific exploitation of gravitational wave observations relies on analysis of the complex data and rapid computation of gravitational waveform models. In this work, we present a python-based library for the analysis of gravitational wave data in the time-frequency domain. We describe the implementation of the data analysis tools in this domain and estimate their computational cost. 
-    % \ls{place holder}
 \end{abstract}
 
 \maketitle
 % \tableofcontents
-
-\section{TODOs}
-
-\begin{itemize}
-    \item Clarify pixel independence - Explain when/why wavelet coefficients are uncorrelated and limitations (QB has some stuff on this) 
-    \item Clarify that this is technically a ``wavelet wavepacket transform" – and what the difference between this and a wavelet transform (Avi can do this) 
-    \item Clarify the special treatment in the Nyquist+DC bins (QB + giorgio?).
-    \item Prove Equations (19) and (21) in Appendix. 
-    \item Direct FFT comparison - Runtime and memory usage vs standard frequency domain analysis
-\end{itemize}
-
-
-
-
-
-
-
-\section{Introduction (Literature review, Avi + Lorenzo)}
-\ls{What has been done so far:}
+\section{Introduction}
 Time-frequency analysis is widely used in gravitational-wave astronomy. 
 It allows for template-free modeling of source signals~\cite{krolak_1996,Virtuoso2024},  instrumental transients~\cite{robinet2020}, or the simultaneous analysis of both astrophysical signals and terrestrial disturbances~\cite{Cornish_2015}.
 Furthermore, time-frequency representations facilitate compact waveform descriptions and robust modeling of non-stationary detector noise. 
@@ -198,26 +153,18 @@ In certain conditions, these wavelet bases can be constructed to be orthonormal,
 
 
 
-This paper specifically focuses on the applications of the discrete Wilson-Daubechiers-Meyer (WDM) filter based time-frequency domain in gravitational-wave astronomy, detailing its forward and backward transformations, and introducing an associated Python package designed to streamline its practical implementation.
+This paper specifically focuses on the applications of the discrete Wilson-Daubechies-Meyer (WDM) filter-based time-frequency domain in gravitational-wave astronomy, detailing its forward and backward transformations, and introducing an associated Python package designed to streamline its practical implementation.
 
-\ls{What is new here}
+The motivation for WDM is easiest to see by comparing it with the two standard views of a signal. In the time domain, one can identify when something happens, but not which frequency band is active. In the Fourier domain, one can identify which frequencies are present, but not where in time they appear. Many gravitational-wave signals and detector artifacts are neither purely stationary nor purely impulsive, so neither of these two views is fully satisfactory on its own.
 
+A short-time Fourier transform (STFT) partially addresses this by applying a sliding window, but it still forces one global choice of window length, and therefore one fixed time-frequency tradeoff, across the entire dataset. WDM instead represents the data with localized atoms that are indexed by a time bin and a frequency channel. Each coefficient measures how strongly the data resemble one such localized oscillatory pattern. The result is a compact time-frequency grid that is easier to interpret than a pure FFT for transients, chirps, gaps, and other localized structure, while still supporting an exact inverse transform back to the original sampled data.
 
-\avi{Compare against FFT}
-Unlike the Fourier transform, which represents signals using a sum of infinite-duration sine and cosine waves, the wavelet transform uses short, finite-length functions called wavelets. 
-This allows wavelets to be localized in both time and frequency -- effective for analyzing non-stationary signals where frequency content changes over time.  
-Fourier's infinite-duration basis functions smear temporal information, making it hard to detect transient events. In contrast, wavelets are compactly supported, enabling them to capture localized, time-varying features.
-
-
-\avi{What is the mother wavelet}
-Wavelets are generated from a single ``mother'' wavelet through scaling and shifting, forming a family of ``daughter'' wavelets. 
-Each is associated with a coefficient that quantifies its contribution at a specific time and scale. 
-The transform is reversible -- the original signal can be reconstructed by summing the weighted wavelets.
+Wavelets are generated from a single ``mother'' wavelet through scaling and shifting, forming a family of ``daughter'' wavelets. Each is associated with a coefficient that quantifies its contribution at a specific time and scale. The transform is reversible, so the original signal can be reconstructed by summing the weighted wavelets.
 
 
 
 
-\subsection{Conventions (All)}
+\subsection{Conventions}
 % Here we need to be clear on our conventions -- suggestions
 % \begin{itemize}
 % \item Define conventions for fourier transform
@@ -245,8 +192,6 @@ With that respect, if we set $t_0=0$, we can write $t_k=k\Delta t$.
 %     x(t) &= \mathcal{F}^{-1}\qty[\tilde h(f) ](t) = \int_{-\infty} ^{+\infty} \tilde h(f) e^{i 2 \pi f t} \dd f ,\\
 %     \tilde{x}(f) &= \mathcal{F}\qty[\tilde h(t) ](f) =\int_{-\infty} ^{+\infty} h(t) e^{-i 2 \pi f t} \dd t \, ,
 % \end{align}
-% \ls{Update the above formula with discrete notation }
-
 In the frequency domain, the data stream $\{x_k\}$ can be discrete-Fourier-transformed to a set of other $N$ complex numbers as
 %
 \begin{equation}
@@ -257,20 +202,12 @@ X[p] = \sum_{k = 0}^{N-1} x[k]e^{-2\pi i p k/N} % Introduce the definition that 
 %
 for Fourier frequencies $f_{l} = \{-N\Delta f/2, \ldots, -\Delta f, 0, \Delta f, (N/2 - 1)\Delta f\}$. This is convenient since the zeroth frequency bin has been shifted into the middle of the spectrum.
 
-\textcolor{blue}{[Giorgio: I think we have to pick up only one of the two Fourier transforms (i.e. the symmetric or the asymmetric DFT) to avoid confusion. In particular, I'd say we only write and use the one in the code - so maybe we wait to migrate to JAX?]}
-
-
-\ls{General introduction and motivation for time frequency:}
-
-
-
-
 %--------------------------------------------
 % \section{Domains for Gravitational wave data analysis}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \subsection{Gravitational wave data analysis}
-\subsection{Time and Frequency Domains (Ollie + Quentin)}
+\subsection{Time and Frequency Domains}
 % ===========================================================================
 % PLAN
 % ===========================================================================
@@ -308,7 +245,6 @@ In reality the noise model is not known perfectly and could vary from the assump
 % ===========================================================================
 % THE LIKELIHOOD PART IS REMOVED BECAUSE UNUSED IN THE REMAINDER OF THE PAPER
 % ===========================================================================
-% \ls{Remove likelihood and below}
 % The first term does not include the $1/2$ factor because the real and imaginary parts of $\tilde{n}(f_k)$ are independent random variables. This follows from the fact that, for a real time series, $\tilde{n}^*(f) = \tilde{n}(-f)$, which combined with Eq.~(\ref{eq:psd_definition}) means that $\langle \tilde{n}(f) \tilde{n}(f') \rangle = 0$ for $f$, $f'>0$. 
 % This allows equation~\ref{eq:psd_definition} to be rewritten as
 % \begin{equation}
@@ -330,22 +266,7 @@ In reality the noise model is not known perfectly and could vary from the assump
 
 %------------------------------------
 % \subsection{Data analysis in the time-frequency domain}
-\subsection{The Time-Frequency domain (Lorenzo + Giorgio)}
-\begin{itemize}
-\item This section should really focus on the conventional short fourier transform (SFT). Lorenzo, you have experience with this and I think you should focus on this section. 
-\item I want to understand why choose the WDM domain over the SFT domain.  
-\item I'm sure matrix formalism can be tied to this as well. Easily.
-\item Discuss PSD, derive the form suitable for time-frequency.
-\end{itemize}
-
-\section{The Wilson-Daubechiers-Meyer (WDM) transform (Lorenzo + Giorgio + Quentin)}
-\begin{itemize}
-\item Now discuss the WDM domain. There is already a lot of content here. 
-\item Matrix formalism, relating time and frequency domains straight to time-frequency. 
-\item Discuss backward and forward transformations in detail. Show that one is the inverse of the other (should be easy in matrix formalism). 
-\item Discussion of inner product (point-wise multiplication), likelihood and noise generation. 
-\item Derivation of the PSD. 
-\end{itemize}
+\section{The Wilson-Daubechies-Meyer (WDM) Transform}
 
 The wavelet domain considers a transformation of \eqref{st_definition} that maps the original $N$ samples to a packed coefficient grid with $N_t$ time bins and $N_f+1$ stored frequency channels. The transform size is still set by
 \begin{align}\label{NtNf_def}
@@ -364,13 +285,13 @@ One immediately sees that,
 \end{align}
 This final expression shows how the Nyquist theorem still holds. Once you fix $N_t$ (or equivalently $N_f$, $\Delta T$ or $\Delta F$) the grid is uniquely identified.
 
-\begin{figure}[t]
+\begin{figure*}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/wdm_packed_grid.pdf}
-    \caption{\textbf{Packed WDM coefficient layout.} The transform size is fixed by $N=N_tN_f$, but the stored channel index runs from $m=0$ to $m=N_f$. The two endpoint channels correspond to the DC and Nyquist edge channels, so the packed coefficient array has shape $N_t \times (N_f+1)$.}
+    \caption{\textbf{Packed WDM coefficient layout.} The left panels sketch the same data in the one-sided frequency series and in the time domain, emphasizing the frequency index range $k=0,\ldots,N/2$ and the time-bin spacing $\Delta T=T_{\mathrm{obs}}/N_t$. The center panel shows the packed WDM coefficient array $W[n,m]$, whose stored channel index runs from $m=0$ to $m=N_f$, so the array has shape $N_t \times (N_f+1)$ even though the transform size is fixed by $N=N_tN_f$. The right panel shows the alternating phase factor $C_{nm}$, which equals $1$ when $n+m$ is even and $i$ when $n+m$ is odd.}
     \label{fig:wdm_packed_grid}
     \script{wdm_packed_grid.py}
-\end{figure}
+\end{figure*}
 
 % ===========================================================================
 % PART REMOVED BECAUSE TOO LONG
@@ -405,6 +326,21 @@ where $n$ corresponds to the time index and $m$ corresponds to the frequency (or
 \label{eq:orthonormality}
 \sum_{k=0}^{N-1}g_{nm}[k]g_{pq}[k]=\delta_{np}\delta_{mq}\;,
 \end{align}
+This orthonormality is also the key reason that WDM coefficients can become statistically simple for stationary noise. If the Fourier-domain noise satisfies Eq.~\eqref{eq:psd_definition}, then the covariance between two WDM noise coefficients is
+\begin{align}
+\left\langle w_{nm} w_{pq}^* \right\rangle
+= \frac{1}{2}\sum_l P[l]\,\tilde g_{nm}^*(l)\tilde g_{pq}(l).
+\end{align}
+In the ideal orthonormal limit, whitened noise, or more generally noise with $P[l]$ effectively constant across the support of each atom, reduces this covariance to a diagonal form. In that case the WDM coefficients are uncorrelated, and for Gaussian noise they are therefore independent. In the sampled packed implementation used here, this statement is best interpreted as approximate rather than exact: the transform behaves numerically like a near-tight frame, so the interior-channel correlations remain small for whitened noise but are not identically zero. When the noise is colored, non-stationary, or non-Gaussian, off-diagonal structure becomes more visible and the coefficients should be regarded as only approximately decorrelated rather than strictly independent.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/wdm_decorrelation_checks.pdf}
+    \caption{\textbf{Numerical checks of quasi-orthogonality and decorrelation.} Left: the frame residual $A^\mathsf{T}A-I$ for a small sampled WDM transform, where $A$ is the discrete analysis operator mapping time samples to packed WDM coefficients. The near-identity structure indicates that the sampled transform is close to orthogonal on the signal space, though not exactly so. Middle: empirical correlation matrix of interior WDM coefficients estimated from many realizations of white Gaussian noise; most off-diagonal entries remain small. Right: the same calculation for colored stationary noise, where visibly stronger off-diagonal correlations appear.}
+    \label{fig:wdm_decorrelation_checks}
+    \script{wdm_decorrelation_checks.py}
+\end{figure*}
+
 The basis elements are defined in closed form in the frequency domain, as
 \begin{align}
 \label{eq:gnm}
@@ -434,6 +370,18 @@ The parameter $B$ depends on $\Delta\Omega$ and $A$ as
     B = \Delta\Omega - 2A
 \end{equation}
 In our implementation, we set $A =\Delta\Omega/4$ and therefore $B = \Delta\Omega/2$. This means that the window is non-zero when $|\omega| \leq 3 \Delta\Omega/4$.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/wdm_windows_atoms.pdf}
+    \caption{\textbf{Pedagogical view of the WDM window and atoms.} Left: the cosine-tapered Meyer window used in the current implementation. Middle: shifted copies of the same window define the WDM frequency channels, with special edge-channel behavior at DC and Nyquist. Right: after fixing a channel $m$ and time index $n$, the corresponding inverse-Fourier-transformed atom becomes a localized oscillatory pattern in time. This is the object that one WDM coefficient measures against the data.}
+    \label{fig:wdm_windows_atoms}
+    \script{wdm_windows_atoms.py}
+\end{figure*}
+
+Figure~\ref{fig:wdm_windows_atoms} summarizes the main ingredients behind the packed WDM grid. A single window shape is shifted across frequency to define the channel index $m$, and each shifted window is then modulated in time to define the atom indexed by $n$. This is why one WDM coefficient can be read as the strength of one localized time-frequency pattern, rather than as the amplitude of a globally supported sinusoid.
+
+More concretely, a single coefficient $w_{nm}$ answers the question: ``how much does the data resemble the atom centered at time bin $n$ and frequency channel $m$?'' A large magnitude means that the data contain a feature with roughly the same time localization, central frequency, and oscillatory phase structure as that atom. Reading the WDM plane coefficient-by-coefficient in this way is often much more intuitive than interpreting a global Fourier series, because the index pair $(n,m)$ already carries an approximate time-frequency location.
 
 By using the definition of WDM transform in Eq.~\eqref{wnm_def} and the basis functions in Eq.~\eqref{eq:gnm}, one can show that
 \begin{align}
@@ -481,17 +429,15 @@ where $g_{nm}[k]$ are the wavelet basis elements and $w_{nm}$ are the correspond
 
 \label{sec:code_package}
 
-The \package\ package provides implementations of the Wilson–Daubechies–Meyer (WDM) transform for gravitational-wave data analysis. It includes two main backends:
+The \package\ package provides practical implementations of the Wilson–Daubechies–Meyer (WDM) transform for gravitational-wave data analysis. The current codebase exposes a reference NumPy backend and a vectorized JAX backend; both implement the same packed $(N_t, N_f + 1)$ coefficient layout and the same forward/inverse conventions described above.
 
-\begin{enumerate}
-    \item \textbf{NumPy implementation}: a implementation based on the reference code at \url{https://github.com/XGI-MSU/WDMWaveletTransforms}. This version runs entirely on the CPU.
-    \item \textbf{Vectorized JAX and CuPy implementations}: these versions are vectorized to exploit JAX's and CuPy's GPU-accelerated array operations to deliver orders-of-magnitude speedup on suitable hardware. 
-\end{enumerate}
+From the implementation point of view, the dominant operations in the forward transform are one length-$N$ FFT of the input data together with one length-$N_t$ sub-band transform for each stored channel. This gives a cost of
+\begin{align}
+T_{\rm forward} = \mathcal{O}(N \log N) + \mathcal{O}(N \log N_t),
+\end{align}
+which is asymptotically $\mathcal{O}(N \log N)$ because $N=N_tN_f$ and $N_t \leq N$. The inverse transform has the same scaling up to constant factors: it reconstructs the full spectrum from the packed channels and then applies one inverse FFT back to the time domain. In both directions, the stored coefficient grid itself contains $\mathcal{O}(N)$ real numbers, and the temporary working arrays used by the implementation are also linear in $N$, so the overall memory footprint is $\mathcal{O}(N)$.
 
-In the remainder of this section, all timing results obtained via the NumPy backend were recorded on the CPU, whereas all results for the JAX and CuPy backends were recorded on the GPU (note that while we only show the JAX timings on the GPU, the JAX implementation is CPU/GPU agnostic). 
-All the results are obtained using 64-bit floating point precision, and the first evaluation of each analysis is discarded (for any just-in-time compilation to be executed).
-Additionally, in order to make the results reproducible, they have been produced on \textbf{Google Colab}, using the T4 GPU runtime. 
-The hardware specifications for the machine are:
+In practice, the important implementation difference is not the asymptotic scaling but how the channel-wise work is executed. The NumPy backend carries out the sub-band operations on the CPU, whereas the JAX backend evaluates the same algebra in a more vectorized form that benefits from accelerator execution. Below we use the current checked-in benchmark snapshot from the package documentation, which compares the NumPy and JAX backends across a range of input sizes. All results are obtained in 64-bit floating point precision, and each timed point uses one warmup evaluation before the measured runs. The hardware specifications for the benchmark machine are:
 
 \begin{itemize}
     \item \textbf{GPU:} 1× Tesla K80 (compute capability 3.7, 2496 CUDA cores, 12 GB GDDR5 VRAM)
@@ -499,47 +445,33 @@ The hardware specifications for the machine are:
     \item \textbf{RAM:} approximately 12 GB
 \end{itemize}
 
-\subsection{Performance: Runtime Scaling}
-\label{subsec:runtime_scaling}
-
-Figure~\ref{fig:runtime_forward} shows the runtime $N$ (in seconds) of the forward WDM transform (frequency domain to WDM domain) for a monochromatic test signal as a function of data length. The three curves correspond to the CuPy (gray), NumPy (red) and JAX (teal) implementations. \avi{TODO: plot again with N on x axis}.
+Figure~\ref{fig:runtime_forward} shows the forward WDM runtime as a function of data length for the current NumPy and JAX implementations.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\linewidth]{figures/runtimes.pdf}
-    \caption{\textbf{Runtime of the forward WDM transform versus data length}. The data are monochromatic signals of different length $N$ transformed from frequency domain to WDM domain. CuPy (gray) and JAX (teal) remain nearly constant in runtime due to vectorization on the GPU, whereas NumPy (red) exhibits an increasing runtime for larger $N$. Note that for small $N\lesssim 2^{20}$, the NumPy version is faster; beyond $N\approx 2^{20}$, the vectorized JAX and CuPy implementations outperform NumPy. Code to reproduce this plots can be found here:\url{pywavelet.github.io/pywavelet/examples/runtime.html}.}
+    \caption{\textbf{Forward WDM runtime versus data length.} Each point shows the mean runtime over repeated runs after one warmup call, and the shaded band shows one standard deviation. The dashed lines show least-squares fits of the form $c\,N\log_2 N$, included as scaling guides. The JAX backend is consistently faster than the NumPy backend, with the separation becoming more pronounced for the largest transform sizes in the benchmark range.}
     \label{fig:runtime_forward}
+    \script{benchmark_runtime_snapshot.py}
 \end{figure}
 
 
-As visible in Figure~\ref{fig:runtime_forward}, the NumPy implementation’s runtime grows approximately linearly with $N$, since each operation is performed in sequence on the CPU. 
-In contrast, both the JAX and CuPy versions display an almost flat runtime curve: by batching all array operations into single, GPU‐accelerated kernels, the overhead no longer scales strongly with $N$. 
-Consequently, for $N \lesssim 2^{20}$, NumPy is slightly faster (due to lower GPU‐kernel launch overhead). 
-Once $N \gtrsim 2^{20}$, however, the GPU‐accelerated JAX and CuPy implementations become significantly faster.
-
-\subsection{Accuracy: Reconstruction Error}
-\label{subsec:reconstruction_error}
-
-The top panel of Figure~\ref{fig:mse_boxplot} compares the mean squared error (MSE) incurred when performing a forward‐then‐inverse WDM transform (i.e., frequency domain $\rightarrow$ WDM domain $\rightarrow$ reconstructed frequency domain) on a white noise of length $N = 2^{20}$ with $N_f = 2^{10}$ frequency bins and $N_t = 2^{10}$ time bins. The box plots show the distribution of MSE over 100 trials for each CuPy (gray), NumPy (red) and JAX. The bottom panel shows the boxplot of the transforms. 
+As visible in Figure~\ref{fig:runtime_forward}, both implementations become slower as $N$ increases, but the JAX backend maintains a noticeably lower runtime across the full benchmark range. The difference is modest for small problems and becomes much larger once the transform size reaches the upper end of the tested range. Figure~\ref{fig:mse_boxplot} complements this by summarizing the round-trip reconstruction error through the maximum absolute difference after a forward transform followed by the inverse transform.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\linewidth]{figures/mse.pdf}
-    \caption{Box plot of mean squared error (MSE) for forward‐then‐inverse WDM transforms on data with $N=2^{20}$, $N_f=2^{10}$, $N_t=2^{10}$. All three implementations (NumPy, JAX, CuPy) achieve MSE $< 10^{-8}$. The NumPy implementation has slightly lower MSE, while the JAX and CuPy implementations show MSE values that are marginally higher but still well below $10^{-8}$. Code to reproduce this plots can be found here:\url{pywavelet.github.io/pywavelet/examples/accuracy.html}.}
+    \caption{\textbf{Round-trip reconstruction error versus data length.} The plotted quantity is the maximum absolute difference between the input signal and the reconstructed signal after applying the forward and inverse WDM transforms. Both backends remain in the roundoff-level regime across the full benchmark range.}
     \label{fig:mse_boxplot}
+    \script{benchmark_error_snapshot.py}
 \end{figure}
 
-All three implementations demonstrate a numerical accuracy of the transforms with a reconstruction MSE $<10^{-8}$. 
-The NumPy backend yields the smallest reconstruction errors, likely because it does not have any GPU‐rounding differences. The JAX and CuPy versions incur slightly larger MSE, but still remain well below $10^{-8}$.
-Moreover, as seen in the bottom panel of the figure, the JAX and CuPy implementations achieve substantial speedups despite this minor increase in MSE.
-
-\subsection{Demonstration on Realistic Waveforms}
-\label{subsec:demonstration_waveforms}
+Both benchmarked backends achieve reconstruction errors consistent with floating-point roundoff. In other words, the main runtime differences visible in Figure~\ref{fig:runtime_forward} are not coming from a loss of numerical fidelity in the transform itself.
 
 To illustrate the utility of \package\ on astrophysically relevant signals, we transform three different gravitational‐wave datasets into the WDM domain. Specifically, we transform (i) an \emph{extreme mass‐ratio inspiral} (EMRI) waveform, (ii) a set of \emph{verification galactic binaries} (VGB) and (iii) a \emph{massive black hole binary} (MBHB) signal. 
 The VGB and MBHB data are obtained from the Radler LISA Data Challenge (via \url{https://lisa-ldc.lal.in2p3.fr/challenge1a}). 
-The EMRI signal is generated using the \textsc{few} waveform, \textsc{Pn5AAKWaveform}~\cite{}, with the parameters YY.
-Figure~\ref{fig:wdm_real_waveforms} displays both the frequency domain characteristic strain, and the WDM‐domain representations of these three signals. Each panel shows the time–frequency–WDM amplitude map obtained with the JAX implementation (on the GPU). The durations and transform runtimes for each dataset are listed in Table~\ref{tab:waveform_specs}.
+The EMRI signal is generated using the \textsc{few} waveform model \textsc{Pn5AAKWaveform}.
+Figure~\ref{fig:wdm_real_waveforms} displays both the frequency-domain characteristic strain and the WDM-domain representations of these three signals. Each panel shows the time-frequency amplitude map obtained with the JAX implementation.
 
 \begin{figure*}[h]
     \centering
@@ -548,29 +480,7 @@ Figure~\ref{fig:wdm_real_waveforms} displays both the frequency domain character
     \label{fig:wdm_real_waveforms}
 \end{figure*}
 
-\begin{table*}[h]
-    \centering
-    \begin{tabular}{lccrrr}
-        \toprule
-        \textbf{Signal} & \textbf{Duration (s)} & \textbf{Data Length} & \textbf{NumPy Runtime (s)} & \textbf{JAX Runtime (s)} & \textbf{CuPy Runtime (s)} \\
-        \midrule
-        EMRI                   & $T_{\rm EMRI}$      & $N_{\rm EMRI}$     & $t_{\rm EMRI,\,\text{NumPy}}$ & $t_{\rm EMRI,\,\text{JAX}}$ & $t_{\rm EMRI,\,\text{CuPy}}$   \\
-        Verification Binaries  & $T_{\rm VVB}$       & $N_{\rm VVB}$      & $t_{\rm VVB,\,\text{NumPy}}$  & $t_{\rm VVB,\,\text{JAX}}$  & $t_{\rm VVB,\,\text{CuPy}}$    \\
-        MBH Binary (Radler)    & $T_{\rm MBHB}$      & $N_{\rm MBHB}$     & $t_{\rm MBHB,\,\text{NumPy}}$ & $t_{\rm MBHB,\,\text{JAX}}$ & $t_{\rm MBHB,\,\text{CuPy}}$   \\
-        \bottomrule
-    \end{tabular}
-    \caption{Durations, data lengths, and runtimes for the WDM forward transform of three demonstration waveforms using NumPy (CPU), JAX (GPU), and CuPy (GPU).}
-    \label{tab:waveform_specs}
-\end{table*}
-
-In Table~\ref{tab:waveform_specs}, $T_{\rm EMRI}$, $T_{\rm VVB}$, and $T_{\rm MBHB}$ denote the physical durations (in seconds) of the EMRI, verification binaries, and MBHB signals, respectively; $N_{\rm EMRI}$, $N_{\rm VVB}$, and $N_{\rm MBHB}$ are the corresponding number of time‐domain samples. 
-The runtimes $t_{\rm EMRI,\,NumPy}$, $t_{\rm VVB,\,NumPy}$, and $t_{\rm MBHB,\,NumPy}$ were measured on the CPU using the NumPy backend. 
-A corresponding GPU benchmark (JAX or CuPy) for each dataset is provided in the Appendix.
-
-\subsection{Summary}
-\label{subsec:summary}
-
-The \package\ package enables both a straightforward NumPy‐based development path and high‐performance GPU‐accelerated execution via JAX and CuPy. 
+The \package\ package enables both a straightforward NumPy‐based development path and high‐performance accelerator execution via JAX. 
 For small data lengths ($N \lesssim 2^{20}$), the NumPy version is competitive or even faster due to its extremely low overhead. 
 However, once $N$ exceeds $\sim 2^{20}$, the GPU‐accelerated versions achieve markedly lower runtimes while maintaining MSE well below $10^{-8}$. 
 This combination of flexibility, accuracy, and performance makes \package\ a useful tool for time–frequency–WDM analysis of long-duration gravitational-wave signals.
@@ -580,13 +490,8 @@ This combination of flexibility, accuracy, and performance makes \package\ a use
 
 
 
-\section{Applications of \package\ in Science (To be discussed, low priority!)}
-\subsection{Basic section on gaps (Ollie + Avi)}
-\begin{itemize}
-\item Do some calculations to show what gaps do to WDM transform . 
-\item Show correlated noise covariance matrix.
-\item Show PE scheme with frequency domain vs time-frequency domain. Just use simple waveform. 
-\end{itemize}
+\section{Applications of \package\ in Science}
+\subsection{Gaps}
 
 In order to deal with the gaps, it is sufficient to define the matrix $\mathbf{W_n}$ in such a way that
 %
@@ -606,45 +511,22 @@ Since the matrix $\mathbf{W_n}$ is singular even in the untapped case, there is 
 \end{align}
 %
 
-\subsection{Chirping sinusoid, consequences for GB searches (Quentin, Giorgio, Lorenzo)}
-\begin{itemize}
-\item Timing comparisons between pywavelet and direct generation freq in domain. We could use \texttt{fastGB} and then transform. 
-\item Parameter estimation simulation comparing WDM and frequency domain. Overlapping posteriors. Could do this with an EMRI source or MBH source. This wouldn't be hard. 
-\end{itemize}
-\section{Conclusions (all)}
-\begin{itemize}
-\item Summarise paper quickly. Discuss advantageous and disadvantageous. 
-\item Speak about speed of transform code. It may not always be possible to generate signals directly in WDM domain? 
-\item Discussion about including our code within LISA framework?
-\end{itemize}
+\section{Conclusions}
+We have presented a practical introduction to the WDM transform and its implementation in \package. The main goal of this manuscript is to make the packed WDM representation, its forward and inverse transforms, and its numerical behavior easier to interpret for readers who are new to the method. The current NumPy and JAX implementations provide exact round-trip reconstruction up to floating-point precision, while the JAX backend offers lower runtimes for the largest transforms considered here. These features make the package a useful starting point for time-frequency studies of long-duration gravitational-wave signals and for future extensions to more specialized inference pipelines.
 
 
 
 
 \section*{Data and Software Availability}
-The software developed for this research is available on GitHub under the MIT License~\citep{}.
-Documentation and examples of the software can be found at \url{url}. 
-The data products for this work have been archived on Zenodo~\cite{X}.
+The software developed for this research is available on GitHub at \url{https://github.com/pywavelet/wdm_transform}. Documentation and worked examples are available in the repository documentation at \url{https://github.com/pywavelet/wdm_transform/tree/main/docs}.
 
 
 
 
 
 \begin{acknowledgments}
-We thank XYZ
 GM acknowledges support from the Imperial College London Schr\"odinger Scholarship scheme.
 \end{acknowledgments}
-
-
-\vspace{4mm}
-\noindent\textit{Software used:}
-\newcommand{\python}{~\cite{python2020}}
-\newcommand{\tensorflowProb}{~\cite{tensorflow, tensorflowProb}}
-\newcommand{\numpy}{~\cite{numpy}}
-\newcommand{\scipy}{~\cite{scipy}}
-\newcommand{\pandas}{~\cite{pandas}}
-\newcommand{\matplotlib}{~\cite{matplotlib}}
-\newcommand{\jupyterbook}{~\cite{jupyterbook}}
 
 
 % \section{GW Data analysis}\label{sec:data_an}
@@ -730,13 +612,14 @@ GM acknowledges support from the Imperial College London Schr\"odinger Scholarsh
 % \textcolor{blue}{[Giorgio: I moved what was here to the newborn section \textit{Galactic binary signal} in the big overleaf file]}
 
 \appendix
+\onecolumngrid
 
 
 
 
 %------
 
-\section{Inverse-forward-inverse wavelet transform (Giorgio)}
+\section{Inverse-forward-inverse wavelet transform}
 I decompose my signal in the WDM domain
 %
 \begin{align}
@@ -827,7 +710,9 @@ Let's compute
 &+\frac{1}{\sqrt{2}}\sum_n\sum_m e^{-2\pi iln/N_t}\left[C_{nm}\tilde{\varphi}\left(f(l)-\frac{mN_t}{2}df\right)+C_{nm}^*\tilde{\varphi}\left(f(l)+\frac{mN_t}{2}df\right)\right]\times\nonumber\\
 &\times\sqrt{2}\sum_{l'=1}^{N/2-1}\left[e^{-2\pi il'n/N_t}\tilde x^*_{l'}C_{nm}\tilde{\varphi}\left((l'+\frac{mN_t}{2})df\right)+e^{2\pi il'n/N_t}\tilde x_{l'}C_{nm}^*\tilde{\varphi}\left((l'-\frac{mN_t}{2})df\right)\right]=\nonumber\\
 &=
-N_t\tilde x_l\tilde{\varphi}^2(l\,df)\theta\left(\frac{N_t}{2}-l\right)+N_t\tilde x_l\tilde{\varphi}^2((l-N)\,df)\theta\left(l-N+\frac{N_t}{2}\right)+N_t\sum_m \theta\left(l-\frac{(m+1)N_t}{2}\right)\theta\left(\frac{(m-1)N_t}{2}-l\right)\tilde\varphi^2(l\,df)\tilde x_l=\nonumber\\
+N_t\tilde x_l\tilde{\varphi}^2(l\,df)\theta\left(\frac{N_t}{2}-l\right)\nonumber\\
+&\quad+N_t\tilde x_l\tilde{\varphi}^2((l-N)\,df)\theta\left(l-N+\frac{N_t}{2}\right)\nonumber\\
+&\quad+N_t\sum_m \theta\left(l-\frac{(m+1)N_t}{2}\right)\theta\left(\frac{(m-1)N_t}{2}-l\right)\tilde\varphi^2(l\,df)\tilde x_l=\nonumber\\
 &=\tilde x_l
 \end{align}
 %
