@@ -5,3 +5,5 @@ dependencies:
   - pip=25.1.1
   - python=3.10
   - matplotlib==3.10
+  - pip:
+    - wdm-transform==0.1.1
