@@ -237,7 +237,10 @@ One immediately sees that,
 \end{align}
 This final expression shows how the Nyquist theorem still holds. Once
 you fix $N_t$ (or equivalently $N_f$, $\Delta T$ or $\Delta F$) the
-grid is uniquely identified.
+grid is uniquely identified. Figure~\ref{fig:wdm_packed_grid}
+summarizes the packed layout, including the DC and Nyquist edge
+channels and the alternating phase factor used for the interior
+coefficients.
 
 \begin{figure*}[t]
   \centering
@@ -289,6 +292,9 @@ are not identically zero. When the noise is colored, non-stationary,
 or non-Gaussian, off-diagonal structure becomes more visible and the
 coefficients should be regarded as only approximately decorrelated
 rather than strictly independent.
+Figure~\ref{fig:wdm_decorrelation_checks} illustrates these points
+numerically for a small sampled transform and for white and colored
+noise realizations.
 
 \begin{figure*}[t]
   \centering
@@ -374,7 +380,9 @@ The parameter $B$ depends on $\Delta\Omega$ and $A$ as
 \end{equation}
 In our implementation, we set $A =\Delta\Omega/4$ and therefore $B =
 \Delta\Omega/2$. This means that the window is non-zero when
-$|\omega| \leq 3 \Delta\Omega/4$.
+$|\omega| \leq 3 \Delta\Omega/4$. Figure~\ref{fig:wdm_windows_atoms}
+summarizes the window shape, its shifted channel copies, and the
+localized atoms that result after modulation in time.
 
 \begin{figure*}[t]
   \centering
@@ -391,8 +399,8 @@ $|\omega| \leq 3 \Delta\Omega/4$.
   \script{wdm_windows_atoms.py}
 \end{figure*}
 
-Figure~\ref{fig:wdm_windows_atoms} summarizes the main ingredients
-behind the packed WDM grid. A single window shape is shifted across
+These are the main ingredients behind the packed WDM grid. A single
+window shape is shifted across
 frequency to define the channel index $m$, and each shifted window is
 then modulated in time to define the atom indexed by $n$. This is why
 one WDM coefficient can be read as the strength of one localized
@@ -474,6 +482,9 @@ centered at the Nyquist frequency $f_{\rm max}$. Its structure
 mirrors the DC case with appropriate frequency shifts. In practice,
 the Nyquist channel is computed using the same windowed-FFT machinery
 as the interior channels, with the frequency shift set to $mN_t/2 = N/2$.
+A concrete toy example is shown in Figure~\ref{fig:wdm_overview},
+which compares the same signal in the time, Fourier, and packed WDM
+domains.
 
 \begin{figure*}[t]
   \centering
@@ -585,8 +596,8 @@ approximation~\eqref{eq:wdm_noise_cov} holds. When it does not ---
 for example, when the noise PSD varies rapidly compared to $\Delta
 T$, or when the noise is strongly non-Gaussian --- the off-diagonal
 covariance terms must be retained and the simple pixel-wise sums
-above become inadequate. The decorrelation checks in
-Figure~\ref{fig:wdm_decorrelation_checks} provide a practical
+above become inadequate. Figure~\ref{fig:wdm_decorrelation_checks}
+provides a practical
 diagnostic: if the off-diagonal entries of the empirical covariance
 remain small after whitening, the diagonal
 likelihood~\eqref{eq:wdm_whittle} is a safe approximation.
@@ -653,7 +664,7 @@ hardware specifications for the benchmark machine are:
 Figure~\ref{fig:runtime_forward} shows the forward WDM runtime as a
 function of data length for the current NumPy and JAX implementations.
 
-\begin{figure}[h]
+\begin{figure}[tbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/runtimes.pdf}
   \caption{\textbf{Forward WDM runtime versus data length.} Each
@@ -676,7 +687,7 @@ Figure~\ref{fig:mse_boxplot} complements this by summarizing the
 round-trip reconstruction error through the maximum absolute
 difference after a forward transform followed by the inverse transform.
 
-\begin{figure}[h]
+\begin{figure}[tbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/mse.pdf}
   \caption{\textbf{Round-trip reconstruction error versus data
@@ -696,10 +707,10 @@ coming from a loss of numerical fidelity in the transform itself.
 To illustrate the utility of \package\ on astrophysically relevant
 signals, we transform three different gravitational-wave datasets
 into the WDM domain. Specifically, we transform (i) an \emph{extreme
-mass-ratio inspiral} (EMRI) waveform, (ii) a set of
-\emph{verification galactic binaries} (VGB) and (iii) a \emph{massive
-black hole binary} (MBHB) signal.
-The VGB and MBHB data are obtained from the Radler LISA Data
+mass-ratio inspiral} (EMRI) waveform, (ii) a \emph{massive black hole
+binary} (MBHB) signal and (iii) a set of \emph{verification
+galactic binaries} (VGB).
+The MBHB and VGB data are obtained from the Radler LISA Data
 Challenge (via \url{https://lisa-ldc.lal.in2p3.fr/challenge1a}).
 The EMRI signal is generated using the \textsc{few} waveform model
 \textsc{Pn5AAKWaveform}.
@@ -708,12 +719,12 @@ frequency-domain characteristic strain and the WDM-domain
 representations of these three signals. Each panel shows the
 time-frequency amplitude map obtained with the JAX implementation.
 
-\begin{figure*}[h]
+\begin{figure*}[t]
   \centering
   \includegraphics[width=1\linewidth]{figures/example_transforms.pdf}
   \caption{WDM-domain representations of three astrophysical signals:
-    (a) EMRI waveform; (b) verification binary ensemble; (c) massive
-    black hole binary from the Radler LISA Data Challenge. All
+    (a) EMRI waveform; (b) massive black hole binary from the Radler
+    LISA Data Challenge; (c) verification binary ensemble. All
   transforms computed with JAX on the GPU.}
   \label{fig:wdm_real_waveforms}
 \end{figure*}
