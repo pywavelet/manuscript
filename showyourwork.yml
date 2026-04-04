@@ -54,6 +54,7 @@ overleaf:
   push:
     - src/tex/figures
     - src/tex/output
+    - src/tex/wdmmanuscript.sty
   # List of files to pull from Overleaf
   pull:
     - src/tex/ms.tex
