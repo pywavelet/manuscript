@@ -1,3 +1,26 @@
+"""Generate a three-panel diagnostic figure for WDM decorrelation behavior.
+
+The figure summarizes three related checks for a small WDM tiling:
+
+1. Left panel: frame residual ``A^T A - I`` for the WDM analysis matrix built
+   from impulse responses. This shows how close the transform is to an
+   orthonormal analysis operator in the original sample space. A perfectly
+   orthonormal transform would give an exact zero matrix here.
+
+2. Middle panel: empirical correlation matrix of interior WDM coefficients for
+   white stationary noise. This tests the usual approximate decorrelation claim:
+   for white noise, interior coefficients should be close to uncorrelated, so
+   off-diagonal correlations should remain small.
+
+3. Right panel: empirical correlation matrix of interior WDM coefficients for
+   colored stationary noise. This shows that once the input has non-flat power
+   across frequency, coefficient correlations become more visible even though the
+   transform still provides a localized time-frequency representation.
+
+The emphasis is qualitative rather than asymptotic: the script is intended to
+produce an interpretable manuscript figure for a modest grid size.
+"""
+
 from __future__ import annotations
 
 import sys
