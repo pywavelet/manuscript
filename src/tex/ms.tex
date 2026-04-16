@@ -752,6 +752,145 @@ time-frequency amplitude map obtained with the JAX implementation.
   \label{fig:wdm_real_waveforms}
 \end{figure*}
 
+\subsection{Resolved galactic-binary inference in a galactic background}
+\label{sec:lisa_gb_example}
+
+As an end-to-end inference example, we generated a one-year LISA-like
+dataset containing stationary instrument noise, a stochastic galactic
+foreground, and one resolved galactic binary (GB), and then analyzed
+that realization with matched frequency-domain and WDM-domain
+likelihoods. Figure~\ref{fig:lisa_gb_example} shows a representative
+realization together with the overlaid posterior constraints from the
+two analyses.
+
+The data set is constructed on a frequency grid spanning
+$10^{-4}$--$3\times 10^{-3}\,\mathrm{Hz}$. The unresolved galactic
+foreground is described by the phenomenological PSD
+\begin{align}
+  S_{\rm gal}(f) =
+  A_{\rm gal} f^{-7/3}
+  \exp\!\left[-\left(\frac{f}{f_{1,{\rm gal}}}\right)^{\alpha_{\rm gal}}\right]
+  \left[1 + \tanh\!\left(\frac{f_{{\rm knee},{\rm gal}} - f}{f_{2,{\rm gal}}}\right)\right],
+\end{align}
+using a standard smooth fit for the LISA galactic foreground. To
+project this foreground into the detector channels we combine that
+frequency model with an anisotropic Milky Way sky map obtained by
+line-of-sight integration through the bulge-plus-disk density model
+\begin{align}
+  \rho_{\rm gal}(x,y,z) =
+  \rho_0\left[
+    A e^{-r^2/R_b^2}
+    + (1-A)e^{-u/R_d}\,{\rm sech}^2(z/Z_d)
+  \right],
+\end{align}
+where $r^2=x^2+y^2+z^2$ and $u^2=x^2+y^2$. We evaluate the
+time-dependent detector response using equal-arm LISA orbits sampled
+at $90$ orbital times, and use that response to map the anisotropic
+foreground into the A/E/T TDI channels. We then draw complex Gaussian
+realizations of both the instrumental noise and the chunked galactic
+foreground and stitch them into a full-year spectrum. The resolved
+source is injected afterward as a TDI 1.5 A/E/T waveform with
+equal-arm LISA orbits and local Fourier support $n=256$. In the
+realization shown here the cadence is
+$\Delta t = 166.7\,\mathrm{s}$, $T_{\rm obs}=1\,\mathrm{yr}$, and the
+injected binary has
+$f_0 = 1.3862897\,\mathrm{mHz}$,
+$\dot f = 1.32\times 10^{-18}\,\mathrm{Hz\,s^{-1}}$,
+$A = 1.19\times 10^{-23}$, and
+$\phi_0 = 1.442\,\mathrm{rad}$.
+
+The resolved GB model uses the standard eight source parameters
+$(f_0,\dot f,A,\alpha,\delta,\psi,\iota,\phi_0)$, but for this
+controlled comparison we sample only
+$(f_0,\dot f,A,\phi_0)$ and hold sky position and orientation fixed to
+their injected values. The carrier frequency is drawn near the fixed
+reference value $f_{0,\rm ref}=1.38591\,\mathrm{mHz}$ through
+$\delta\!\ln f_0 \sim \mathcal{U}[-10^{-3},10^{-3}]$, while
+$\dot f$ and $A$ are drawn from truncated Gaussians in log space over
+$[5\times 10^{-19},\,4\times 10^{-18}]\,\mathrm{Hz\,s^{-1}}$ and
+$[6\times 10^{-24},\,1.7\times 10^{-23}]$, respectively.
+
+The frequency-domain analysis uses a local A/E/T band centered on the
+prior support of the source and evaluates the Whittle likelihood
+\begin{align}
+  \ln \mathcal{L}_{\rm freq}(\theta)
+  \propto
+  -\sum_{c\in\{A,E,T\}} \sum_k
+  \left[
+    \ln S_c(f_k)
+    + \frac{2\Delta f\,\left|\Delta t\,[d_{c,k}-h_{c,k}(\theta)]\right|^2}{S_c(f_k)}
+  \right],
+\end{align}
+where $d_{c,k}$ and $h_{c,k}$ are the complex local Fourier modes and
+$S_c(f)$ is the stationary effective PSD, namely instrumental noise
+plus the time-averaged galactic
+foreground contribution in channel $c$. The WDM analysis starts from
+the same local Fourier patch, embeds the template into that
+patch, and applies the WDM transform with
+$N_t=32$, $a=1/3$, and $d=1$. The resulting WDM likelihood is the
+diagonal Gaussian specialization of Eq.~\eqref{eq:wdm_whittle},
+\begin{align}
+  \ln \mathcal{L}_{\rm WDM}(\theta)
+  =
+  -\frac{1}{2}\sum_{c\in\{A,E,T\}} \sum_{n,m}
+  \left[
+    \ln(2\pi \sigma^2_{c,m})
+    + \frac{\left(w^{(d)}_{c,nm}-w^{(h)}_{c,nm}(\theta)\right)^2}{\sigma^2_{c,m}}
+  \right],
+\end{align}
+with a stationary per-pixel variance
+\begin{align}
+  \sigma^2_{c,m} = \frac{S_c(f_m)}{2\Delta t} = f_{\rm Nyq} S_c(f_m),
+\end{align}
+broadcast across the WDM time bins. In other words, this example uses
+the same stationary PSD in both domains and asks whether the WDM
+transform reproduces the frequency-domain posterior under that shared
+noise model.
+
+Both analyses use the NumPyro implementation of the No-U-Turn Sampler
+with a dense mass matrix, target acceptance probability $0.85$, and
+maximum tree depth $10$. Each run uses $800$ warmup steps followed by
+$1000$ retained samples from a single chain, initialized near the
+injected parameters with small jitters in $\log \dot f$ and $\log A$.
+In the realization shown here, both samplers produced zero divergences. The
+latent effective sample sizes are $613$--$637$ for the
+frequency-domain chain and $590$--$714$ for the WDM chain, while the
+corresponding $\hat R$ values lie in the ranges
+$0.999$--$1.007$ and $0.999$--$1.016$. The truth-band optimal SNRs are
+$22.5469$ in the frequency-domain calculation and $22.5462$ in the
+WDM calculation. All reported $90\%$ credible intervals contain the
+injected truth in both runs, and the posterior medians differ only by
+$9.0\times 10^{-11}\,\mathrm{Hz}$ in $f_0$,
+$2.2\times 10^{-20}\,\mathrm{Hz\,s^{-1}}$ in $\dot f$,
+$5.2\times 10^{-26}$ in $A$,
+$6.1\times 10^{-3}\,\mathrm{rad}$ in $\phi_0$, and
+$0.10$ in SNR. Within the numerical precision of this study, the WDM
+and frequency-domain analyses are therefore statistically
+indistinguishable for this seeded resolved-GB example.
+
+\begin{figure*}[t]
+  \centering
+  \begin{minipage}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/lisa_gb_demo_data.pdf}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/lisa_gb_demo_corner.pdf}
+  \end{minipage}
+  \caption{\textbf{LISA galactic background example.}
+    Left: characteristic-strain comparison between the injected
+    resolved galactic binary and the channel noise model including the
+    galactic foreground. Right: overlaid posterior corner plot for the
+    WDM-domain and frequency-domain analyses of the same realization.
+    The two posterior families overlap closely in
+    $(f_0,\dot f,A,\phi_0)$ and in the derived optimal SNR.}
+  \label{fig:lisa_gb_example}
+\end{figure*}
+
+\script{lisa_gb_data.py}
+\script{lisa_gb_corner.py}
+
 The \package\ package enables both a straightforward NumPy-based
 development path and high-performance accelerator execution via JAX.
 For small data lengths ($N \lesssim 2^{20}$), the NumPy version is
