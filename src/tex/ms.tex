@@ -868,27 +868,21 @@ $0.10$ in SNR. Within the numerical precision of this study, the WDM
 and frequency-domain analyses are therefore statistically
 indistinguishable for this seeded resolved-GB example.
 
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
-  \begin{minipage}[t]{0.48\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{figures/lisa_gb_demo_data.pdf}
-  \end{minipage}\hfill
-  \begin{minipage}[t]{0.48\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{figures/lisa_gb_demo_corner.pdf}
-  \end{minipage}
-  \caption{\textbf{LISA galactic background example.}
-    Left: characteristic-strain comparison between the injected
-    resolved galactic binary and the channel noise model including the
-    galactic foreground. Right: overlaid posterior corner plot for the
-    WDM-domain and frequency-domain analyses of the same realization.
-    The two posterior families overlap closely in
-    $(f_0,\dot f,A,\phi_0)$ and in the derived optimal SNR.}
-  \label{fig:lisa_gb_example}
-    \script{lisa_gb_corner.py}
-    \script{lisa_gb_data.py}
-\end{figure*}
+  \includegraphics[width=\linewidth]{figures/lisa_gb_demo_data.pdf}
+  \caption{\textbf{LISA galactic background: Strain comparison.} Characteristic-strain comparison between the injected resolved galactic binary and the channel noise model including the galactic foreground.}
+  \label{fig:lisa_gb_data}
+  \script{lisa_gb_data.py}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/lisa_gb_demo_corner.pdf}
+  \caption{\textbf{LISA galactic background: Posterior analysis.} Overlaid posterior corner plot for the WDM-domain and frequency-domain analyses of the same realization. The two posterior families overlap closely in $(f_0, \dot{f}, A, \phi_0)$ and in the derived optimal SNR.}
+  \label{fig:lisa_gb_corner}
+  \script{lisa_gb_corner.py}
+\end{figure}
 
 
 The \package\ package enables both a straightforward NumPy-based
