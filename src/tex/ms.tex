@@ -13,24 +13,23 @@
 ]{revtex4-2}
 
 \usepackage{wdmmanuscript}
+\usepackage{hyperref}
 
 \begin{document}
 
 \preprint{APS/123-QED}
 
-\title{Accelerated Python-based codes for Time-frequeNcy Transforms
-(TNT) for use within gravitational wave astronomy}
+\title{Python-based codes for WDM-transform for use within gravitational wave astronomy}
 
 \author{Quentin Baghi}
-\affiliation{Paris}
+\affiliation{Universit\'e Paris Cit\'e, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France}
 \author{Ollie Burke}
 \affiliation{School of Physics and Astronomy, University of Glasgow,
 University Avenue, Glasgow, G12 8QQ, UK}
 \affiliation{Laboratoire des 2 Infinis - Toulouse (L2IT-IN2P3),
 Université de Toulouse, CNRS, UPS, F-31062 Toulouse Cedex 9, France}
 \author{Giorgio Mentasti}
-\affiliation{Department of Physics, Imperial College London, Prince
-Consort Road, SW7 2AZ, London, United Kingdom}
+\affiliation{Universit\'e Paris Cit\'e, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France}
 \author{Lorenzo Speri}
 \author{Avi Vajpeyi}
 \affiliation{Department of Statistics, University of Auckland, 38
@@ -50,7 +49,25 @@ Princes St, Auckland, New Zealand}
 \maketitle
 
 
+\section{TODOs}
+
+\begin{itemize}
+    \item Orthonormality of Gnm (plot avi)
+    \item forward and inverse transform (giorgio)
+    \item the WDM coef should be set by the noise and galactic background
+    \item (for docs animate T going up and down)
+    \item write about the galactic binary example plots corner plots
+    \item writing covar in presence of gaps, non stationary noise, is under investigation, crucial for LISA analysis. 
+    \item having good orthonormaity allows you to transform domains
+\end{itemize}
+
+
 \section{Introduction}
+
+
+
+
+
 Time-frequency analysis is widely used in gravitational-wave
 astronomy. It enables template-free modeling of source
 signals~\cite{krolak_1996,Virtuoso2024}, instrumental
@@ -141,7 +158,7 @@ points. We define the time sampling rate and the Nyquist frequency as
 \begin{align}
   r_s&\equiv\frac{1}{\Delta t}\equiv\frac{N}{T}\;,\nonumber\\
   f_{\rm max}&=\frac 1 2r_s\;,\nonumber\\
-  \Delta f &\equiv 1/(2\Delta t)
+  \Delta f &= 1/T
 \end{align}
 With that respect, if we set $t_0=0$, we can write $t_k=k\Delta t$.
 In the frequency domain, the data stream $\{x_k\}$ can be
@@ -231,9 +248,8 @@ frequency with respect to the underlying tiling with area $N = N_{t}N_{f}$
 One immediately sees that,
 \begin{align}
   \Delta T &= \frac{T_{\text{obs}}}{N_{t}} = \frac{N\Delta t}{N_{t}}
-  = \frac{N_{t}N_{f}\Delta t}{N_{t}} = N_{f}\Delta t \\
-  \Delta F &= \frac{f_{\text{max}}}{N_{f}} = \frac{1}{2N_{f}\Delta t}
-  = \frac{1}{2\Delta T}
+  = N_{f}\Delta t \\
+  \Delta F &= \frac{f_{\text{max}}}{N_{f}} = \frac{1}{2N_{f}\Delta t}=\frac{N_t\Delta f}{2} = \frac{1}{2\Delta T}
 \end{align}
 This final expression shows how the Nyquist theorem still holds. Once
 you fix $N_t$ (or equivalently $N_f$, $\Delta T$ or $\Delta F$) the
@@ -259,18 +275,18 @@ coefficients.
 \end{figure*}
 
 \subsection{Forward transform}
-For a given time series $x[k]$, the WDM transform represents the data
+For a given frequency series $\tilde x[l]$, the WDM transform represents the data
 through the coefficients
 \begin{align}
   \label{wnm_def}
-  w_{nm}=\sum_{k=0}^{N-1}x[k]g_{nm}[k]\;,
+  w_{nm}&=\sum_{l=0}^{N-1}\tilde x[l]\tilde g^*_{nm}[l]\;,\nonumber\\
+  \tilde x[l]&=\sum_{n=0}^{N_t}\sum_{m=0}^{N_f}w_{nm}\tilde g_{nm}[l]\;,
 \end{align}
 where $n$ corresponds to the time index and $m$ corresponds to the
 frequency (or scale) index. The functions $g_{nm}[k]$ are the WDM
 basis elements, which are chosen to be (quasi-)orthonormal:
-\begin{align}
-  \label{eq:orthonormality}
-  \sum_{k=0}^{N-1}g_{nm}[k]g_{pq}[k]=\delta_{np}\delta_{mq}\;,
+\begin{align}\label{eq:orthonormality}
+\sum_{l=0}^{N-1}g^*_{nm}[l]g_{pq}[l]=\delta_{np}\delta_{mq}\;,
 \end{align}
 This orthonormality is also the key reason that WDM coefficients can
 become statistically simple for stationary noise. If the
@@ -285,33 +301,40 @@ noise with $P[l]$ effectively constant across the support of each
 atom, reduces this covariance to a diagonal form. In that case the
 WDM coefficients are uncorrelated, and for Gaussian noise they are
 therefore independent. In the sampled packed implementation used
-here, this statement is best interpreted as approximate rather than
-exact: the transform behaves numerically like a near-tight frame, so
-the interior-channel correlations remain small for whitened noise but
-are not identically zero. When the noise is colored, non-stationary,
-or non-Gaussian, off-diagonal structure becomes more visible and the
-coefficients should be regarded as only approximately decorrelated
+here, it is useful to separate two statements. First, the interior
+atoms ($m=1,\ldots,N_f-1$) satisfy the discrete orthonormality
+relation numerically to machine precision. Second, the packed
+real-valued storage includes special DC and Nyquist edge channels,
+so the full stored coefficient array is best viewed as a convenient
+packed representation rather than as a minimal orthonormal basis.
+For this reason, the decorrelation discussion below focuses on the
+interior coefficients. For whitened noise their empirical
+correlations remain very small, while for colored, non-stationary, or
+non-Gaussian noise off-diagonal structure becomes more visible and
+the coefficients should be regarded as only approximately decorrelated
 rather than strictly independent.
-Figure~\ref{fig:wdm_decorrelation_checks} illustrates these points
+Figure~\ref{fig:wdm_orthogonality_decorrelation} illustrates these points
 numerically for a small sampled transform and for white and colored
 noise realizations.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=1\linewidth]{figures/wdm_decorrelation_checks.pdf}
-  \caption{\textbf{Numerical checks of quasi-orthogonality and
-    decorrelation.} Left: the frame residual $A^\mathsf{T}A-I$ for a
-    small sampled WDM transform, where $A$ is the discrete analysis
-    operator mapping time samples to packed WDM coefficients. The
-    near-identity structure indicates that the sampled transform is
-    close to orthogonal on the signal space, though not exactly so.
+  \includegraphics[width=1\linewidth]{figures/wdm_orthogonality_decorrelation.pdf}
+  \caption{\textbf{Numerical checks of orthogonality and
+    decorrelation.} Left: Gram matrix of the interior sampled WDM
+    atoms, showing the discrete inner products
+    $\langle g_i, g_j\rangle$ after flattening the interior index pair
+    $(n,m)$ into a single label $i$. The matrix is visually
+    indistinguishable from the identity, and the annotated residuals
+    are at machine precision, providing a direct numerical
+    demonstration of orthonormality for the interior channels.
     Middle: empirical correlation matrix of interior WDM coefficients
     estimated from many realizations of white Gaussian noise; most
     off-diagonal entries remain small. Right: the same calculation for
     colored stationary noise, where visibly stronger off-diagonal
   correlations appear.}
-  \label{fig:wdm_decorrelation_checks}
-  \script{wdm_decorrelation_checks.py}
+  \label{fig:wdm_orthogonality_decorrelation}
+  \script{wdm_orthogonality_decorrelation.py}
 \end{figure*}
 
 The basis elements are defined in closed form in the frequency
@@ -596,7 +619,7 @@ approximation~\eqref{eq:wdm_noise_cov} holds. When it does not ---
 for example, when the noise PSD varies rapidly compared to $\Delta
 T$, or when the noise is strongly non-Gaussian --- the off-diagonal
 covariance terms must be retained and the simple pixel-wise sums
-above become inadequate. Figure~\ref{fig:wdm_decorrelation_checks}
+above become inadequate. Figure~\ref{fig:wdm_orthogonality_decorrelation}
 provides a practical
 diagnostic: if the off-diagonal entries of the empirical covariance
 remain small after whitening, the diagonal
