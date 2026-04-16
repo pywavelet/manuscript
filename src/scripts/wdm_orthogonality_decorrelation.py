@@ -1,24 +1,23 @@
-"""Generate a three-panel diagnostic figure for WDM decorrelation behavior.
+"""Generate a three-panel diagnostic figure for WDM orthogonality and decorrelation.
 
 The figure summarizes three related checks for a small WDM tiling:
 
-1. Left panel: frame residual ``A^T A - I`` for the WDM analysis matrix built
-   from impulse responses. This shows how close the transform is to an
-   orthonormal analysis operator in the original sample space. A perfectly
-   orthonormal transform would give an exact zero matrix here.
+1. Left panel: Gram matrix of the interior analysis atoms. These are the
+   channels with ``m = 1, ..., nf - 1``; in the packed real-valued layout the
+   DC and Nyquist edge channels are stored redundantly, so the direct
+   orthonormality check is most transparent on the interior set. For the
+   sampled transform used here, the interior atoms are orthonormal to machine
+   precision.
 
 2. Middle panel: empirical correlation matrix of interior WDM coefficients for
-   white stationary noise. This tests the usual approximate decorrelation claim:
-   for white noise, interior coefficients should be close to uncorrelated, so
-   off-diagonal correlations should remain small.
+   white stationary noise. This tests the usual decorrelation claim: for white
+   noise, interior coefficients should be close to uncorrelated, so
+   off-diagonal correlations remain small.
 
 3. Right panel: empirical correlation matrix of interior WDM coefficients for
    colored stationary noise. This shows that once the input has non-flat power
    across frequency, coefficient correlations become more visible even though the
    transform still provides a localized time-frequency representation.
-
-The emphasis is qualitative rather than asymptotic: the script is intended to
-produce an interpretable manuscript figure for a modest grid size.
 """
 
 from __future__ import annotations
@@ -89,13 +88,14 @@ def main() -> None:
     nf = 8
     dt = 1.0
 
-    analysis = _analysis_matrix(nt, nf, dt)
-    frame_residual = analysis.T @ analysis - np.eye(nt * nf)
-
     keep = _interior_indices(nt, nf)
+    analysis = _analysis_matrix(nt, nf, dt)
+    interior_gram = analysis[keep, :] @ analysis[keep, :].T
     white_corr = _correlation_matrix(_coefficient_samples(nt, nf, dt, kind="white")[:, keep])
     colored_corr = _correlation_matrix(_coefficient_samples(nt, nf, dt, kind="colored")[:, keep])
 
+    gram_residual = interior_gram - np.eye(interior_gram.shape[0])
+    gram_offdiag = gram_residual[~np.eye(gram_residual.shape[0], dtype=bool)]
     white_offdiag = white_corr[~np.eye(white_corr.shape[0], dtype=bool)]
     colored_offdiag = colored_corr[~np.eye(colored_corr.shape[0], dtype=bool)]
 
@@ -110,20 +110,22 @@ def main() -> None:
     fig, axes = plt.subplots(1, 3, figsize=(12.2, 4.1), constrained_layout=True)
 
     image = axes[0].imshow(
-        frame_residual,
+        interior_gram,
         origin="lower",
-        cmap="RdBu_r",
-        vmin=-0.08,
-        vmax=0.08,
+        cmap="viridis",
+        vmin=0.0,
+        vmax=1.0,
         interpolation="nearest",
     )
-    axes[0].set_title(r"Frame residual $A^\mathsf{T}A - I$")
-    axes[0].set_xlabel("sample index")
-    axes[0].set_ylabel("sample index")
+    axes[0].set_title(r"Interior Gram matrix $\langle g_i, g_j \rangle$")
+    axes[0].set_xlabel("interior atom index")
+    axes[0].set_ylabel("interior atom index")
     axes[0].text(
         0.98,
         0.02,
-        r"$\max |{\rm offdiag}| = $" + f"{np.max(np.abs(frame_residual - np.diag(np.diag(frame_residual)))):.3f}",
+        r"$\max |G-I| =$" + f" {np.max(np.abs(gram_residual)):.1e}\n"
+        + r"$\max |G_{ij}|_{i\neq j} =$"
+        + f" {np.max(np.abs(gram_offdiag)):.1e}",
         transform=axes[0].transAxes,
         ha="right",
         va="bottom",
@@ -131,7 +133,7 @@ def main() -> None:
         bbox={"facecolor": "white", "alpha": 0.8, "edgecolor": "none", "pad": 2.5},
     )
     cbar = fig.colorbar(image, ax=axes[0], fraction=0.046, pad=0.02)
-    cbar.set_label("deviation from identity")
+    cbar.set_label("inner product")
 
     image = axes[1].imshow(
         white_corr,
@@ -181,7 +183,7 @@ def main() -> None:
     cbar = fig.colorbar(image, ax=axes[2], fraction=0.046, pad=0.02)
     cbar.set_label("correlation")
 
-    fig.savefig(paths.figures / "wdm_decorrelation_checks.pdf", bbox_inches="tight")
+    fig.savefig(paths.figures / "wdm_orthogonality_decorrelation.pdf", bbox_inches="tight")
 
 
 if __name__ == "__main__":
