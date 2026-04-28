@@ -49,18 +49,6 @@ Princes St, Auckland, New Zealand}
 \maketitle
 
 
-\section{TODOs}
-
-\begin{itemize}
-    \item Orthonormality of Gnm (plot avi)
-    \item forward and inverse transform (giorgio)
-    \item the WDM coef should be set by the noise and galactic background
-    \item (for docs animate T going up and down)
-    \item write about the galactic binary example plots corner plots
-    \item writing covar in presence of gaps, non stationary noise, is under investigation, crucial for LISA analysis. 
-    \item having good orthonormaity allows you to transform domains
-\end{itemize}
-
 
 \section{Introduction}
 
@@ -165,7 +153,7 @@ In the frequency domain, the data stream $\{x_k\}$ can be
 discrete-Fourier-transformed to a set of other $N$ complex numbers as
 \begin{equation}
   \label{eq:dft-definition}
-  X[p] = \sum_{k = 0}^{N-1} x[k]e^{-2\pi i p k/N}
+  \tilde x[l] = \sum_{k = 0}^{N-1} x[k]e^{-2\pi i l k/N}
 \end{equation}
 for Fourier frequencies $f_{l} = \{-N\Delta f/2, \ldots, -\Delta f,
 0, \Delta f, (N/2 - 1)\Delta f\}$. This is convenient since the
@@ -181,7 +169,7 @@ i.e., one output channel from one detector, can be written in the
 time and frequency domain as:
 \begin{align}
   {x}[k] & = h[k|\vec{\mu}]+ n[t],\\
-  X[l]& = \tilde{h}[l|\vec{\mu}]+ \tilde{n}[l]
+  \tilde x[l]& = \tilde{h}[l|\vec{\mu}]+ \tilde{n}[l]
 \end{align}
 where the tilde indicates the Fourier transform.
 
@@ -286,15 +274,16 @@ where $n$ corresponds to the time index and $m$ corresponds to the
 frequency (or scale) index. The functions $g_{nm}[k]$ are the WDM
 basis elements, which are chosen to be (quasi-)orthonormal:
 \begin{align}\label{eq:orthonormality}
-\sum_{l=0}^{N-1}g^*_{nm}[l]g_{pq}[l]=\delta_{np}\delta_{mq}\;,
+\sum_{l=0}^{N-1}g^*_{nm}[l]g_{pq}[l]=\delta_{(nm),(pq)}\;,\nonumber\\
+\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}g^*_{nm}[l]g_{nm}[l']=\delta_{ll'}\;,
 \end{align}
 This orthonormality is also the key reason that WDM coefficients can
 become statistically simple for stationary noise. If the
 Fourier-domain noise satisfies Eq.~\eqref{eq:psd_definition}, then
 the covariance between two WDM noise coefficients is
 \begin{align}
-  \left\langle w_{nm} w_{pq}^* \right\rangle
-  = \frac{1}{2}\sum_l P[l]\,\tilde g_{nm}^*(l)\tilde g_{pq}(l).
+  \left\langle w_{nm} w_{pq} \right\rangle
+  = \frac{1}{2}\sum_l P[l]\,\tilde g_{nm}(l)\tilde g_{pq}^*(l).
 \end{align}
 In the ideal orthonormal limit, whitened noise, or more generally
 noise with $P[l]$ effectively constant across the support of each
@@ -343,9 +332,9 @@ Nyquist ($m=N_f$) the definitions differ:
 \begin{align}
   \label{eq:gnm_full}
   \tilde{g}_{nm}(f) =
-  \begin{cases}
+  \dfrac{1}{\sqrt{2}}\begin{cases}
     e^{-4\pi i n f \Delta T}\, \tilde{\varphi}(f), & m=0, \\[6pt]
-    \dfrac{1}{\sqrt{2}}\,e^{-2\pi i n f \Delta
+    e^{-2\pi i n f \Delta
     T}\Big(C_{nm}\,\tilde{\varphi}(f - m\Delta F) & \\[2pt]
     \quad + C_{nm}^*\,\tilde{\varphi}(f + m\Delta F)\Big), & 0 < m <
     N_f, \\[6pt]
@@ -353,6 +342,7 @@ Nyquist ($m=N_f$) the definitions differ:
     \quad + \tilde{\varphi}(f + N_f\Delta F)\Big), & m = N_f,
   \end{cases}
 \end{align}
+%
 for $n = 0,\ldots,N_t-1$. The interior channels carry a $1/\sqrt{2}$
 normalization and the alternating phase factor $C_{nm}$, while the DC
 and Nyquist edge channels have a doubled time-shift exponent and no
@@ -490,8 +480,8 @@ The DC edge channel has a doubled time-shift exponent and no $C_{nm}$
 factor in the basis definition~\eqref{eq:gnm_full}. Following the
 same Fourier-domain evaluation yields
 \begin{align}\label{eq:wn0}
-  w_{n0} = 2\,\Re\left[\sum_{l=1}^{N_t/2}\tilde{x}_l\,e^{4\pi i l
-  n/N_t}\,\tilde{\varphi}(l\,df)\right] + \tilde{x}_0\,\tilde{\varphi}(0)\,.
+  w_{n0} = \sqrt{2\,}\Re\left[\sum_{l=1}^{N_t/2}\tilde{x}_l\,e^{4\pi i l
+  n/N_t}\,\tilde{\varphi}(l\,df)\right] + \frac{1}{\sqrt{2}}\tilde{x}_0\,\tilde{\varphi}(0)\,.
 \end{align}
 Note the factor of $4\pi$ in the exponent (versus $2\pi$ for interior
 channels): the DC basis element oscillates at twice the rate in the
@@ -505,6 +495,10 @@ centered at the Nyquist frequency $f_{\rm max}$. Its structure
 mirrors the DC case with appropriate frequency shifts. In practice,
 the Nyquist channel is computed using the same windowed-FFT machinery
 as the interior channels, with the frequency shift set to $mN_t/2 = N/2$.
+\begin{align}\label{eq:wnNf}
+  w_{nN_f} = \sqrt{2\,}\Re\left[\sum_{l=N/2-N_t/2}^{N/2-1}\tilde{x}_l\,e^{4\pi i l
+  n/N_t}\,\tilde{\varphi}((l-N/2)\,df)\right] + \frac{1}{\sqrt{2}}\tilde{x}_{N/2}\,\tilde{\varphi}(0)\,.
+\end{align}
 A concrete toy example is shown in Figure~\ref{fig:wdm_overview},
 which compares the same signal in the time, Fourier, and packed WDM
 domains.
@@ -548,6 +542,9 @@ Appendix~\ref{app:normalization_Meyer}). Together these two
 identities ensure exact round-trip reconstruction: forward followed
 by inverse returns the original data to machine precision, as
 verified numerically in Section~\ref{sec:code_package}.
+
+\color{red} Maybe we should show visibly the difference bw the quasi and full orthanormal condition? \color{black}
+
 
 \subsection{Statistical properties and the WDM likelihood}\label{sec:stats}
 
@@ -755,6 +752,16 @@ time-frequency amplitude map obtained with the JAX implementation.
 \subsection{Resolved galactic-binary inference in a galactic background}
 \label{sec:lisa_gb_example}
 
+
+\color{red} 
+This seems wrong -- we are using a stationary Lnl
+\color{black}
+
+
+\color{blue} 
+Shall we also talk about instrumental noise?
+\color{black}
+
 As an end-to-end inference example, we generated a one-year LISA-like
 dataset containing stationary instrument noise, a stochastic galactic
 foreground, and one resolved galactic binary (GB), and then analyzed
@@ -765,17 +772,20 @@ two analyses.
 
 The data set is constructed on a frequency grid spanning
 $10^{-4}$--$3\times 10^{-3}\,\mathrm{Hz}$. The unresolved galactic
-foreground is described by the phenomenological PSD
+foreground is described by the phenomenological PSD \cite{Karnesis:2021tsh}
+%
 \begin{align}
   S_{\rm gal}(f) =
   A_{\rm gal} f^{-7/3}
   \exp\!\left[-\left(\frac{f}{f_{1,{\rm gal}}}\right)^{\alpha_{\rm gal}}\right]
   \left[1 + \tanh\!\left(\frac{f_{{\rm knee},{\rm gal}} - f}{f_{2,{\rm gal}}}\right)\right],
 \end{align}
+%
 using a standard smooth fit for the LISA galactic foreground. To
 project this foreground into the detector channels we combine that
 frequency model with an anisotropic Milky Way sky map obtained by
-line-of-sight integration through the bulge-plus-disk density model
+line-of-sight integration through the bulge-plus-disk density model \cite{Mentasti:2023uyi}
+%
 \begin{align}
   \rho_{\rm gal}(x,y,z) =
   \rho_0\left[
@@ -783,21 +793,11 @@ line-of-sight integration through the bulge-plus-disk density model
     + (1-A)e^{-u/R_d}\,{\rm sech}^2(z/Z_d)
   \right],
 \end{align}
+%
 where $r^2=x^2+y^2+z^2$ and $u^2=x^2+y^2$. We evaluate the
 time-dependent detector response using equal-arm LISA orbits sampled
 at $90$ orbital times, and use that response to map the anisotropic
-foreground into the A/E/T TDI channels. We then draw complex Gaussian
-realizations of both the instrumental noise and the chunked galactic
-foreground and stitch them into a full-year spectrum. The resolved
-source is injected afterward as a TDI 1.5 A/E/T waveform with
-equal-arm LISA orbits and local Fourier support $n=256$. In the
-realization shown here the cadence is
-$\Delta t = 166.7\,\mathrm{s}$, $T_{\rm obs}=1\,\mathrm{yr}$, and the
-injected binary has
-$f_0 = 1.3862897\,\mathrm{mHz}$,
-$\dot f = 1.32\times 10^{-18}\,\mathrm{Hz\,s^{-1}}$,
-$A = 1.19\times 10^{-23}$, and
-$\phi_0 = 1.442\,\mathrm{rad}$.
+foreground into the A/E/T TDI channels, assuming that the spectrum is stationary per each of these $90$ orbital times. We then draw complex Gaussian realizations of both the instrumental noise and the chunked galactic foreground and stitch them into a full-year spectrum. The resolved source is injected afterward as a TDI 1.5 A/E/T waveform with equal-arm LISA orbits and local Fourier support $n=256$. In the realization shown here the cadence is $\Delta t = 166.7\,\mathrm{s}$, $T_{\rm obs}=1\,\mathrm{yr}$, and the injected binary has $f_0 = 1.3862897\,\mathrm{mHz}$, $\dot f = 1.32\times 10^{-18}\,\mathrm{Hz\,s^{-1}}$, $A = 1.19\times 10^{-23}$, and $\phi_0 = 1.442\,\mathrm{rad}$.
 
 The resolved GB model uses the standard eight source parameters
 $(f_0,\dot f,A,\alpha,\delta,\psi,\iota,\phi_0)$, but for this
@@ -949,7 +949,91 @@ worked examples are available in the repository documentation at
 \appendix
 \onecolumngrid
 
-\section{Detailed forward transform derivation}\label{app:forward_derivation}
+\section{Normality condition of the $g_{nm}(f)$ basis}
+We introduce the basis $\tilde g_{nm}(f)$ in the discrete case:
+%
+\begin{align}
+\label{eq:gnm_discr}
+\tilde{g}_{nm}[l] =
+\dfrac{1}{\sqrt{2}}\begin{cases}
+e^{-4\pi i n l/N_t}\, \tilde{\varphi}[l], & m=0, \\[6pt]
+e^{-2\pi i n l/N_t}\Big(C_{nm}\,\tilde{\varphi}[l - mN_t/2] + C_{nm}^*\,\tilde{\varphi}[l + mN_t/2]\Big), & 0 < m < N_f, \\[6pt]
+e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big), & m = N_f,
+\end{cases}
+\end{align}
+%
+Where we write the Meyer window function in the discrete case focusing on $d=1$:
+%
+\begin{align}\label{eq:phi_discrete}
+\tilde\varphi[l]&=\sqrt{\frac{2}{N_t}}\begin{cases}
+1 & |l_r|<A \\
+\cos \left[\frac{\pi}{2}\,\left(
+\frac{|l_r|-A}{B}\right)\right] & A \leq|l_r| < A+B \\
+0 & |l_r|\geq A+B
+\end{cases}\nonumber\\
+l_r&=l\frac{2}{N_t}
+\end{align}
+%
+where $l\in\{-\frac{N_t}{2},-\frac{N_t}{2}+1,...,\frac{N_t}{2}-1\}$. Now we verify that
+%
+\begin{align}
+\sum_{nm}&\tilde{g}_{nm}[l]\tilde{g}_{nm}^*[l']=\frac{1}{2}\sum_n e^{-4\pi i n (l-l')/N_t}\, \tilde{\varphi}[l]\,\tilde{\varphi}[l']\nonumber\\
+&+\frac{1}{2}\sum_{0<m<N_f}\sum_{n}e^{-2\pi i n (l-l')/N_t}\,\Big(C_{nm}\,\tilde{\varphi}[l - mN_t/2] + C_{nm}^*\,\tilde{\varphi}[l + mN_t/2]\Big)\Big(C_{nm}^*\,\tilde{\varphi}[l' - mN_t/2] + C_{nm}\,\tilde{\varphi}[l' + mN_t/2]\Big)\nonumber\\
+&+\frac{1}{2}\sum_n e^{-4\pi i n (l-l')/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big)\Big(\tilde{\varphi}[l' - N/2] + \tilde{\varphi}[l' + N/2]\Big)
+\end{align}
+%
+Now we simplify the $0<m<N_f$ term, by noticing that $C_{nm}^2=C_{nm}^{*2}=(-1)^{m}(-1)^{n}$ and $|C_{nm}|^2=1$
+%
+\begin{align}
+\frac{1}{2}\sum_{0<m<N_f}\sum_{n}&e^{-2\pi i n (l-l')/N_t}\,\Big(\tilde{\varphi}[l - mN_t/2]\tilde{\varphi}[l' - mN_t/2] + \tilde{\varphi}[l + mN_t/2]\tilde{\varphi}[l' + mN_t/2]\nonumber\\
+&+ (-1)^{m}(-1)^{n}\tilde{\varphi}[l - mN_t/2]\tilde{\varphi}[l' + mN_t/2]+ (-1)^{m}(-1)^{n}\tilde{\varphi}[l + mN_t/2]\tilde{\varphi}[l' - mN_t/2]\Big)
+\end{align}
+%
+one notices that the summation over $n$ can be directly performed, and it vanishes for every value but $l=l'$. In particular, the second line (the mixed terms) always vanishes. A similar result holds for the $m=0,N_f$ cases, therefore we can write
+%
+\begin{align}
+\sum_{nm}&\tilde{g}_{nm}[l]\tilde{g}_{nm}^*[l']=\delta_{ll'}\frac{N_t}{2}\left(\tilde\varphi^2[l]+\sum_{0<m<N_f}\tilde\varphi^2[l-mN_t/2]+\sum_{0<m<N_f}\tilde\varphi^2[l+mN_t/2]+\tilde\varphi^2[l-N/2]+\tilde\varphi^2[l+N/2]\right)
+\end{align}
+%
+Now the thing to notice is that each value of $l$ lays in two and only two of these windows. Let be $\bar m$ and $\bar m+1$ the indices of these two windows, such that $\frac{\bar m N_t}{2}<|l|<\frac{(\bar m+1)N_t}{2}$ ($\bar m$ could be 0, or $\bar m+1$ can be $N_f$). Then the sum becomes
+%
+\begin{align}
+\sum_{nm}&\tilde{g}_{nm}[l]\tilde{g}_{nm}^*[l']=\delta_{ll'}\frac{N_t}{2}\left(\tilde\varphi^2[l-\bar m N_t/2]+\tilde\varphi^2[l-(\bar m+1)N_t/2]\right)
+\end{align}
+%
+Let $l\geq 0$ for sake of simplicity ($l<0$ cases are analogous). Then either $l<\frac{(m+A)N_t}{2}$ or $l\geq\frac{(m+A)N_t}{2}$.
+In the first case, we have $\tilde\varphi^2[l-\bar m N_t/2]=\frac{2}{N_t}$ and $\tilde\varphi^2[l-(\bar m+1)N_t/2]=0$, since for $|\frac{2l}{N_t}-(\bar m+1)|>A+B$. In the second case, we have
+%
+\begin{align}
+\sum_{nm}&\tilde{g}_{nm}[l]\tilde{g}_{nm}^*[l']=\delta_{ll'}\left(\cos^2\left[\frac{\pi}{2}\frac{\frac{2l}{N_t}-\bar m -A}{B}\right]+\cos^2\left[\frac{\pi}{2}\frac{\bar m + 1 -\frac{2l}{N_t} -A}{B}\right]\right)
+\end{align}
+%
+which after some algebra simplifies to
+%
+\begin{align}
+\sum_{nm}&\tilde{g}_{nm}[l]\tilde{g}_{nm}^*[l']=\delta_{ll'}\left(1+\cos\left(\frac{\pi}{2}\frac{1-2A}{B}\right)\cos\left(2\frac{\pi}{2}\frac{\frac{2l}{N_t}-\bar m -A}{B}-\frac{\pi}{2}\frac{1-2A}{B}\right)\right)=\delta_{ll'}
+\end{align}
+%
+where we used the fact of $2A+B=1$. Therefore we find that for every value of $l$ we have%
+%
+\begin{align}
+\sum_{nm}&\tilde{g}_{nm}[l]\tilde{g}_{nm}^*[l']=\delta_{ll'}
+\end{align}
+%
+
+\subsection{Normalization of the Meyer window}\label{app:normalization_Meyer}
+
+We verify that the Meyer window defined in
+Eq.~\eqref{eq:phi_discrete} (the discrete case of \eqref{eq:meyer_window}) is correctly normalized. We compute
+%
+\begin{align}
+\sum_{l=-N/2}^{N/2-1} \tilde{\varphi}^2[l]&=2\sum_{l=0}^{A\frac{N_t}{2}-1}\frac{2}{N_t}-\frac{2}{N_t}+2\sum_{l=A\frac{N_t}{2}}^{(A+B)\frac{N_t}{2}-1}\frac{2}{N_t}\cos^2\left[\frac{\pi}{2}\frac{\frac{2l}{N_t}-A}{B}\right]=2A-\frac{2}{N_t}+\frac{4}{N_t}\sum_{k=0}^{B\frac{N_t}{2}-1}\cos^2\left[\frac{\pi}{2}\frac{2k}{BN_t}\right]=\nonumber\\
+&=2A-\frac{2}{N_t}+\frac{4}{N_t}\sum_{k=0}^{B\frac{N_t}{2}-1}\frac{1}{2}+\frac{4}{N_t}\sum_{k=0}^{B\frac{N_t}{2}-1}\frac{1}{2}\cos\left(\frac{2\pi k}{BN_t}\right)=2A-\frac{2}{N_t}+B+\frac{2}{N_t}=1
+\end{align}
+%
+where on the first line the term $-\frac{2}{N_t}$ avoids double counting $l=0$, where the last summation equals $+\frac{2}{N_t}$ after performing the geometrical series and where we remember that $2A+B=1$ is a property of the window function.
+
+\section{Detailed derivation for the forward and inverse transforms}\label{app:forward_derivation}
 
 This appendix provides the full algebraic steps leading to the
 compact expressions for the forward WDM coefficients presented in
@@ -967,7 +1051,7 @@ where the discrete frequencies are mapped as
   \end{cases}\times df\,,\qquad df = \frac{1}{T}\,.
 \end{align}
 
-\subsection{Interior channels ($m > 0$)}
+\subsection{Interior channels ($0<m<N_f$)}
 
 Inserting the interior-channel basis element from
 Eq.~\eqref{eq:gnm_full} and splitting the sum over positive and
@@ -1003,37 +1087,62 @@ For the DC edge channel, the basis element has a doubled time-shift
 exponent and no $C_{nm}$ factor. The same positive/negative frequency
 splitting yields
 \begin{align}
-  w_{n0}&=\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{4\pi
+  w_{n0}&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{4\pi
   iln/N_t}\,\tilde{\varphi}(l\,df)
-  +\sum_{l=N/2}^{N-1} \tilde{x}_l\, e^{4\pi
+  +\frac{1}{\sqrt{2}}\sum_{l=N/2}^{N-1} \tilde{x}_l\, e^{4\pi
   i(l-N)n/N_t}\,\tilde{\varphi}((l-N)\,df)
   \nonumber\\
-  &=2\,\Re\left[\sum_{l=1}^{N_t/2} \tilde{x}_{l}\, e^{4\pi
-  iln/N_t}\,\tilde{\varphi}(l\,df)\right]+\tilde{x}_0\,\tilde{\varphi}(0)\,,
+  &=\,\sqrt{2}\Re\left[\sum_{l=1}^{N_t/2} \tilde{x}_{l}\, e^{4\pi
+  iln/N_t}\,\tilde{\varphi}(l\,df)\right]+\frac{1}{\sqrt{2}}\tilde{x}_0\,\tilde{\varphi}(0)\,,
 \end{align}
 which is Eq.~\eqref{eq:wn0} of the main text.
+\subsection{Nyquist channel ($m=N_f$)}
 
-\section{Normalization of the Meyer window}\label{app:normalization_Meyer}
-
-We verify that the Meyer window defined in
-Eq.~\eqref{eq:meyer_window} is correctly normalized. Specializing to
-the $d=1$ case used throughout this work and defining $a =
-A/\Delta\Omega$ with $B = \Delta\Omega - 2A$, we compute
 \begin{align}
-  \int_{-\infty}^{+\infty} d\omega\, \tilde{\varphi}^2(\omega)
-  &= 2\int_{0}^{A}\frac{d\omega}{\Delta\Omega}
-  +
-  2\int_{A}^{A+B}\frac{d\omega}{\Delta\Omega}\,\cos^2\!\left[\frac{\pi}{2}\left(\frac{\omega-A}{B}\right)\right]\nonumber\\
-  &= 2a + 2(1-2a)\int_0^1 dz\,\cos^2\!\left[\frac{\pi}{2}\,z\right]\nonumber\\
-  &= 2a + (1-2a)\left(1 + \underbrace{\int_0^1
-  dz\,\cos[\pi\,z]}_{=\,0}\right)\nonumber\\
-  &= 1\,,
+  w_{nm}&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{2\pi
+  iln/N_t}\left[\tilde{\varphi}\!\left(\!(l-\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(l+\tfrac{N}{2})df\right)\right]+\frac{1}{\sqrt{2}}\sum_{l=N/2}^{N-1} \tilde{x}_l\, e^{2\pi
+  i(l-N)n/N_t}\left[\tilde{\varphi}\!\left(\!(l\!-\!N\!-\!\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(l\!-\!N\!+\!\tfrac{N}{2})df\right)\right]\nonumber\\
+  &=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{2\pi
+  iln/N_t}\left[\tilde{\varphi}\!\left(\!(l-\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(l+\tfrac{N}{2})df\right)\right]+\frac{1}{\sqrt{2}}\sum_{l=1}^{N/2} \tilde{x}_{N-l}\, e^{-2\pi
+  iln/N_t}\left[\tilde{\varphi}\!\left(\!(-l\!-\!\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(-l\!+\!\tfrac{N}{2})df\right)\right].
 \end{align}
-where the substitution $z = (\omega - A)/B$ was used. This unit
-normalization, together with the overlap identity
-$\tilde{\varphi}^2(\omega) + \tilde{\varphi}^2(\omega - \Delta\Omega)
-= 1/\Delta\Omega$ in the transition region, is what guarantees exact
-round-trip reconstruction of the forward-inverse transform pair.
+%
+the $l=0$ term in the first summation vanishes, and the $l=N/2$ term is treated separately:
+%
+\begin{align}
+  w_{nm}&=\sqrt{2}\,\Re\sum_{l=1}^{N/2-1} \tilde{x}_l\, e^{2\pi
+  iln/N_t}\,\,\tilde{\varphi}\!\left(\!(l-\tfrac{N}{2})df\right)+\frac{1}{\sqrt{2}}\tilde{x}_{N/2}\, e^{-\pi
+  inN_f}\tilde{\varphi}(0)\nonumber\\
+  &=\sqrt{2}\,\,\Re\sum_{l'=-N_t/2}^{-1}
+  \tilde{x}_{l'+N/2}\, e^{2\pi
+  il'n/N_t}\,\tilde{\varphi}(l'\,df)+\frac{1}{\sqrt{2}}\tilde{x}_{N/2}\, \tilde{\varphi}(0)\,,
+\end{align}
+%
+assuming an even value for $N_f$.
+
+\subsection{The inverse transform}
+
+We write the inverse transform of the $w_{nm}$ coefficients to recover the signal $x[l]$ for $l<N/2$ since we know that for $l\geq N/2$ the reality condition holds ($x[N-l]=x^*[l]$):
+%
+\begin{align}
+x[l]=\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}w_{nm}g_{nm}[l]&=\frac{1}{\sqrt{2}}\sum_{n}\sum_{0<m<N_f}w_{nm}e^{-2\pi iln/N_t}\left[C_{nm}\tilde{\varphi}\!\left(\!(l-\tfrac{mN_t}{2})df\right)+C^*_{nm}\tilde{\varphi}\!\left(\!(l+\tfrac{mN_t}{2})df\right)\right]\nonumber\\
+&+\frac{1}{\sqrt{2}}\sum_{n}w_{n0}e^{-4\pi iln/N_t}\tilde{\varphi}(l\,df)+\frac{1}{\sqrt{2}}\sum_{n}w_{nN_f}e^{-4\pi iln/N_t}\left[\tilde{\varphi}\!\left(\!(l-\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(l+\tfrac{N}{2})df\right)\right]=\nonumber\\
+&=\begin{cases}
+x_0[l]\qquad\qquad\qquad \qquad l<N_t/2\\
+x_m[l]\qquad\qquad\qquad m N_t/2\leq l<(m+1)N_t/2\\
+x_{N_f}[l]\qquad\qquad\qquad |l| \geq N/2-N_t/2
+\end{cases}
+\end{align}
+%
+where we note that for each vlaue of $l$, the inverse transform depends on which of the $m$ bands the $l$ value belongs, in particular
+%
+\begin{align}
+x_0[l]&=\frac{1}{\sqrt{2}}\sum_{n}w_{n1}e^{-2\pi iln/N_t}C_{n1}\tilde{\varphi}\!\left(\!(l-\tfrac{N_t}{2})df\right)+\sum_{n}w_{n0}e^{-4\pi iln/N_t}\tilde{\varphi}(l\,df)\nonumber\\
+x_m[l]&=\frac{1}{\sqrt{2}}\sum_n w_{nm}e^{-2\pi iln/N_t}C_{nm}\tilde{\varphi}\!\left(\!(l-\tfrac{mN_t}{2})df\right)+\frac{1}{\sqrt{2}}\sum_n w_{n(m+1)}e^{-2\pi iln/N_t}C_{n(m+1)}\tilde{\varphi}\!\left(\!(l-\tfrac{(m+1)N_t}{2})df\right)\nonumber\\
+x_m[l]&=\frac{1}{\sqrt{2}}\sum_n w_{n(N_f-1)}e^{-2\pi iln/N_t}C_{n(N_f-1)}\tilde{\varphi}\!\left(\!(l-\tfrac{N}{2}+\tfrac{N_t}{2})df\right)+\frac{1}{\sqrt{2}}\sum_n w_{n N_f}e^{-4\pi iln/N_t}\tilde{\varphi}\!\left(\!(l-\tfrac{N}{2})df\right)
+\end{align}
+%
+
 
 \bibliographystyle{plain}
 \bibliography{bib}
