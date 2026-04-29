@@ -35,10 +35,6 @@ dependencies:
     - src/static/benchmark_results.json
   src/scripts/benchmark_error_snapshot.py:
     - src/static/benchmark_results.json
-  src/scripts/lisa_gb_data.py:
-    - src/data/injection.npz
-    - src/data/freq_posteriors.npz
-    - src/data/wdm_posteriors.npz
   # src/tex/ms.tex:
   #   - src/tex/stylesheet.tex
 
