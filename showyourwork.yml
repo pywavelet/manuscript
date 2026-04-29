@@ -33,8 +33,6 @@ datasets:
 dependencies:
   src/scripts/benchmark_runtime_snapshot.py:
     - src/static/benchmark_results.json
-  src/scripts/benchmark_error_snapshot.py:
-    - src/static/benchmark_results.json
   # src/tex/ms.tex:
   #   - src/tex/stylesheet.tex
 
