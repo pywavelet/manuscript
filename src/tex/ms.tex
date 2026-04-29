@@ -499,23 +499,6 @@ as the interior channels, with the frequency shift set to $mN_t/2 = N/2$.
   w_{nN_f} = \sqrt{2\,}\Re\left[\sum_{l=N/2-N_t/2}^{N/2-1}\tilde{x}_l\,e^{4\pi i l
   n/N_t}\,\tilde{\varphi}((l-N/2)\,df)\right] + \frac{1}{\sqrt{2}}\tilde{x}_{N/2}\,\tilde{\varphi}(0)\,.
 \end{align}
-A concrete toy example is shown in Figure~\ref{fig:wdm_overview},
-which compares the same signal in the time, Fourier, and packed WDM
-domains.
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=0.88\linewidth]{figures/wdm_overview.pdf}
-  \caption{\textbf{A simple signal seen in three representations.}
-    The top panel shows a toy signal in the time domain, the middle
-    panel shows its Fourier amplitude spectrum, and the bottom panel
-    shows the magnitude of the packed WDM coefficients. The WDM
-    representation keeps the narrow-band oscillation localized in
-  frequency while also localizing the transient chirping feature in time.}
-  \label{fig:wdm_overview}
-  \script{wdm_overview.py}
-\end{figure*}
-
 \subsection{Backward transform}
 
 The original data stream is recovered by applying the backward
@@ -542,9 +525,6 @@ Appendix~\ref{app:normalization_Meyer}). Together these two
 identities ensure exact round-trip reconstruction: forward followed
 by inverse returns the original data to machine precision, as
 verified numerically in Section~\ref{sec:code_package}.
-
-\color{red} Maybe we should show visibly the difference bw the quasi and full orthanormal condition? \color{black}
-
 
 \subsection{Statistical properties and the WDM likelihood}\label{sec:stats}
 
@@ -670,19 +650,17 @@ that benefits from accelerator execution. Below we use the current
 checked-in benchmark snapshot from the package documentation, which
 compares the NumPy and JAX backends across a range of input sizes.
 All results are obtained in 64-bit floating point precision, and each
-timed point uses one warmup evaluation before the measured runs. The
-hardware specifications for the benchmark machine are:
-
+timed point uses one warmup evaluation before the measured runs.
+% TODO: update hardware block after Colab benchmark run
+The hardware specifications for the benchmark machine are:
 \begin{itemize}
-  \item \textbf{GPU:} 1× Tesla K80 (compute capability 3.7, 2496 CUDA
-    cores, 12 GB GDDR5 VRAM)
-  \item \textbf{CPU:} 1× single-core hyper-threaded Intel Xeon
-    Processor @ 2.3 GHz (1 core, 2 threads)
-  \item \textbf{RAM:} approximately 12 GB
+  \item \textbf{GPU:} NVIDIA [TBD] (Google Colab)
+  \item \textbf{CPU:} [TBD]
+  \item \textbf{RAM:} [TBD]
 \end{itemize}
 
 Figure~\ref{fig:runtime_forward} shows the forward WDM runtime as a
-function of data length for the current NumPy and JAX implementations.
+function of data length for the NumPy (CPU) and JAX (GPU) implementations.
 
 \begin{figure}[tbp]
   \centering
@@ -702,73 +680,28 @@ As visible in Figure~\ref{fig:runtime_forward}, both implementations
 become slower as $N$ increases, but the JAX backend maintains a
 noticeably lower runtime across the full benchmark range. The
 difference is modest for small problems and becomes much larger once
-the transform size reaches the upper end of the tested range.
-Figure~\ref{fig:mse_boxplot} complements this by summarizing the
-round-trip reconstruction error through the maximum absolute
-difference after a forward transform followed by the inverse transform.
-
-\begin{figure}[tbp]
-  \centering
-  \includegraphics[width=1\linewidth]{figures/mse.pdf}
-  \caption{\textbf{Round-trip reconstruction error versus data
-    length.} The plotted quantity is the maximum absolute difference
-    between the input signal and the reconstructed signal after
-    applying the forward and inverse WDM transforms. Both backends
-  remain in the roundoff-level regime across the full benchmark range.}
-  \label{fig:mse_boxplot}
-  \script{benchmark_error_snapshot.py}
-\end{figure}
-
-Both benchmarked backends achieve reconstruction errors consistent
-with floating-point roundoff. In other words, the main runtime
-differences visible in Figure~\ref{fig:runtime_forward} are not
-coming from a loss of numerical fidelity in the transform itself.
-
-To illustrate the utility of \package\ on astrophysically relevant
-signals, we transform three different gravitational-wave datasets
-into the WDM domain. Specifically, we transform (i) an \emph{extreme
-mass-ratio inspiral} (EMRI) waveform, (ii) a \emph{massive black hole
-binary} (MBHB) signal and (iii) a set of \emph{verification
-galactic binaries} (VGB).
-The MBHB and VGB data are obtained from the Radler LISA Data
-Challenge (via \url{https://lisa-ldc.lal.in2p3.fr/challenge1a}).
-The EMRI signal is generated using the \textsc{few} waveform model
-\textsc{Pn5AAKWaveform}.
-Figure~\ref{fig:wdm_real_waveforms} displays both the
-frequency-domain characteristic strain and the WDM-domain
-representations of these three signals. Each panel shows the
-time-frequency amplitude map obtained with the JAX implementation.
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=1\linewidth]{figures/example_transforms.pdf}
-  \caption{WDM-domain representations of three astrophysical signals:
-    (a) EMRI waveform; (b) massive black hole binary from the Radler
-    LISA Data Challenge; (c) verification binary ensemble. All
-  transforms computed with JAX on the GPU.}
-  \label{fig:wdm_real_waveforms}
-\end{figure*}
+the transform size reaches the upper end of the tested range. Both
+backends achieve round-trip reconstruction errors consistent with
+floating-point roundoff; the runtime differences are not due to any
+loss of numerical fidelity in the transform itself.
 
 \subsection{Resolved galactic-binary inference in a galactic background}
 \label{sec:lisa_gb_example}
 
 
-\color{red} 
-This seems wrong -- we are using a stationary Lnl
-\color{black}
-
-
-\color{blue} 
-Shall we also talk about instrumental noise?
-\color{black}
-
 As an end-to-end inference example, we generated a one-year LISA-like
-dataset containing stationary instrument noise, a stochastic galactic
-foreground, and one resolved galactic binary (GB), and then analyzed
-that realization with matched frequency-domain and WDM-domain
-likelihoods. Figure~\ref{fig:lisa_gb_example} shows a representative
-realization together with the overlaid posterior constraints from the
-two analyses.
+dataset containing stationary instrumental noise, a stochastic galactic
+foreground, and one resolved galactic binary (GB). Both the
+frequency-domain and WDM-domain likelihoods use the same stationary
+noise model throughout; this is an intentional controlled comparison
+designed to isolate the effect of the WDM basis change from any
+modelling differences. The effective PSD $S_c(f)$ in each channel $c$
+includes both the instrumental noise contribution and the
+time-averaged galactic foreground. Figure~\ref{fig:lisa_gb_data} shows
+the characteristic-strain comparison between the injected source and
+the channel noise model, and
+Figure~\ref{fig:lisa_gb_corner} shows the overlaid posterior
+constraints from the two analyses.
 
 The data set is constructed on a frequency grid spanning
 $10^{-4}$--$3\times 10^{-3}\,\mathrm{Hz}$. The unresolved galactic
@@ -885,12 +818,58 @@ indistinguishable for this seeded resolved-GB example.
 \end{figure}
 
 
+% Design notes:
+%   - JSD between WDM and frequency-domain 1D marginal posteriors
+%   - n = 100 seeds, same signal injection, independent noise draws
+%   - Median + [q05, q95] inter-seed interval + worst-case max
+%   - SNR omitted (derived quantity; tracks A and f0)
+%   - JSD <= 0.01 nats ~ "effectively identical" posteriors
+%
+\begin{table}[tbp]
+  \centering
+  \caption{\textbf{Jensen--Shannon divergence between WDM and
+    frequency-domain marginal posteriors across 100 independent noise
+    realisations.} The injected signal parameters are held fixed; only
+    the noise draw varies. JSD is computed on the 1D marginal for each
+    sampled parameter. All values in nats; $\mathrm{JSD} \le 0.01$
+    indicates posteriors that are effectively identical.}
+  \label{tab:jsd}
+  \begin{ruledtabular}
+    \begin{tabular}{lcccc}
+      Parameter
+        & Median
+        & $[\mathrm{q}_{05},\,\mathrm{q}_{95}]$
+        & Max \\
+      \hline
+      $f_0$ [Hz]
+        & $0.0139$
+        & $[0.0086,\;0.0469]$
+        & $0.109$ \\
+      $\dot{f}$ [Hz/s]
+        & $0.0106$
+        & $[0.0069,\;0.0139]$
+        & $0.016$ \\
+      $A$
+        & $0.0125$
+        & $[0.0087,\;0.0227]$
+        & $0.059$ \\
+      $\phi_0$ [rad]
+        & $0.0153$
+        & $[0.0051,\;0.0686]$
+        & $0.184$ \\
+    \end{tabular}
+  \end{ruledtabular}
+\end{table}
+
+
+
 The \package\ package enables both a straightforward NumPy-based
 development path and high-performance accelerator execution via JAX.
 For small data lengths ($N \lesssim 2^{20}$), the NumPy version is
 competitive or even faster due to its extremely low overhead.
 However, once $N$ exceeds $\sim 2^{20}$, the GPU-accelerated versions
-achieve markedly lower runtimes while maintaining MSE well below $10^{-8}$.
+achieve markedly lower runtimes while both backends maintain
+round-trip reconstruction errors at floating-point roundoff.
 This combination of flexibility, accuracy, and performance makes
 \package\ a useful tool for time-frequency-WDM analysis of
 long-duration gravitational-wave signals.
