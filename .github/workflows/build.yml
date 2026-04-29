@@ -15,6 +15,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure conda
+        run: |
+          printf "channel_priority: strict\n" > ~/.condarc
+          if command -v conda >/dev/null 2>&1; then
+            conda config --set channel_priority strict
+          fi
+
       - name: Build the article PDF
         id: build
         uses: showyourwork/showyourwork-action@9987603860836147f19f5022b902c2d43e7268e4

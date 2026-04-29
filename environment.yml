@@ -1,7 +1,13 @@
 channels:
   - conda-forge
 dependencies:
+  - corner=2.2.3
   - numpy=2.2.6
   - pip=25.1.1
-  - python=3.10
+  - python=3.12
+  - scipy=1.15.2
   - matplotlib==3.10
+  - pip:
+      - jaxgb==0.2.1
+      - lisaorbits==3.0.3
+      - git+https://github.com/pywavelet/wdm_transform.git@e4bb0641df1f68172a30edeb0427e79fe28c58c8
