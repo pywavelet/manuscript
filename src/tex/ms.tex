@@ -393,24 +393,7 @@ The parameter $B$ depends on $\Delta\Omega$ and $A$ as
 \end{equation}
 In our implementation, we set $A =\Delta\Omega/4$ and therefore $B =
 \Delta\Omega/2$. This means that the window is non-zero when
-$|\omega| \leq 3 \Delta\Omega/4$. Figure~\ref{fig:wdm_windows_atoms}
-summarizes the window shape, its shifted channel copies, and the
-localized atoms that result after modulation in time.
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=1\linewidth]{figures/wdm_windows_atoms.pdf}
-  \caption{\textbf{Pedagogical view of the WDM window and atoms.}
-    Left: the cosine-tapered Meyer window used in the current
-    implementation. Middle: shifted copies of the same window define
-    the WDM frequency channels, with special edge-channel behavior at
-    DC and Nyquist. Right: after fixing a channel $m$ and time index
-    $n$, the corresponding inverse-Fourier-transformed atom becomes a
-    localized oscillatory pattern in time. This is the object that one
-  WDM coefficient measures against the data.}
-  \label{fig:wdm_windows_atoms}
-  \script{wdm_windows_atoms.py}
-\end{figure*}
+$|\omega| \leq 3 \Delta\Omega/4$. 
 
 These are the main ingredients behind the packed WDM grid. A single
 window shape is shifted across
