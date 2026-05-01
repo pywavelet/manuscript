@@ -634,39 +634,60 @@ checked-in benchmark snapshot from the package documentation, which
 compares the NumPy and JAX backends across a range of input sizes.
 All results are obtained in 64-bit floating point precision, and each
 timed point uses one warmup evaluation before the measured runs.
-% TODO: update hardware block after Colab benchmark run
-The hardware specifications for the benchmark machine are:
-\begin{itemize}
-  \item \textbf{GPU:} NVIDIA [TBD] (Google Colab)
-  \item \textbf{CPU:} [TBD]
-  \item \textbf{RAM:} [TBD]
-\end{itemize}
+Benchmarks were performed on Google Colab using a CPU node
+(2$\times$ Intel Xeon vCPU, 2.0--2.2\,GHz, 12.7\,GB RAM) and a
+GPU node (NVIDIA T4, 16\,GB VRAM).
 
-Figure~\ref{fig:runtime_forward} shows the forward WDM runtime as a
-function of data length for the NumPy (CPU) and JAX (GPU) implementations.
+Figure~\ref{fig:runtime_forward} shows the forward-kernel runtime
+as a function of input size $N$ for the NumPy (CPU), JAX (CPU), and
+JAX (GPU) backends, together with the batched-execution speedup
+$t_\mathrm{serial}/t_\mathrm{batch}$.  Here, $t_\mathrm{serial}$
+is the wall-clock time for three independent single-channel calls
+and $t_\mathrm{batch}$ is the time for a single call that processes
+all three channels simultaneously.
 
 \begin{figure}[tbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/runtimes.pdf}
-  \caption{\textbf{Forward WDM runtime versus data length.} Each
-    point shows the mean runtime over repeated runs after one warmup
-    call, and the shaded band shows one standard deviation. The dashed
-    lines show least-squares fits of the form $c\,N\log_2 N$, included
-    as scaling guides. The JAX backend is consistently faster than the
-    NumPy backend, with the separation becoming more pronounced for the
-  largest transform sizes in the benchmark range.}
+  \caption{\textbf{Forward WDM runtime versus data length.} The top
+    panel shows the median runtime over repeated runs after one warmup
+    call; shaded bands span the 16th--84th percentile interval.  The
+    black dashed line shows an $N\log_2 N$ reference scaling.  The
+    bottom panel shows the batched-execution speedup
+    $t_\mathrm{serial}/t_\mathrm{batch}$, where the serial baseline
+    applies the kernel independently to each of three channels and the
+    batched call processes all three simultaneously.  The JAX GPU
+    runtime is overhead-limited below $N \approx 10^5$ and achieves
+    speedups of up to ${\sim}\,4\times$ over serial execution at small
+    input sizes.}
   \label{fig:runtime_forward}
   \script{benchmark_runtime_snapshot.py}
 \end{figure}
 
-As visible in Figure~\ref{fig:runtime_forward}, both implementations
-become slower as $N$ increases, but the JAX backend maintains a
-noticeably lower runtime across the full benchmark range. The
-difference is modest for small problems and becomes much larger once
-the transform size reaches the upper end of the tested range. Both
-backends achieve round-trip reconstruction errors consistent with
-floating-point roundoff; the runtime differences are not due to any
-loss of numerical fidelity in the transform itself.
+At large $N$ all three backends approach $\mathcal{O}(N\log N)$
+scaling, consistent with the dominant length-$N$ FFT in the forward
+transform.  Deviations at small $N$ reflect different overhead
+regimes: per-call Python and memory-allocation costs for NumPy, and
+kernel-dispatch latency for JAX.  The JAX GPU runtime is nearly flat
+below $N \approx 10^5$, indicating that transforms at those sizes are
+dominated by kernel-launch overhead rather than arithmetic throughput;
+beyond this threshold GPU efficiency improves and, at $N = 10^6$, the
+GPU scalar runtime (${\approx}\,13\,\mathrm{ms}$) is roughly
+$35\times$ lower than NumPy (${\approx}\,460\,\mathrm{ms}$).
+
+The speedup panel shows that batched execution yields no measurable
+benefit for NumPy ($t_\mathrm{serial}/t_\mathrm{batch} \approx 1$
+throughout), as NumPy does not exploit the extra batch dimension for
+additional parallelism.  JAX (CPU) recovers $1.5$--$3\times$ via
+JIT-compiled vectorization over the batch axis.  JAX (GPU) achieves
+up to ${\sim}\,4\times$ at small $N$, where all three channels fit
+simultaneously into the device pipeline; the speedup decreases to
+${\approx}\,1.5\times$ at $N = 10^6$ as individual transforms
+approach device saturation.  All backends achieve round-trip
+reconstruction errors at floating-point precision
+(${\lesssim}\,10^{-10}$); the runtime differences therefore reflect
+implementation efficiency rather than any loss of numerical
+fidelity.
 
 \subsection{Resolved galactic-binary inference in a galactic background}
 \label{sec:lisa_gb_example}
