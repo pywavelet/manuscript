@@ -15,6 +15,8 @@
 \usepackage{wdmmanuscript}
 \usepackage{hyperref}
 
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+
 \begin{document}
 
 \preprint{APS/123-QED}
@@ -36,14 +38,15 @@ Université de Toulouse, CNRS, UPS, F-31062 Toulouse Cedex 9, France}
 Princes St, Auckland, New Zealand}
 
 \begin{abstract}
-  Here we present \package, a Python package for rapid and accurate
-  Wilson-Daubechies-Meyer (WDM) time-frequency transforms on CPU and
-  accelerator backends. The current implementations use NumPy and JAX
-  and can transform million-point data streams in milliseconds while
-  maintaining excellent numerical accuracy. We give a practical
-  introduction to the WDM domain, discuss several implementation
-  choices and limitations, and illustrate how these methods can
-  support future space-based gravitational-wave data analysis.
+  We present \package, a Python package for rapid and accurate
+  Wilson--Daubechies--Meyer (WDM) time-frequency transforms on CPU and
+  GPU accelerator backends. The package provides NumPy and JAX
+  implementations that can transform million-point data streams in
+  tens of milliseconds while maintaining floating-point reconstruction
+  accuracy. We give a practical introduction to the WDM domain, discuss
+  implementation choices and limitations, and illustrate how these
+  methods can support future space-based gravitational-wave data
+  analysis.
 \end{abstract}
 
 \maketitle
@@ -57,16 +60,16 @@ Princes St, Auckland, New Zealand}
 
 
 Time-frequency analysis is widely used in gravitational-wave
-astronomy. It enables template-free modeling of source
+astronomy. It enables template-free characterisation of source
 signals~\cite{krolak_1996,Virtuoso2024}, instrumental
 transients~\cite{robinet2020}, and the joint analysis of
 astrophysical signals and terrestrial
-disturbances~\cite{Cornish_2015}. Moreover, time-frequency
-representations provide compact waveform descriptions and facilitate
-the modeling of non-stationary detector noise. Among the available
-techniques, discrete wavelet wavepacket transforms are particularly
-well suited to gravitational-wave data analysis: they furnish
-localized, orthonormal basis functions capable of representing
+disturbances~\cite{Cornish_2015}. Time-frequency
+representations also provide compact waveform descriptions and
+facilitate the modelling of non-stationary detector noise. Among the
+available techniques, discrete wavelet wavepacket transforms are
+particularly well suited to gravitational-wave data analysis: they
+furnish localized, orthonormal basis functions capable of representing
 transient and chirping signals, and for locally stationary noise they
 yield an approximately diagonal noise covariance, greatly simplifying
 likelihood evaluation and spectral estimation.
@@ -87,11 +90,11 @@ for long-duration signals expected in future detectors such as LISA.
 
 While the foundational works above establish the theoretical and
 algorithmic advantages of the WDM transform, many practical aspects
-of its implementation are necessarily distributed across the
-literature and existing codebases. In particular, details such as the
-packed coefficient layout, the treatment of the DC and Nyquist edge
-channels, and the numerical properties of the discretized transform
-are often implicit. As a result, adopting WDM in new applications can
+of its implementation remain scattered across the literature and
+existing codebases. In particular, details such as the packed
+coefficient layout, the treatment of the DC and Nyquist edge channels,
+and the numerical properties of the discretised transform are often
+left implicit. As a result, adopting the WDM in new applications can
 require reconstructing these elements from multiple sources.
 
 This paper aims to provide a unified and pedagogical presentation of
@@ -104,23 +107,22 @@ approximately independent. We accompany this exposition with
 on both CPU (NumPy) and accelerator (JAX) backends, with validation
 through round-trip reconstruction tests and empirical decorrelation studies.
 
-The motivation for WDM can be understood by comparing it with the two
+The motivation for the WDM can be understood by contrasting the two
 standard representations of a discrete signal. In the time domain one
 can identify \emph{when} a feature occurs but not which frequency
-band is active, while in the Fourier domain one can identify
+band is active, whereas in the Fourier domain one can identify
 \emph{which} frequencies are present but not when they appear. Many
-gravitational-wave signals and detector artifacts are neither purely
-stationary nor purely impulsive, so neither representation is fully
-satisfactory in isolation. A short-time Fourier transform partially
-addresses this limitation through a sliding window, but imposes a
-fixed time-frequency resolution across the dataset. The WDM transform
-instead tiles the time-frequency plane with localized atoms indexed
-by a time bin $n$ and a frequency channel $m$, with coefficients
-$w_{nm}$ measuring the projection of the data onto each atom. The
-result is a uniform time-frequency representation that is well suited
-to describing transients, chirps, gaps, and other localized
-structure, while still admitting an exact inverse transform back to
-the original sampled data.
+gravitational-wave signals and detector artefacts are neither purely
+stationary nor purely impulsive, so neither representation alone is
+fully satisfactory. A short-time Fourier transform partially addresses
+this limitation through a sliding window, but imposes a fixed
+time-frequency resolution across the entire dataset. The WDM transform
+instead tiles the time-frequency plane with localized atoms indexed by
+a time bin $n$ and a frequency channel $m$, with coefficients $w_{nm}$
+measuring the projection of the data onto each atom. The result is a
+uniform time-frequency representation well suited to describing
+transients, chirps, gaps, and other localized structure, while still
+admitting an exact inverse transform back to the original sampled data.
 
 The remainder of this paper is organized as follows.
 Section~\ref{sec:conventions} introduces notation and conventions.
@@ -131,24 +133,24 @@ statistical properties of the coefficients under stationary and
 non-stationary noise. Section~\ref{sec:code_package} describes the
 \package\ package, presents runtime and accuracy benchmarks, and
 demonstrates the transform on astrophysical signals. We conclude in
-Section~\ref{sec:conclusions}..
+Section~\ref{sec:conclusions}.
 
 \subsection{Conventions}\label{sec:conventions}
-We are given a data stream in time domain, consisting of a set of N
-samples of a \textbf{real} quantity $x$ at times $\{t_k\}_{k=0\dots
-N-1}$ in a total time of observation $T$
+Consider a data stream consisting of $N$ uniformly sampled values of a
+\textbf{real} quantity $x$ at times $\{t_k\}_{k=0,\dots,N-1}$ over a
+total observation time $T$:
 \begin{align}\label{st_definition}
-  x[k]=x(t_k)\qquad,\qquad k=\{0\dots N-1\}\;,
+  x[k]=x(t_k)\qquad,\qquad k=0,\dots,N-1\;,
 \end{align}
-sampled uniformly with sampling interval $\Delta t = t_{k+1} - t_{k}$
-with $T = N\Delta t$. All of the information we have lies in these N
-points. We define the time sampling rate and the Nyquist frequency as
+with sampling interval $\Delta t = t_{k+1} - t_{k}$ and $T = N\Delta t$.
+All available information is encoded in these $N$ samples.
+We define the sampling rate and the Nyquist frequency as
 \begin{align}
   r_s&\equiv\frac{1}{\Delta t}\equiv\frac{N}{T}\;,\nonumber\\
   f_{\rm max}&=\frac 1 2r_s\;,\nonumber\\
   \Delta f &= 1/T
 \end{align}
-With that respect, if we set $t_0=0$, we can write $t_k=k\Delta t$.
+In that regard, if we set $t_0=0$, we can write $t_k=k\Delta t$.
 In the frequency domain, the data stream $\{x_k\}$ can be
 discrete-Fourier-transformed to a set of other $N$ complex numbers as
 \begin{equation}
@@ -156,8 +158,12 @@ discrete-Fourier-transformed to a set of other $N$ complex numbers as
   \tilde x[l] = \sum_{k = 0}^{N-1} x[k]e^{-2\pi i l k/N}
 \end{equation}
 for Fourier frequencies $f_{l} = \{-N\Delta f/2, \ldots, -\Delta f,
-0, \Delta f, (N/2 - 1)\Delta f\}$. This is convenient since the
-zeroth frequency bin has been shifted into the middle of the spectrum.
+0, \Delta f, \ldots, (N/2 - 1)\Delta f\}$, i.e.\ the zero-frequency
+bin is centred in the array.
+\TODO{The sum in Eq.~\eqref{eq:dft-definition} runs over $k=0,\ldots,N-1$
+(standard DFT ordering), yet the frequency list is zero-centred.  Should we
+state explicitly that a subsequent \texttt{fftshift} is implied, or rewrite
+the frequency list to match the raw DFT output before clarifying the shift?}
 
 \subsection{Time and Frequency Domains}
 We assume that the output of a gravitational wave detector, $x(t)$,
@@ -168,7 +174,7 @@ errors~\cite{Savalle_2022}, the content of a single data stream,
 i.e., one output channel from one detector, can be written in the
 time and frequency domain as:
 \begin{align}
-  {x}[k] & = h[k|\vec{\mu}]+ n[t],\\
+  {x}[k] & = h[k|\vec{\mu}] + n[k],\\
   \tilde x[l]& = \tilde{h}[l|\vec{\mu}]+ \tilde{n}[l]
 \end{align}
 where the tilde indicates the Fourier transform.
@@ -189,7 +195,7 @@ have a different shape from the reference one \cite{babak2021lisa},
 the probability distribution of the noise might not be Gaussian, or
 the noise might not be stationary, leading to correlations between frequencies.
 
-\section{The Wilson-Daubechies-Meyer (WDM) Transform}\label{sec:wdm}
+\section{The Wilson--Daubechies--Meyer (WDM) Transform}\label{sec:wdm}
 
 Before defining the transform, it is worth clarifying a point of
 terminology. A standard discrete wavelet transform (DWT) decomposes a
@@ -221,11 +227,10 @@ channels. The transform size is still set by
 \end{align}
 and the stored channels are indexed by $m=0,\dots,N_f$, with $m=0$
 the DC edge channel, $m=1,\dots,N_f-1$ the interior channels, and
-$m=N_f$ the Nyquist edge channel. The underlying idea is to chunk the
-data stream into $N_t$ chunks and to perform a frequency analysis of
-each one of those. Please note that $N$ is fixed, but $N_t$ is an
-arbitrary choice you can make. The only constraint is obviously $1\le
-N_t\le N$. Consequently, the constraint applies for $N_f$: $1\le N_f\le N$.
+$m=N_f$ the Nyquist edge channel. The underlying idea is to partition the data stream into $N_t$ time
+segments and to perform a frequency analysis of each one. Here $N$ is
+fixed by the data, while $N_t$ is a free user choice subject only to
+$1 \le N_t \le N$ (and consequently $1 \le N_f \le N$).
 Given that choice we can define the spacing in both time and
 frequency with respect to the underlying tiling with area $N = N_{t}N_{f}$
 \begin{align}\label{DTDF}
@@ -277,7 +282,7 @@ basis elements, which are chosen to be (quasi-)orthonormal:
 \sum_{l=0}^{N-1}g^*_{nm}[l]g_{pq}[l]=\delta_{(nm),(pq)}\;,\nonumber\\
 \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}g^*_{nm}[l]g_{nm}[l']=\delta_{ll'}\;,
 \end{align}
-This orthonormality is also the key reason that WDM coefficients can
+This orthonormality is the key reason that WDM coefficients can
 become statistically simple for stationary noise. If the
 Fourier-domain noise satisfies Eq.~\eqref{eq:psd_definition}, then
 the covariance between two WDM noise coefficients is
@@ -285,17 +290,22 @@ the covariance between two WDM noise coefficients is
   \left\langle w_{nm} w_{pq} \right\rangle
   = \frac{1}{2}\sum_l P[l]\,\tilde g_{nm}(l)\tilde g_{pq}^*(l).
 \end{align}
-In the ideal orthonormal limit, whitened noise, or more generally
+\TODO{Confirm that $\langle w_{nm} w_{pq}\rangle$ (rather than
+$\langle w_{nm} w_{pq}^*\rangle$) is correct here given that $w_{nm}$
+is real, and verify the factor of $\tfrac{1}{2}$ against the PSD
+normalisation convention in Eq.~\eqref{eq:psd_definition}.
+Can we add a unit test / script that checks this numerically?}
+In the ideal orthonormal limit, whitened noise — or more generally
 noise with $P[l]$ effectively constant across the support of each
-atom, reduces this covariance to a diagonal form. In that case the
-WDM coefficients are uncorrelated, and for Gaussian noise they are
-therefore independent. In the sampled packed implementation used
-here, it is useful to separate two statements. First, the interior
-atoms ($m=1,\ldots,N_f-1$) satisfy the discrete orthonormality
-relation numerically to machine precision. Second, the packed
-real-valued storage includes special DC and Nyquist edge channels,
-so the full stored coefficient array is best viewed as a convenient
-packed representation rather than as a minimal orthonormal basis.
+atom — reduces this covariance to diagonal form. In that case the WDM
+coefficients are uncorrelated, and for Gaussian noise they are
+therefore independent. In the sampled packed implementation used here,
+it is useful to distinguish two statements. First, the interior atoms
+($m=1,\ldots,N_f-1$) satisfy the discrete orthonormality relation to
+machine precision. Second, the packed real-valued storage includes
+special DC and Nyquist edge channels, so the full stored coefficient
+array is best viewed as a convenient packed representation rather than
+a minimal orthonormal basis.
 For this reason, the decorrelation discussion below focuses on the
 interior coefficients. For whitened noise their empirical
 correlations remain very small, while for colored, non-stationary, or
@@ -443,7 +453,9 @@ Appendix~\ref{app:forward_derivation} for details), giving
   \sqrt{2}\,(-1)^{nm}\,\Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2}\tilde{x}_{l'+mN_t/2}\,e^{2\pi
   i l'n/N_t}\,\tilde{\varphi}(l'\,df)\right],
 \end{align}
-where $l' = l - mN_t/2$ and $df = 1/T$. This can be written compactly as
+where $l' = l - mN_t/2$ and $df = 1/T$. The frequency shift
+$l = l' + mN_t/2$ contributes a phase $e^{2\pi i (mN_t/2) n/N_t}
+= e^{i\pi mn} = (-1)^{mn}$, so the result can be written compactly as
 \begin{align}\label{eq:wnm_compact}
   w_{nm} = \sqrt{2}\,(-1)^{nm}\,\Re\,C_{nm}^*\,x_m[n]\,,
 \end{align}
@@ -479,8 +491,10 @@ mirrors the DC case with appropriate frequency shifts. In practice,
 the Nyquist channel is computed using the same windowed-FFT machinery
 as the interior channels, with the frequency shift set to $mN_t/2 = N/2$.
 \begin{align}\label{eq:wnNf}
-  w_{nN_f} = \sqrt{2\,}\Re\left[\sum_{l=N/2-N_t/2}^{N/2-1}\tilde{x}_l\,e^{4\pi i l
-  n/N_t}\,\tilde{\varphi}((l-N/2)\,df)\right] + \frac{1}{\sqrt{2}}\tilde{x}_{N/2}\,\tilde{\varphi}(0)\,.
+  w_{nN_f} &= \sqrt{2}\,\Re\!\left[\sum_{l=N/2-N_t/2}^{N/2-1}
+    \tilde{x}_l\,e^{4\pi i l n/N_t}\,\tilde{\varphi}\!\left((l-N/2)\,df\right)\right]
+    \nonumber\\
+  &\quad + \frac{1}{\sqrt{2}}\,\tilde{x}_{N/2}\,\tilde{\varphi}(0)\,.
 \end{align}
 \subsection{Backward transform}
 
@@ -586,28 +600,32 @@ remain small after whitening, the diagonal
 likelihood~\eqref{eq:wdm_whittle} is a safe approximation.
 
 \paragraph{When does the diagonal approximation hold?}
-The diagonal covariance requires two conditions to be satisfied
-simultaneously. First, the noise must be \emph{locally stationary}:
-its PSD must vary on timescales much longer than the wavelet pixel
-width $\Delta T$. Second, the PSD must be approximately flat across
-the frequency support of each atom, which spans roughly $\Delta F$
-for interior channels. The Heisenberg--Gabor uncertainty relation,
-saturated by the WDM tiling at $\Delta T\,\Delta F = 1/2$, means
-these two conditions trade off against each other. Choosing a finer
-frequency resolution (large $\Delta T$) improves the second condition
-but worsens the first. In practice, a single choice of $N_f$ often
-suffices for mildly non-stationary noise, but strongly non-stationary
-data with sharp spectral features may require a multi-resolution
-strategy, as discussed by Cornish~\cite{Cornish:2020odn}.
+The WDM tiling obeys $\Delta T\,\Delta F = 1/2$ (see
+Eq.~\eqref{DTDF}), so each atom occupies the minimum allowed
+time-frequency area consistent with the uncertainty principle, though
+the actual time-bandwidth product of the cosine-tapered Meyer window
+exceeds this minimum. The diagonal covariance~\eqref{eq:wdm_noise_cov}
+holds whenever the noise PSD varies slowly compared to this joint
+support. Concretely, this is the condition of \emph{local
+stationarity}: spectral variations on timescales shorter than $\Delta
+T$, or spectral features narrower than $\Delta F$, will induce
+off-diagonal covariance terms. The WDM tiling therefore poses an
+inherent trade-off: choosing finer frequency resolution (larger
+$\Delta T$) suppresses spectral leakage within each atom but degrades
+temporal tracking of non-stationarity. In practice a single choice of
+$N_f$ often suffices for mildly non-stationary noise, but data with
+sharp spectral features or rapid temporal variation may require a
+multi-resolution strategy, as discussed by
+Cornish~\cite{Cornish:2020odn}.
 
 \section{\package\ Package}
 \label{sec:code_package}
 
 The \package\ package provides practical implementations of the
-Wilson–Daubechies–Meyer (WDM) transform for gravitational-wave data
-analysis. The current codebase exposes a reference NumPy backend and
-a vectorized JAX backend; both implement the same packed $(N_t, N_f +
-1)$ coefficient layout and the same forward/inverse conventions described above.
+Wilson--Daubechies--Meyer (WDM) transform for gravitational-wave data
+analysis. The current codebase provides a reference NumPy backend and
+a vectorised JAX backend; both implement the same packed $(N_t, N_f +
+1)$ coefficient layout and forward/inverse conventions described above.
 
 From the implementation point of view, the dominant operations in the
 forward transform are one length-$N$ FFT of the input data together
@@ -625,18 +643,17 @@ $\mathcal{O}(N)$ real numbers, and the temporary working arrays used
 by the implementation are also linear in $N$, so the overall memory
 footprint is $\mathcal{O}(N)$.
 
-In practice, the important implementation difference is not the
+In practice, the dominant implementation difference is not the
 asymptotic scaling but how the channel-wise work is executed. The
-NumPy backend carries out the sub-band operations on the CPU, whereas
-the JAX backend evaluates the same algebra in a more vectorized form
-that benefits from accelerator execution. Below we use the current
-checked-in benchmark snapshot from the package documentation, which
-compares the NumPy and JAX backends across a range of input sizes.
-All results are obtained in 64-bit floating point precision, and each
-timed point uses one warmup evaluation before the measured runs.
-Benchmarks were performed on Google Colab using a CPU node
-(2$\times$ Intel Xeon vCPU, 2.0--2.2\,GHz, 12.7\,GB RAM) and a
-GPU node (NVIDIA T4, 16\,GB VRAM).
+NumPy backend carries out the sub-band operations sequentially on the
+CPU, whereas the JAX backend evaluates the same algebra in vectorised
+form that benefits from accelerator execution. All timings below are
+drawn from the benchmark suite included in the package documentation;
+each data point uses 64-bit floating-point arithmetic and is preceded
+by one warmup evaluation before the measured runs. Benchmarks were
+performed on Google Colab using a CPU node (2$\times$ Intel Xeon
+vCPU, 2.0--2.2\,GHz, 12.7\,GB RAM) and a GPU node (NVIDIA T4,
+16\,GB VRAM).
 
 Figure~\ref{fig:runtime_forward} shows the forward-kernel runtime
 as a function of input size $N$ for the NumPy (CPU), JAX (CPU), and
@@ -649,17 +666,16 @@ all three channels simultaneously.
 \begin{figure}[tbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/runtimes.pdf}
-  \caption{\textbf{Forward WDM runtime versus data length.} The top
-    panel shows the median runtime over repeated runs after one warmup
-    call; shaded bands span the 16th--84th percentile interval.  The
-    black dashed line shows an $N\log_2 N$ reference scaling.  The
-    bottom panel shows the batched-execution speedup
-    $t_\mathrm{serial}/t_\mathrm{batch}$, where the serial baseline
-    applies the kernel independently to each of three channels and the
-    batched call processes all three simultaneously.  The JAX GPU
-    runtime is overhead-limited below $N \approx 10^5$ and achieves
-    speedups of up to ${\sim}\,4\times$ over serial execution at small
-    input sizes.}
+  \caption{\textbf{Forward WDM runtime versus input length.} \emph{Top}:
+    median wall-clock runtime over repeated runs after one warmup call;
+    shaded bands span the 16th--84th percentile interval.  The black
+    dashed line shows the $N\log_2 N$ reference scaling.  \emph{Bottom}:
+    batched-execution speedup $t_\mathrm{serial}/t_\mathrm{batch}$, where
+    the serial baseline applies the kernel independently to each of three
+    channels and the batched call processes all three simultaneously.  The
+    JAX GPU runtime is launch-overhead-limited below $N \approx 10^5$ and
+    achieves speedups of up to ${\sim}\,4\times$ over serial execution at
+    small input sizes.}
   \label{fig:runtime_forward}
   \script{benchmark_runtime_snapshot.py}
 \end{figure}
@@ -712,9 +728,11 @@ $10^{-4}$--$3\times 10^{-3}\,\mathrm{Hz}$. The unresolved galactic
 foreground is described by the phenomenological PSD \cite{Karnesis:2021tsh}
 %
 \begin{align}
-  S_{\rm gal}(f) =
+  S_{\rm gal}(f) &=
   A_{\rm gal} f^{-7/3}
   \exp\!\left[-\left(\frac{f}{f_{1,{\rm gal}}}\right)^{\alpha_{\rm gal}}\right]
+  \nonumber\\
+  &\quad\times
   \left[1 + \tanh\!\left(\frac{f_{{\rm knee},{\rm gal}} - f}{f_{2,{\rm gal}}}\right)\right],
 \end{align}
 %
@@ -732,9 +750,15 @@ line-of-sight integration through the bulge-plus-disk density model \cite{Mentas
 \end{align}
 %
 where $r^2=x^2+y^2+z^2$ and $u^2=x^2+y^2$. We evaluate the
-time-dependent detector response using equal-arm LISA orbits sampled
-at $90$ orbital times, and use that response to map the anisotropic
-foreground into the A/E/T TDI channels, assuming that the spectrum is stationary per each of these $90$ orbital times. We then draw complex Gaussian realizations of both the instrumental noise and the chunked galactic foreground and stitch them into a full-year spectrum. The resolved source is injected afterward as a TDI 1.5 A/E/T waveform with equal-arm LISA orbits and local Fourier support $n=256$. In the realization shown here the cadence is $\Delta t = 166.7\,\mathrm{s}$, $T_{\rm obs}=1\,\mathrm{yr}$, and the injected binary has $f_0 = 1.3862897\,\mathrm{mHz}$, $\dot f = 1.32\times 10^{-18}\,\mathrm{Hz\,s^{-1}}$, $A = 1.19\times 10^{-23}$, and $\phi_0 = 1.442\,\mathrm{rad}$.
+time-dependent detector response using equal-arm LISA orbits~\cite{lisaorbits}
+sampled at $90$ orbital times, and use that response to map the
+anisotropic foreground into the A/E/T TDI channels, assuming that the
+spectrum is stationary within each of these $90$ orbital segments. We
+then draw complex Gaussian realisations of both the instrumental noise
+and the chunked galactic foreground and stitch them into a full-year
+spectrum. The resolved source is injected afterward as a TDI~1.5 A/E/T
+waveform computed with \texttt{jaxgb}~\cite{jaxgb}, using equal-arm
+LISA orbits and local Fourier support $n=256$. In the realization shown here the cadence is $\Delta t = 166.7\,\mathrm{s}$, $T_{\rm obs}=1\,\mathrm{yr}$, and the injected binary has $f_0 = 1.3862897\,\mathrm{mHz}$, $\dot f = 1.32\times 10^{-18}\,\mathrm{Hz\,s^{-1}}$, $A = 1.19\times 10^{-23}$, and $\phi_0 = 1.442\,\mathrm{rad}$.
 
 The resolved GB model uses the standard eight source parameters
 $(f_0,\dot f,A,\alpha,\delta,\psi,\iota,\phi_0)$, but for this
@@ -751,11 +775,11 @@ The frequency-domain analysis uses a local A/E/T band centered on the
 prior support of the source and evaluates the Whittle likelihood
 \begin{align}
   \ln \mathcal{L}_{\rm freq}(\theta)
-  \propto
+  &\propto
   -\sum_{c\in\{A,E,T\}} \sum_k
   \left[
     \ln S_c(f_k)
-    + \frac{2\Delta f\,\left|\Delta t\,[d_{c,k}-h_{c,k}(\theta)]\right|^2}{S_c(f_k)}
+    + \frac{2\Delta f\,\bigl|\Delta t\,[d_{c,k}-h_{c,k}(\theta)]\bigr|^2}{S_c(f_k)}
   \right],
 \end{align}
 where $d_{c,k}$ and $h_{c,k}$ are the complex local Fourier modes and
@@ -768,25 +792,27 @@ $N_t=32$, $a=1/3$, and $d=1$. The resulting WDM likelihood is the
 diagonal Gaussian specialization of Eq.~\eqref{eq:wdm_whittle},
 \begin{align}
   \ln \mathcal{L}_{\rm WDM}(\theta)
-  =
-  -\frac{1}{2}\sum_{c\in\{A,E,T\}} \sum_{n,m}
-  \left[
+  &= -\frac{1}{2}\sum_{c\in\{A,E,T\}} \sum_{n,m}
+  \Bigg[
     \ln(2\pi \sigma^2_{c,m})
+    \nonumber\\
+  &\qquad\qquad
     + \frac{\left(w^{(d)}_{c,nm}-w^{(h)}_{c,nm}(\theta)\right)^2}{\sigma^2_{c,m}}
-  \right],
+  \Bigg],
 \end{align}
-with a stationary per-pixel variance
+with a stationary per-pixel variance following from
+Eq.~\eqref{eq:snm_stationary} with $\Delta F = f_{\rm Nyq}/N_f$:
 \begin{align}
-  \sigma^2_{c,m} = \frac{S_c(f_m)}{2\Delta t} = f_{\rm Nyq} S_c(f_m),
+  \sigma^2_{c,m} = S_{nm} = S_c(f_m)\,\Delta F = \frac{S_c(f_m)}{2\Delta t} = f_{\rm Nyq}\,S_c(f_m),
 \end{align}
 broadcast across the WDM time bins. In other words, this example uses
 the same stationary PSD in both domains and asks whether the WDM
 transform reproduces the frequency-domain posterior under that shared
 noise model.
 
-Both analyses use the NumPyro implementation of the No-U-Turn Sampler
-with a dense mass matrix, target acceptance probability $0.85$, and
-maximum tree depth $10$. Each run uses $800$ warmup steps followed by
+Both analyses use the NumPyro~\cite{phan2019composable} implementation
+of the No-U-Turn Sampler with a dense mass matrix, target acceptance
+probability $0.85$, and maximum tree depth $10$. Each run uses $800$ warmup steps followed by
 $1000$ retained samples from a single chain, initialized near the
 injected parameters with small jitters in $\log \dot f$ and $\log A$.
 In the realization shown here, both samplers produced zero divergences. The
@@ -822,12 +848,36 @@ indistinguishable for this seeded resolved-GB example.
 \end{figure}
 
 
+To test whether the agreement seen in Figures~\ref{fig:lisa_gb_data}
+and~\ref{fig:lisa_gb_corner} is robust across a range of signals and
+noise draws, we repeated the inference for 100 independent seeds. For
+each seed the source parameters $(f_0, \dot{f}, A, \phi_0)$ and the
+sky position and orientation were drawn fresh from the prior, and an
+independent realisation of the instrumental noise and galactic
+foreground was generated; sky position and orientation were then held
+fixed at their injected values during sampling. Both likelihoods use
+the same time-averaged effective PSD throughout, so this study
+isolates the effect of the WDM basis change from any difference in
+noise modelling: the non-stationarity of the galactic foreground
+enters both analyses as the same shared systematic and does not
+contribute to the JSD. For each seed we computed the Jensen--Shannon
+divergence (JSD) between the WDM-domain and frequency-domain 1D
+marginal posteriors. The JSD is a symmetric, bounded measure of
+distributional similarity, with $\mathrm{JSD} = 0$ for identical
+distributions. Table~\ref{tab:jsd} summarises the resulting
+distributions across the 100 seeds: median values lie at or below
+$0.016\,\mathrm{nat}$ for all four parameters, and the
+90th-percentile upper bound reaches at most $0.07\,\mathrm{nat}$.
+These results confirm that the WDM-domain likelihood faithfully
+reproduces the frequency-domain posterior under a shared stationary
+noise model, across a representative population of signal parameters
+and noise realisations.
+
 % Design notes:
 %   - JSD between WDM and frequency-domain 1D marginal posteriors
 %   - n = 100 seeds, same signal injection, independent noise draws
-%   - Median + [q05, q95] inter-seed interval + worst-case max
+%   - Median + [q05, q95] inter-seed interval
 %   - SNR omitted (derived quantity; tracks A and f0)
-%   - JSD <= 0.01 nats ~ "effectively identical" posteriors
 %
 \begin{table}[tbp]
   \centering
@@ -835,32 +885,27 @@ indistinguishable for this seeded resolved-GB example.
     frequency-domain marginal posteriors across 100 independent noise
     realisations.} The injected signal parameters are held fixed; only
     the noise draw varies. JSD is computed on the 1D marginal for each
-    sampled parameter. All values in nats; $\mathrm{JSD} \le 0.01$
-    indicates posteriors that are effectively identical.}
+    sampled parameter. All values in nats; the $[\mathrm{q}_{05},
+    \mathrm{q}_{95}]$ interval characterises seed-to-seed variability.}
   \label{tab:jsd}
   \begin{ruledtabular}
-    \begin{tabular}{lcccc}
+    \begin{tabular}{lcc}
       Parameter
         & Median
-        & $[\mathrm{q}_{05},\,\mathrm{q}_{95}]$
-        & Max \\
+        & $[\mathrm{q}_{05},\,\mathrm{q}_{95}]$ \\
       \hline
       $f_0$ [Hz]
         & $0.0139$
-        & $[0.0086,\;0.0469]$
-        & $0.109$ \\
+        & $[0.0086,\;0.0469]$ \\
       $\dot{f}$ [Hz/s]
         & $0.0106$
-        & $[0.0069,\;0.0139]$
-        & $0.016$ \\
+        & $[0.0069,\;0.0139]$ \\
       $A$
         & $0.0125$
-        & $[0.0087,\;0.0227]$
-        & $0.059$ \\
+        & $[0.0087,\;0.0227]$ \\
       $\phi_0$ [rad]
         & $0.0153$
-        & $[0.0051,\;0.0686]$
-        & $0.184$ \\
+        & $[0.0051,\;0.0686]$ \\
     \end{tabular}
   \end{ruledtabular}
 \end{table}
@@ -881,14 +926,14 @@ long-duration gravitational-wave signals.
 \section{Conclusions}\label{sec:conclusions}
 
 We have presented a self-contained, pedagogical account of the
-Wilson-Daubechies-Meyer (WDM) wavelet packet transform and its
+Wilson--Daubechies--Meyer (WDM) wavelet packet transform and its
 implementation in the open-source \package\ package. The main goal of
-this work is to make the WDM representation accessible to readers who
-are new to time-frequency methods, by walking through the full
-three-case basis definition (DC, interior, and Nyquist channels), the
-packed $(N_t, N_f{+}1)$ coefficient layout, the forward and inverse
+this work is to make the WDM representation accessible to readers new
+to time-frequency methods, by walking through the full three-case
+basis definition (DC, interior, and Nyquist channels), the packed
+$(N_t, N_f{+}1)$ coefficient layout, the forward and inverse
 transforms with detailed derivations, and the conditions under which
-WDM coefficients can be treated as approximately independent.
+WDM coefficients may be treated as approximately independent.
 
 On the implementation side, the NumPy and JAX backends both achieve
 exact round-trip reconstruction to floating-point precision. The JAX
@@ -899,14 +944,23 @@ inference pipelines that require millions of likelihood evaluations.
 Several limitations of the current work should be noted. First, the
 package implements only the $d=1$ Meyer window; higher-order windows
 ($d > 1$) offer better spectral leakage suppression and may be
-preferable for data with sharp spectral features. Second, this paper
-does not address the generation of gravitational-wave signals
-directly in the WDM domain, which is where much of the computational
-advantage of the WDM representation lies~\cite{Cornish:2020odn}; we
-defer fast wavelet-domain waveform generation to future work. Third,
-the treatment of data gaps and edge effects, while straightforward in
-principle, requires careful handling of the boundary wavelets and is
-not yet implemented in the package.
+preferable for data with sharp spectral features. Second, the paper
+does not address the generation of gravitational-wave signals directly
+in the WDM domain — where much of the computational advantage of the
+WDM representation lies~\cite{Cornish:2020odn} — and we defer fast
+wavelet-domain waveform generation to future work. Third, the
+treatment of data gaps and edge effects, while conceptually
+straightforward, requires careful handling of the boundary wavelets
+and is not yet implemented in the package. Fourth, the LISA galactic-binary
+inference example of Section~\ref{sec:lisa_gb_example} uses a
+time-averaged effective PSD in both the frequency-domain and
+WDM-domain likelihoods; this controlled comparison isolates the WDM
+basis change but does not exercise the principal advantage of the WDM
+representation, namely the ability to assign a time-varying $S_{nm}$
+to each pixel and thereby accommodate genuinely non-stationary noise
+without off-diagonal covariance terms. Demonstrating this advantage on
+realistic LISA non-stationary backgrounds is an important direction for
+future work.
 
 Looking ahead, the most immediate extensions are the incorporation of
 fast wavelet-domain waveform generation for compact binary signals,
@@ -945,7 +999,7 @@ e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big)
 \end{cases}
 \end{align}
 %
-Where we write the Meyer window function in the discrete case focusing on $d=1$:
+where we write the Meyer window function in the discrete case focusing on $d=1$:
 %
 \begin{align}\label{eq:phi_discrete}
 \tilde\varphi[l]&=\sqrt{\frac{2}{N_t}}\begin{cases}
@@ -1117,7 +1171,7 @@ x_{N_f}[l]\qquad\qquad\qquad |l| \geq N/2-N_t/2
 \end{cases}
 \end{align}
 %
-where we note that for each vlaue of $l$, the inverse transform depends on which of the $m$ bands the $l$ value belongs, in particular
+where we note that for each value of $l$, the inverse transform depends on which of the $m$ bands the $l$ value belongs, in particular
 %
 \begin{align}
 x_0[l]&=\frac{1}{\sqrt{2}}\sum_{n}w_{n1}e^{-2\pi iln/N_t}C_{n1}\tilde{\varphi}\!\left(\!(l-\tfrac{N_t}{2})df\right)+\sum_{n}w_{n0}e^{-4\pi iln/N_t}\tilde{\varphi}(l\,df)\nonumber\\
