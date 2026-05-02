@@ -38,15 +38,27 @@ Université de Toulouse, CNRS, UPS, F-31062 Toulouse Cedex 9, France}
 Princes St, Auckland, New Zealand}
 
 \begin{abstract}
-  We present \package, a Python package for rapid and accurate
-  Wilson--Daubechies--Meyer (WDM) time-frequency transforms on CPU and
-  GPU accelerator backends. The package provides NumPy and JAX
-  implementations that can transform million-point data streams in
-  tens of milliseconds while maintaining floating-point reconstruction
-  accuracy. We give a practical introduction to the WDM domain, discuss
-  implementation choices and limitations, and illustrate how these
-  methods can support future space-based gravitational-wave data
-  analysis.
+  We present \package, an open-source Python package implementing the
+  Wilson--Daubechies--Meyer (WDM) time-frequency transform for
+  gravitational-wave data analysis.  The WDM basis and its applications
+  to gravitational-wave astronomy have been established in prior
+  work by Klimenko et al, Necula et al, and Cornish et al%~\cite{Necula_2012,Klimenko:2005xv,Klimenko:2015ypf,Cornish:2020odn}
+  ;
+  the goal of this paper is to provide a self-contained, mathematically
+  explicit reference for practitioners wishing to adopt the WDM in
+  modern Python and JAX inference workflows.  We document the forward
+  and inverse transform step by step, making explicit the packed
+  $(N_t, N_f{+}1)$ coefficient layout, the DC and Nyquist edge-channel
+  conventions, the alternating phase factor $C_{nm}$, and the
+  normalization conditions required for exact round-trip reconstruction.
+  The package supplies NumPy and JAX backends, both validated to
+  floating-point precision, with the JAX backend enabling
+  GPU-accelerated transforms of million-point data streams in tens of
+  milliseconds.  As a worked example we verify that the WDM-domain
+  Whittle likelihood reproduces frequency-domain posteriors for a
+  resolved LISA galactic binary under a shared stationary noise model,
+  confirming numerical equivalence of the two representations in that
+  controlled setting.
 \end{abstract}
 
 \maketitle
@@ -91,21 +103,31 @@ for long-duration signals expected in future detectors such as LISA.
 While the foundational works above establish the theoretical and
 algorithmic advantages of the WDM transform, many practical aspects
 of its implementation remain scattered across the literature and
-existing codebases. In particular, details such as the packed
+existing codebases.  In particular, details such as the packed
 coefficient layout, the treatment of the DC and Nyquist edge channels,
-and the numerical properties of the discretised transform are often
-left implicit. As a result, adopting the WDM in new applications can
-require reconstructing these elements from multiple sources.
+the alternating phase factor, Fourier indexing and shift conventions,
+and the normalization conditions required for exact reconstruction are
+often left implicit, or are documented only in the context of specific
+C/C\texttt{++} implementations that do not support automatic
+differentiation.  Translating these conventions into a modern Python
+or JAX workflow --- one that admits GPU acceleration, just-in-time
+compilation, and direct integration with probabilistic programming
+libraries --- currently requires reconstructing them from multiple
+sources.
 
-This paper aims to provide a unified and pedagogical presentation of
-the WDM transform. We describe what each coefficient represents, how
-the forward and inverse transforms are computed step by step, how the
-packed $(N_t, N_f+1)$ coefficient grid is organized in practice, and
-under what conditions the coefficients may be treated as
-approximately independent. We accompany this exposition with
+This paper does not claim to introduce the WDM transform or to
+establish its suitability for gravitational-wave analysis; those
+contributions belong to the works cited above.  Rather, it aims to
+provide a unified and pedagogical reference for the sampled,
+discrete implementation.  We describe what each coefficient
+represents, how the forward and inverse transforms are computed step
+by step, how the packed $(N_t, N_f+1)$ coefficient grid is organized
+in practice, and under what conditions the coefficients may be treated
+as approximately independent.  We accompany this exposition with
 \package, an open-source Python package that implements the transform
 on both CPU (NumPy) and accelerator (JAX) backends, with validation
-through round-trip reconstruction tests and empirical decorrelation studies.
+through round-trip reconstruction tests and empirical decorrelation
+studies.
 
 The motivation for the WDM can be understood by contrasting the two
 standard representations of a discrete signal. In the time domain one
@@ -926,14 +948,17 @@ long-duration gravitational-wave signals.
 \section{Conclusions}\label{sec:conclusions}
 
 We have presented a self-contained, pedagogical account of the
-Wilson--Daubechies--Meyer (WDM) wavelet packet transform and its
-implementation in the open-source \package\ package. The main goal of
-this work is to make the WDM representation accessible to readers new
-to time-frequency methods, by walking through the full three-case
-basis definition (DC, interior, and Nyquist channels), the packed
-$(N_t, N_f{+}1)$ coefficient layout, the forward and inverse
-transforms with detailed derivations, and the conditions under which
-WDM coefficients may be treated as approximately independent.
+Wilson--Daubechies--Meyer (WDM) wavelet packet transform, building on
+the theoretical foundations established in prior
+work~\cite{Necula_2012,Klimenko:2005xv,Klimenko:2015ypf,Cornish:2020odn},
+and its implementation in the open-source \package\ package.  The
+primary goal of this work is to make the discrete, sampled WDM
+implementation explicit and reproducible for practitioners new to the
+transform, by walking through the full three-case basis definition
+(DC, interior, and Nyquist channels), the packed $(N_t, N_f{+}1)$
+coefficient layout, the forward and inverse transforms with detailed
+derivations, and the conditions under which WDM coefficients may be
+treated as approximately independent.
 
 On the implementation side, the NumPy and JAX backends both achieve
 exact round-trip reconstruction to floating-point precision. The JAX
@@ -966,11 +991,12 @@ Looking ahead, the most immediate extensions are the incorporation of
 fast wavelet-domain waveform generation for compact binary signals,
 the implementation of evolutionary power spectral density estimation
 directly on the WDM grid, and integration of the package into
-existing LISA data analysis frameworks. The combination of a
+existing LISA data analysis frameworks.  The combination of a
 pedagogical reference, a tested open-source implementation, and
-GPU-accelerated performance should lower the barrier for the
-gravitational-wave community to adopt time-frequency methods for the
-long-duration, non-stationary signals expected from future detectors.
+GPU-accelerated performance should lower the barrier to adopting the
+WDM transform within modern, autodiff-compatible Python inference
+pipelines for the long-duration, non-stationary signals expected from
+future detectors such as LISA.
 
 \section*{Data and Software Availability}
 The software developed for this research is available on GitHub at
