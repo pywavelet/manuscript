@@ -39,15 +39,14 @@ Princes St, Auckland, New Zealand}
 
 \begin{abstract}
   We present \package, an open-source Python package implementing the
-  Wilson--Daubechies--Meyer (WDM) time-frequency transform for
+  Wilson--Daubechies--Meyer (WDM) wavelet-packet time-frequency transform for
   gravitational-wave data analysis.  The WDM basis and its applications
-  to gravitational-wave astronomy have been established in prior
-  work by Klimenko et al, Necula et al, and Cornish et al%~\cite{Necula_2012,Klimenko:2005xv,Klimenko:2015ypf,Cornish:2020odn}
-  ;
-  the goal of this paper is to provide a self-contained, mathematically
-  explicit reference for practitioners wishing to adopt the WDM in
-  modern Python and JAX inference workflows.  We document the forward
-  and inverse transform step by step, making explicit the packed
+  to gravitational-wave astronomy were established in foundational
+  work by Klimenko, Necula, Cornish, and collaborators; the goal of
+  this paper is to provide a self-contained, mathematically explicit
+  reference for practitioners wishing to adopt the WDM in modern
+  Python and JAX inference workflows.  We document the forward and
+  inverse transform step by step, making explicit the packed
   $(N_t, N_f{+}1)$ coefficient layout, the DC and Nyquist edge-channel
   conventions, the alternating phase factor $C_{nm}$, and the
   normalization conditions required for exact round-trip reconstruction.
@@ -79,55 +78,63 @@ astrophysical signals and terrestrial
 disturbances~\cite{Cornish_2015}. Time-frequency
 representations also provide compact waveform descriptions and
 facilitate the modelling of non-stationary detector noise. Among the
-available techniques, discrete wavelet wavepacket transforms are
+available techniques, discrete wavelet-packet transforms are
 particularly well suited to gravitational-wave data analysis: they
 furnish localized, orthonormal basis functions capable of representing
 transient and chirping signals, and for locally stationary noise they
 yield an approximately diagonal noise covariance, greatly simplifying
 likelihood evaluation and spectral estimation.
 
-The Wilson--Daubechies--Meyer (WDM) wavelet wavepacket
-basis~\cite{Necula_2012} was introduced into gravitational-wave
-analysis through the coherent WaveBurst
-algorithm~\cite{Klimenko:2005xv,Klimenko:2015ypf} for unmodeled burst
-searches. Building on this foundation, Cornish~\cite{Cornish:2020odn}
-developed WDM into a general-purpose framework for template-based
-inference, demonstrating that binary merger waveforms can be
-generated directly in the WDM domain at a computational cost scaling
-as $N\sqrt{N}$ rather than $N^2$, and showing that the WDM noise
-covariance is diagonal for a broad class of locally stationary
-processes. These results provide strong motivation for performing
-gravitational-wave inference directly in the WDM domain, particularly
-for long-duration signals expected in future detectors such as LISA.
+The Wilson--Daubechies--Meyer (WDM) wavelet-packet basis already
+has a substantial history in gravitational-wave astronomy.  The fast
+Wilson--Daubechies transform was developed for transient
+gravitational-wave analysis by Necula, Klimenko, and
+Mitselmakher~\cite{Necula_2012}, and WDM representations have been
+used in coherent WaveBurst and related burst-search contexts.
+% TODO(Avi): Add citation for coherent WaveBurst WDM implementation.
+These earlier papers and implementations established the theoretical
+and algorithmic basis of the transform for excess-power and
+time-frequency analyses, including its orthonormal structure,
+controlled spectral leakage, flexible frequency sub-bands, and
+time-delay filters relevant for sky localization.  Subsequent WDM
+software and applications by Digman and Cornish further developed fast
+forward and inverse transforms, WDM likelihoods, and time-frequency
+analyses for LISA sources and backgrounds~\cite{2023ascl.soft07037D,
+digman_cornish_bbh_wdm,digman_cornish_tv_galactic_wdm}.  Recent work
+by Pearson and Cornish has also shown how WDM-domain methods can be
+combined with Bayesian data augmentation to handle data gaps in
+long-duration gravitational-wave observations~\cite{pearson_cornish_wdm_gaps}.
 
-While the foundational works above establish the theoretical and
-algorithmic advantages of the WDM transform, many practical aspects
-of its implementation remain scattered across the literature and
-existing codebases.  In particular, details such as the packed
-coefficient layout, the treatment of the DC and Nyquist edge channels,
-the alternating phase factor, Fourier indexing and shift conventions,
-and the normalization conditions required for exact reconstruction are
-often left implicit, or are documented only in the context of specific
-C/C\texttt{++} implementations that do not support automatic
-differentiation.  Translating these conventions into a modern Python
-or JAX workflow --- one that admits GPU acceleration, just-in-time
-compilation, and direct integration with probabilistic programming
-libraries --- currently requires reconstructing them from multiple
-sources.
+Cornish developed a complementary WDM-domain programme for
+likelihood-based gravitational-wave inference and waveform generation.
+In this formulation, regularly sampled data are mapped to an
+orthogonal grid of localized time-frequency pixels; slowly evolving
+signals may be represented compactly as tracks on this grid, and
+binary waveforms can be generated directly in the WDM domain
+\cite{Cornish:2020odn}.  A central statistical motivation is that
+locally stationary noise, whose spectrum varies slowly across an
+individual time-frequency pixel, has an approximately diagonal
+covariance in the WDM domain.  This approximate diagonalization,
+analyzed in detail for the WDM basis in
+Ref.~\cite{cornish_nonstationary_wdm}, provides the WDM-domain
+analogue of the familiar diagonal Fourier-domain covariance for
+stationary noise and underlies WDM Whittle-type likelihoods.
 
-This paper does not claim to introduce the WDM transform or to
-establish its suitability for gravitational-wave analysis; those
-contributions belong to the works cited above.  Rather, it aims to
-provide a unified and pedagogical reference for the sampled,
-discrete implementation.  We describe what each coefficient
-represents, how the forward and inverse transforms are computed step
-by step, how the packed $(N_t, N_f+1)$ coefficient grid is organized
-in practice, and under what conditions the coefficients may be treated
-as approximately independent.  We accompany this exposition with
-\package, an open-source Python package that implements the transform
-on both CPU (NumPy) and accelerator (JAX) backends, with validation
-through round-trip reconstruction tests and empirical decorrelation
-studies.
+The present manuscript does not claim to introduce the WDM transform,
+to replace these foundational analyses, or to outperform existing
+pipeline-specific implementations.  Its contribution is instead to
+make the sampled WDM construction easy to adopt and reproduce in
+modern Python-based gravitational-wave workflows.  We give a
+self-contained derivation of the forward and inverse transforms,
+state the packed $(N_t,N_f+1)$ coefficient layout explicitly, spell
+out the DC and Nyquist channel treatment, and fix the normalization,
+phase, and indexing conventions used by the implementation.  These
+choices are then validated through exact round-trip reconstruction
+tests and empirical checks of coefficient decorrelation.  The
+accompanying \package\ package provides CPU and GPU-capable NumPy/JAX
+backends, so that the same mathematically explicit transform can be
+used in conventional analyses and in differentiable inference
+workflows.
 
 The motivation for the WDM can be understood by contrasting the two
 standard representations of a discrete signal. In the time domain one
@@ -219,27 +226,35 @@ the noise might not be stationary, leading to correlations between frequencies.
 
 \section{The Wilson--Daubechies--Meyer (WDM) Transform}\label{sec:wdm}
 
-Before defining the transform, it is worth clarifying a point of
-terminology. A standard discrete wavelet transform (DWT) decomposes a
-signal using a dyadic tiling of the time-frequency plane: each
-successive scale doubles the frequency bandwidth and halves the time
-resolution. This is natural for self-similar or fractal-like signals,
-but it means that low-frequency channels have coarse time resolution
-and high-frequency channels have coarse frequency resolution. A
-\emph{wavelet packet} (or \emph{wavelet wavepacket}) transform
-generalizes this by allowing the user to choose any admissible tiling
-of the time-frequency plane. The WDM basis is a specific wavelet
-packet basis that uses a \emph{uniform} rectangular tiling: every
-cell has the same width $\Delta T$ in time and the same width $\Delta
-F$ in frequency, with $\Delta T\,\Delta F = 1/2$. This uniform tiling
-is what makes the WDM representation so well suited for
-gravitational-wave data analysis, because signals that sweep across
-many frequency bands (such as compact binary inspirals) occupy a
-simple, coherent track on the grid rather than being spread across
-cells of very different sizes. Throughout this paper, we use ``WDM
-transform'' and ``wavelet transform'' interchangeably, but the reader
-should keep in mind that the WDM basis belongs to the wavelet packet
-family rather than to the standard dyadic wavelet family.
+\subsection{Terminology}
+The name Wilson--Daubechies--Meyer combines several pieces of
+time-frequency analysis terminology. A standard discrete wavelet
+transform usually refers to a multiresolution, dyadic decomposition
+(``dyadic'' meaning organized by factors of two, so that each
+successive scale changes the time and frequency resolution by powers
+of two). Such transforms represent low-frequency structure with broad
+time support and fine frequency resolution, and high-frequency
+structure with narrower time support and coarser frequency
+resolution. A \emph{wavelet packet} (or \emph{wavelet-wavepacket})
+transform is more general: it allows a broader class of admissible
+tilings of the time-frequency plane. The object studied in this paper
+is the Wilson--Daubechies--Meyer (WDM) wavelet-packet transform; for
+brevity, we refer to it as the WDM transform throughout. Unlike a
+standard dyadic wavelet transform, the WDM transform used here has a
+uniform rectangular tiling, so that all pixels have the same time
+width $\Delta T$ and frequency width $\Delta F$, with
+$\Delta T\,\Delta F = 1/2$ under the one-sided frequency convention
+used below.
+
+The word ``Wilson'' refers to the Wilson-basis construction, in which
+positive- and negative-frequency windowed Fourier atoms are combined
+with alternating phase factors to form a real, orthonormal basis. This
+is the origin of the paired terms centered at $+m\Delta F$ and
+$-m\Delta F$, and of the phase factor $C_{nm}$ in the basis definition
+below. The ``Daubechies--Meyer'' part refers to the smooth Meyer-type
+frequency window used to construct these atoms. In the present
+implementation this is the cosine-tapered $d=1$ Meyer window defined
+below.
 
 The WDM transform maps the original $N$ samples to a packed
 coefficient grid with $N_t$ time bins and $N_f+1$ stored frequency
@@ -284,7 +299,9 @@ coefficients.
     stored channel index runs from $m=0$ to $m=N_f$, so the array has
     shape $N_t \times (N_f+1)$ even though the transform size is fixed
     by $N=N_tN_f$. The right panel shows the alternating phase factor
-  $C_{nm}$, which equals $1$ when $n+m$ is even and $i$ when $n+m$ is odd.}
+  $C_{nm}$, which equals $1$ when $n+m$ is even and $i$ when $n+m$ is odd.
+  Unlike a standard dyadic wavelet transform, the WDM basis used here
+  has a uniform rectangular tiling of the time-frequency plane.}
   \label{fig:wdm_packed_grid}
   \script{wdm_packed_grid.py}
 \end{figure*}
@@ -298,7 +315,7 @@ through the coefficients
   \tilde x[l]&=\sum_{n=0}^{N_t}\sum_{m=0}^{N_f}w_{nm}\tilde g_{nm}[l]\;,
 \end{align}
 where $n$ corresponds to the time index and $m$ corresponds to the
-frequency (or scale) index. The functions $g_{nm}[k]$ are the WDM
+frequency-channel index. The functions $g_{nm}[k]$ are the WDM
 basis elements, which are chosen to be (quasi-)orthonormal:
 \begin{align}\label{eq:orthonormality}
 \sum_{l=0}^{N-1}g^*_{nm}[l]g_{pq}[l]=\delta_{(nm),(pq)}\;,\nonumber\\
@@ -961,13 +978,13 @@ However, once $N$ exceeds $\sim 2^{20}$, the GPU-accelerated versions
 achieve markedly lower runtimes while both backends maintain
 round-trip reconstruction errors at floating-point roundoff.
 This combination of flexibility, accuracy, and performance makes
-\package\ a useful tool for time-frequency-WDM analysis of
+\package\ a useful tool for WDM time-frequency analysis of
 long-duration gravitational-wave signals.
 
 \section{Conclusions}\label{sec:conclusions}
 
 We have presented a self-contained, pedagogical account of the
-Wilson--Daubechies--Meyer (WDM) wavelet packet transform, building on
+Wilson--Daubechies--Meyer (WDM) wavelet-packet transform, building on
 the theoretical foundations established in prior
 work~\cite{Necula_2012,Klimenko:2005xv,Klimenko:2015ypf,Cornish:2020odn},
 and its implementation in the open-source \package\ package.  The
@@ -992,9 +1009,9 @@ preferable for data with sharp spectral features. Second, the paper
 does not address the generation of gravitational-wave signals directly
 in the WDM domain — where much of the computational advantage of the
 WDM representation lies~\cite{Cornish:2020odn} — and we defer fast
-wavelet-domain waveform generation to future work. Third, the
+WDM-domain waveform generation to future work. Third, the
 treatment of data gaps and edge effects, while conceptually
-straightforward, requires careful handling of the boundary wavelets
+straightforward, requires careful handling of the boundary basis elements
 and is not yet implemented in the package. Fourth, the LISA galactic-binary
 inference example of Section~\ref{sec:lisa_gb_example} uses a
 time-averaged effective PSD in both the frequency-domain and
@@ -1007,7 +1024,7 @@ realistic LISA non-stationary backgrounds is an important direction for
 future work.
 
 Looking ahead, the most immediate extensions are the incorporation of
-fast wavelet-domain waveform generation for compact binary signals,
+fast WDM-domain waveform generation for compact binary signals,
 the implementation of evolutionary power spectral density estimation
 directly on the WDM grid, and integration of the package into
 existing LISA data analysis frameworks.  The combination of a
