@@ -643,16 +643,19 @@ Cornish~\cite{Cornish:2020odn}.
 \section{\package\ Package}
 \label{sec:code_package}
 
-The \package\ package provides practical implementations of the
-Wilson--Daubechies--Meyer (WDM) transform for gravitational-wave data
-analysis. The current codebase provides a reference NumPy backend and
-a vectorised JAX backend; both implement the same packed $(N_t, N_f +
-1)$ coefficient layout and forward/inverse conventions described above.
+The \package\ package provides NumPy and JAX backends for the
+Wilson--Daubechies--Meyer (WDM) transform, both implementing the
+packed $(N_t, N_f+1)$ coefficient layout and forward/inverse
+conventions described above.  The primary interface exposes the full
+forward and inverse transforms; in addition, band-limited routines
+allow the transform to be evaluated over a specified subset of
+frequency channels, reducing compute cost when only a portion of the
+time-frequency plane is needed.
 
 From the implementation point of view, the dominant operations in the
 forward transform are one length-$N$ FFT of the input data together
-with one length-$N_t$ sub-band transform for each stored channel.
-This gives a cost of
+with one length-$N_t$ sub-band transform for each stored channel. This
+gives a cost of
 \begin{align}
   T_{\rm forward} = \mathcal{O}(N \log N) + \mathcal{O}(N \log N_t),
 \end{align}
@@ -660,44 +663,54 @@ which is asymptotically $\mathcal{O}(N \log N)$ because $N=N_tN_f$
 and $N_t \leq N$. The inverse transform has the same scaling up to
 constant factors: it reconstructs the full spectrum from the packed
 channels and then applies one inverse FFT back to the time domain. In
-both directions, the stored coefficient grid itself contains
-$\mathcal{O}(N)$ real numbers, and the temporary working arrays used
-by the implementation are also linear in $N$, so the overall memory
-footprint is $\mathcal{O}(N)$.
+both directions, the stored coefficient grid contains $\mathcal{O}(N)$
+real numbers, and the temporary working arrays used by the
+implementation are also linear in $N$, so the overall memory footprint
+is $\mathcal{O}(N)$.
 
-In practice, the dominant implementation difference is not the
-asymptotic scaling but how the channel-wise work is executed. The
-NumPy backend carries out the sub-band operations sequentially on the
-CPU, whereas the JAX backend evaluates the same algebra in vectorised
-form that benefits from accelerator execution. All timings below are
-drawn from the benchmark suite included in the package documentation;
-each data point uses 64-bit floating-point arithmetic and is preceded
-by one warmup evaluation before the measured runs. Benchmarks were
+We validate the implementation using round-trip reconstruction tests.
+For an input time series $x$, we compute its packed WDM coefficients,
+apply the inverse transform, and compare the reconstructed series
+$\hat{x}$ with the original. Across the benchmarked problem sizes and
+backends, the relative reconstruction error
+\begin{align}
+  \epsilon_{\rm rt} = \frac{\|\hat{x}-x\|_2}{\|x\|_2}
+\end{align}
+remains at the level of double-precision floating-point roundoff,
+$\epsilon_{\rm rt} \lesssim 10^{-16}$, providing a direct numerical
+check that the packed layout, including the DC and Nyquist edge
+channels, is implemented consistently across both backends.
+
+All timings are drawn from the benchmark suite
+included in the package documentation. Each data point reports the
+median wall-clock time over 7 repeated runs in 64-bit floating-point
+arithmetic; JAX JIT compilation is excluded via a single warmup
+evaluation, and GPU timings assume arrays already resident on the
+device (host--device transfer is not included). Benchmarks were
 performed on Google Colab using a CPU node (2$\times$ Intel Xeon
 vCPU, 2.0--2.2\,GHz, 12.7\,GB RAM) and a GPU node (NVIDIA T4,
 16\,GB VRAM).
 
-Figure~\ref{fig:runtime_forward} shows the forward-kernel runtime
-as a function of input size $N$ for the NumPy (CPU), JAX (CPU), and
-JAX (GPU) backends, together with the batched-execution speedup
-$t_\mathrm{serial}/t_\mathrm{batch}$.  Here, $t_\mathrm{serial}$
-is the wall-clock time for three independent single-channel calls
-and $t_\mathrm{batch}$ is the time for a single call that processes
-all three channels simultaneously.
+Figure~\ref{fig:runtime_forward} shows the forward-kernel runtime as a
+function of input size $N$ for the NumPy (CPU), JAX (CPU), and JAX
+(GPU) backends, together with the batched-execution speedup
+$t_\mathrm{serial}/t_\mathrm{batch}$. Here, $t_\mathrm{serial}$ is
+the wall-clock time for three independent single-channel calls and
+$t_\mathrm{batch}$ is the time for a single call that processes all
+three channels simultaneously.
 
 \begin{figure}[tbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/runtimes.pdf}
-  \caption{\textbf{Forward WDM runtime versus input length.} \emph{Top}:
-    median wall-clock runtime over repeated runs after one warmup call;
-    shaded bands span the 16th--84th percentile interval.  The black
-    dashed line shows the $N\log_2 N$ reference scaling.  \emph{Bottom}:
-    batched-execution speedup $t_\mathrm{serial}/t_\mathrm{batch}$, where
-    the serial baseline applies the kernel independently to each of three
-    channels and the batched call processes all three simultaneously.  The
-    JAX GPU runtime is launch-overhead-limited below $N \approx 10^5$ and
-    achieves speedups of up to ${\sim}\,4\times$ over serial execution at
-    small input sizes.}
+  \caption{\textbf{Forward WDM runtime versus input length.}
+    \emph{Top}: median wall-clock runtime over 7 runs after one warmup
+    call; shaded bands span the 16th--84th percentile interval.  The
+    black dashed line shows the $N\log_2 N$ reference scaling.
+    \emph{Bottom}: batched-execution speedup
+    $t_\mathrm{serial}/t_\mathrm{batch}$, where the serial baseline
+    applies the kernel independently to each of three channels and the
+    batched call processes all three simultaneously.  Reported timings
+    exclude JAX JIT compilation and host--device data transfer.}
   \label{fig:runtime_forward}
   \script{benchmark_runtime_snapshot.py}
 \end{figure}
@@ -717,15 +730,21 @@ The speedup panel shows that batched execution yields no measurable
 benefit for NumPy ($t_\mathrm{serial}/t_\mathrm{batch} \approx 1$
 throughout), as NumPy does not exploit the extra batch dimension for
 additional parallelism.  JAX (CPU) recovers $1.5$--$3\times$ via
-JIT-compiled vectorization over the batch axis.  JAX (GPU) achieves
+JIT-compiled vectorisation over the batch axis.  JAX (GPU) achieves
 up to ${\sim}\,4\times$ at small $N$, where all three channels fit
 simultaneously into the device pipeline; the speedup decreases to
 ${\approx}\,1.5\times$ at $N = 10^6$ as individual transforms
-approach device saturation.  All backends achieve round-trip
-reconstruction errors at floating-point precision
-(${\lesssim}\,10^{-10}$); the runtime differences therefore reflect
-implementation efficiency rather than any loss of numerical
-fidelity.
+approach device saturation.  The $\epsilon_{\rm rt} \lesssim 10^{-16}$
+round-trip errors established above hold for all backends and sizes;
+the runtime differences therefore reflect implementation efficiency
+rather than any loss of numerical fidelity.
+
+These benchmarks characterise the present NumPy and JAX implementations
+under the conventions used in this paper, rather than providing an
+exhaustive comparison with existing pipeline-specific WDM codes.  The
+main conclusion is that the JAX backend can substantially reduce the
+cost of large WDM transforms while preserving the same floating-point
+reconstruction accuracy as the NumPy implementation.
 
 \subsection{Resolved galactic-binary inference in a galactic background}
 \label{sec:lisa_gb_example}
@@ -1003,6 +1022,9 @@ The software developed for this research is available on GitHub at
 \url{https://github.com/pywavelet/wdm_transform}. Documentation and
 worked examples are available in the repository documentation at
 \url{https://github.com/pywavelet/wdm_transform/tree/main/docs}.
+The online documentation includes minimal examples demonstrating the
+construction of a WDM tiling, application of the forward transform, and
+round-trip reconstruction with the inverse transform.
 
 \begin{acknowledgments}
   GM acknowledges support from the Imperial College London
