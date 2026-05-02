@@ -6,7 +6,8 @@
     primaryClass = "gr-qc",
     doi = "10.1103/PhysRevD.102.124038",
     month = "8",
-    year = "2020"
+    year = "2020",
+    abstract = {Data from gravitational wave detectors are recorded as time series that include contributions from myriad noise sources in addition to any gravitational wave signals. When regularly sampled data are available, such as for ground based and future space based interferometers, analyses are typically performed in the frequency domain, where stationary (time invariant) noise processes can be modeled very efficiently. In reality, detector noise is not stationary due to a combination of short duration noise transients and longer duration drifts in the power spectrum. This nonstationarity produces correlations across samples at different frequencies, obviating the main advantage of a frequency domain analysis. Here an alternative time-frequency approach to gravitational wave data analysis is proposed that uses discrete, orthogonal wavelet wave packets. The time domain data is mapped onto a uniform grid of time-frequency pixels. For locally stationary noise—that is, noise with an adiabatically varying spectrum—the time-frequency pixels are uncorrelated, which greatly simplifies the calculation of quantities such as the likelihood. Moreover, the gravitational wave signals from binary systems can be compactly represented as a collection of lines in time-frequency space, resulting in a computational cost for computing waveforms and likelihoods that scales as the square root of the number of time samples, as opposed to the linear scaling for time or frequency based analyses. Key to this approach is having fast methods for computing binary signals directly in the wavelet domain. Multiple fast transform methods are developed in detail.}
 }
 
 
@@ -225,3 +226,105 @@ abstract = {The time-frequency transforms are important tools for identification
     url = {https://pypi.org/project/jaxgb/},
     license = {BSD-3-Clause}
 }
+
+
+@ARTICLE{pearson_cornish_wdm_gaps,
+       author = {{Pearson}, Noah and {Cornish}, Neil J.},
+        title = "{Handling data gaps for the next generation of gravitational-wave observatories}",
+      journal = {\prd},
+     keywords = {General relativity, alternative theories of gravity, General Relativity and Quantum Cosmology},
+         year = 2026,
+        month = mar,
+       volume = {113},
+       number = {6},
+          eid = {064033},
+        pages = {064033},
+          doi = {10.1103/htg6-w4yy},
+archivePrefix = {arXiv},
+       eprint = {2509.05479},
+ primaryClass = {gr-qc},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2026PhRvD.113f4033P},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System},
+      abstract = {In the coming decades, as the low-frequency sensitivity of detectors improves, the time that gravitational-wave signals remain in the sensitive band will increase, leading to new challenges in analyzing data, namely nonstationary noise and data gaps. Time-frequency (wavelet) methods can efficiently handle nonstationary noise, but data gaps still lead to spectral leakage due to the finite length of the wavelet filters. It was previously shown that Bayesian data augmentation—"gap filling"—could mitigate spectral leakage in frequency domain analyses, but the computational cost associated with the matrix operations needed in that approach is prohibitive. Here we present a new, computationally efficient approach to Bayesian data augmentation in the time-frequency domain that avoids repeated, costly matrix operations. We show that our approach efficiently solves the problem of data gaps in simulated Laser Interferometer Space Antenna (LISA) data and can be smoothly integrated into the LISA Global Fit. The same approach can also be used for future third-generation ground-based interferometers.}
+}
+
+
+@ARTICLE{cornish_nonstationary_wdm,
+       author = {{Cornish}, Neil J.},
+        title = "{Non-stationary noise in gravitational wave analyses: The wavelet domain noise covariance matrix}",
+      journal = {arXiv e-prints},
+     keywords = {General Relativity and Quantum Cosmology},
+         year = 2025,
+        month = nov,
+          eid = {arXiv:2511.10632},
+        pages = {arXiv:2511.10632},
+          doi = {10.48550/arXiv.2511.10632},
+archivePrefix = {arXiv},
+       eprint = {2511.10632},
+ primaryClass = {gr-qc},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2025arXiv251110632C},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System},
+      abstract = {Gravitational wave detectors produce time series of the gravitational wave strain co-added with instrument noise. For evenly sampled data, such as from laser interferometers, it has been traditional to Fourier transform the data and perform analyses in the frequency domain. The motivation being that the Fourier domain noise covariance matrix will be diagonal if the noise properties are constant in time, which greatly simplifies and accelerates the analysis. However, if the noise is non-stationary this advantage is lost. It has been proposed that the time-frequency or wavelet domain is better suited for studying non-stationary noise, at least when the time variation is suitably slow, since then the wavelet domain noise covariance matrix is, to a good approximation, diagonal. Here we investigate the conditions under which the diagonal approximation is appropriate for the case of the Wilson-Daubechies-Meyer (WDM) wavelet packet basis, which is seeing increased use in gravitational wave data analysis. We show that so long as the noise varies slowly across a wavelet pixel, in both time {\em and} frequency, the WDM noise correlation matrix is well approximated as diagonal. The off-diagonal terms are proportional to the time and frequency derivatives of the dynamic spectral model. The same general picture should apply to other discrete wavelet transforms with wavelet filters that are suitably compact in time and frequency. Strategies for handling data with rapidly varying noise that violate these assumptions are discussed.}
+}
+
+
+
+@software{2023ascl.soft07037D,
+       author = {{Digman}, Matthew C. and {Cornish}, Neil J.},
+        title = "{WDMWaveletTransforms: Fast forward and inverse WDM wavelet transforms}",
+ howpublished = {Astrophysics Source Code Library, record ascl:2307.037},
+         year = 2023,
+        month = jul,
+          eid = {ascl:2307.037},
+archivePrefix = {ascl},
+       eprint = {2307.037},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2023ascl.soft07037D},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System},
+      abstract = {WDMWaveletTransforms implements the fast forward and inverse WDM wavelet transforms in Python from both the time and frequency domains. The frequency domain transforms are inherently faster and more accurate. The wavelet domain to frequency domain and frequency domain to wavelet domain transforms are nearly exact numerical inverses of each other for a variety of inputs tested, including Gaussian random noise. WDMWaveletTransforms has both command line and Python interfaces.}
+}
+
+
+
+
+@ARTICLE{digman_cornish_bbh_wdm,
+       author = {{Digman}, Matthew C. and {Cornish}, Neil J.},
+        title = "{Parameter estimation for stellar-origin black hole mergers in LISA}",
+      journal = {\prd},
+     keywords = {General Relativity and Quantum Cosmology, Astrophysics - High Energy Astrophysical Phenomena, Astrophysics - Instrumentation and Methods for Astrophysics},
+         year = 2023,
+        month = jul,
+       volume = {108},
+       number = {2},
+          eid = {023022},
+        pages = {023022},
+          doi = {10.1103/PhysRevD.108.023022},
+archivePrefix = {arXiv},
+       eprint = {2212.04600},
+ primaryClass = {gr-qc},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2023PhRvD.108b3022D},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System},
+      abstract = {The population of stellar-origin black hole binaries (SOBHBs) detected by existing ground-based gravitational-wave detectors is an exciting target for the future space-based Laser Interferometer Space Antenna (LISA). LISA is sensitive to signals at significantly lower frequencies than ground-based detectors. SOBHB signals will thus be detected much earlier in their evolution, years to decades before they merge. The mergers will then occur in the frequency band covered by ground-based detectors. Observing SOBHBs years before merger can help distinguish between progenitor models for these systems. We present a new Bayesian parameter estimation algorithm for LISA observations of SOBHBs that uses a time-frequency (wavelet) -based likelihood function. Our technique accelerates the analysis by several orders of magnitude compared to the standard frequency domain approach and allows for an efficient treatment of nonstationary noise.}
+}
+
+
+
+@ARTICLE{digman_cornish_tv_galactic_wdm,
+       author = {{Digman}, Matthew C. and {Cornish}, Neil J.},
+        title = "{LISA Gravitational Wave Sources in a Time-varying Galactic Stochastic Background}",
+      journal = {\apj},
+     keywords = {Gravitational waves, Gravitational wave astronomy, Compact binary stars, Supermassive black holes, 678, 675, 283, 1663, Astrophysics - Instrumentation and Methods for Astrophysics, General Relativity and Quantum Cosmology},
+         year = 2022,
+        month = nov,
+       volume = {940},
+       number = {1},
+          eid = {10},
+        pages = {10},
+          doi = {10.3847/1538-4357/ac9139},
+archivePrefix = {arXiv},
+       eprint = {2206.14813},
+ primaryClass = {astro-ph.IM},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2022ApJ...940...10D},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System},
+      abstract = {A unique challenge for data analysis with the Laser Interferometer Space Antenna (LISA) is that the noise backgrounds from instrumental noise and astrophysical sources will change significantly over both the year and the entire mission. Variations in the noise levels will be on timescales comparable to, or shorter than, the time most signals spend in the detector's sensitive band. The variation in the amplitude of the galactic stochastic GW background from galactic binaries as the antenna pattern rotates relative to the galactic center is a particularly significant component of the noise variation. LISA's sensitivity to different source classes will therefore vary as a function of sky location and time. The variation will impact both overall signal-to-noise and the efficiency of alerts to EM observers to search for multimessenger counterparts.}
+}
+
