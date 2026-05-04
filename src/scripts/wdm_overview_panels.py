@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+import paths
 
 COL = {
     "text": "#222222",
@@ -56,65 +57,99 @@ def phi_unit(freqs: np.ndarray, *, center: float = 0.0, a: float = 0.20) -> np.n
     )
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 1 — x̃[ℓ]
+# Frequency axis with tick marks, ellipses, and a single dashed rectangle
+# marking the N_t bins of channel m.
+# ─────────────────────────────────────────────────────────────────────────────
+
 def save_xtilde_panel(
     outpath: Path,
     *,
-    figsize: tuple[float, float] = (5.4, 2.2),
+    figsize: tuple[float, float] = (4.0, 2.6),
     transparent: bool = True,
 ) -> None:
     fig, ax = plt.subplots(figsize=figsize)
-    # Increased top margin to prevent label overlap seen in image_54b741.png
     fig.subplots_adjust(left=0.08, right=0.95, top=0.82, bottom=0.22)
     clean_axis(ax)
 
-    # Indices centered around 0
-    # -3: -N*df/2, -2 & -1: inner bins, 0: center, 1: next bin, 3: (N/2-1)*df
     indices = [-3, -2, -1, 0, 1, 3]
     x0, x1 = -3.0, 3.0
-    
+
     ax.set_xlim(x0 - 0.5, x1 + 0.5)
-    ax.set_ylim(-0.8, 1.5)
+    ax.set_ylim(-0.95, 1.5)
 
     # Main horizontal axis
     ax.plot([x0, x1], [0, 0], color=COL["line"], lw=2.2, solid_capstyle="butt")
 
     for k in indices:
-        # Tall stems for boundaries and zero frequency
-        h = 0.35 if k in (x0, 0, x1) else 0.35
-        ax.plot([k, k], [0, h], color=COL["line"], lw=2.2, solid_capstyle="butt")
+        ax.plot([k, k], [0, 0.35], color=COL["line"], lw=2.2, solid_capstyle="butt")
 
-    # Balanced ellipses for data continuity
-    ax.text(-1.5, 0.12, r"$\dots$", ha="center", va="bottom", fontsize=18, color=COL["line"])
-    ax.text(2.0, 0.12, r"$\dots$", ha="center", va="bottom", fontsize=18, color=COL["line"])
+    # Ellipses for data continuity
+    ax.text(-1.5, 0.12, r"$\dots$", ha="center", va="bottom",
+            fontsize=18, color=COL["line"])
+    ax.text(2.0, 0.12, r"$\dots$", ha="center", va="bottom",
+            fontsize=18, color=COL["line"])
 
-    # Frequency labels placed higher to avoid stem collision
+    # Frequency labels
     lbl_y = 0.45
-    ax.text(0, lbl_y, r"$0$", ha="center", va="bottom", fontsize=16, color=COL["text"])
-    ax.text(x0, lbl_y, r"$-N\Delta f/2$", ha="center", va="bottom", fontsize=14, color=COL["text"])
-    ax.text(x1, lbl_y, r"$\left(\frac{N}{2}-1\right)\Delta f$", ha="center", va="bottom", fontsize=14, color=COL["text"])
+    ax.text(0, lbl_y, r"$0$", ha="center", va="bottom",
+            fontsize=16, color=COL["text"])
+    ax.text(x0, lbl_y, r"$-N\Delta f/2$", ha="center", va="bottom",
+            fontsize=14, color=COL["text"])
+    ax.text(x1, lbl_y, r"$\left(\frac{N}{2}-1\right)\Delta f$",
+            ha="center", va="bottom", fontsize=14, color=COL["text"])
 
-    # Delta f indicator centered under the [0, 1] interval
-    ax.annotate(
-        "",
-        xy=(0.08, -0.28),
-        xytext=(0.92, -0.28),
-        arrowprops=dict(arrowstyle="<->", lw=1.2, color=COL["line"]),
-    )
-    ax.text(0.5, -0.38, r"$\Delta f$", ha="center", va="top", fontsize=16, color=COL["text"])
-    
-    # Top-left variable label (Positioned to avoid overlap with -N*df/2)
-    ax.text(0.0, 1.05, r"$\tilde{x}[\ell]$", ha="left", va="top", 
+    # ── Channel m: two vertical dashed lines + bracket above ──
+    ch_left  = 0.5    # left edge of channel m
+    ch_right = 2.5    # right edge (width = N_t bins)
+    ch_centre = (ch_left + ch_right) / 2
+    bracket_y = 0.62  # height of the horizontal bracket bar
+
+    # Vertical dashed lines
+    ax.plot([ch_left,  ch_left],  [0, bracket_y], color=COL["line"],
+            lw=1.0, ls="--")
+    ax.plot([ch_right, ch_right], [0, bracket_y], color=COL["line"],
+            lw=1.0, ls="--")
+
+    # Horizontal bracket bar connecting the two lines
+    ax.plot([ch_left, ch_right], [bracket_y, bracket_y],
+            color=COL["line"], lw=1.0)
+
+    # Short serifs at each end of the bracket
+    serif_h = 0.06
+    ax.plot([ch_left,  ch_left],  [bracket_y - serif_h, bracket_y],
+            color=COL["line"], lw=1.0)
+    ax.plot([ch_right, ch_right], [bracket_y - serif_h, bracket_y],
+            color=COL["line"], lw=1.0)
+
+    # N_t label above the bracket
+    ax.text(ch_centre, bracket_y + 0.06, r"$N_t$", ha="center", va="bottom",
+            fontsize=14, color=COL["text"])
+
+    # mN_t/2 tick label below axis at channel centre
+    ax.plot([ch_centre, ch_centre], [0, -0.12], color=COL["line"], lw=1.0)
+    ax.text(ch_centre, -0.18, r"$mN_t/2$", ha="center", va="top",
+            fontsize=13, color=COL["text"])
+
+    # Top-left variable label
+    ax.text(0.0, 1.05, r"$\tilde{x}[\ell]$", ha="left", va="top",
             transform=ax.transAxes, fontsize=24, color=COL["text"])
 
     save(fig, outpath, transparent=transparent)
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 2 — φ̃[ℓ]
+# Existing phi panel, unchanged.
+# ─────────────────────────────────────────────────────────────────────────────
 
 def save_phi_panel(
     outpath: Path,
     *,
     n: int = 1600,
     a: float = 0.20,
-    figsize: tuple[float, float] = (6.2, 2.7),
+    figsize: tuple[float, float] = (2.8, 2.6),
     transparent: bool = True,
 ) -> None:
     b = 1.0 - 2.0 * a
@@ -136,19 +171,24 @@ def save_phi_panel(
         xytext=(f.min(), 0),
         arrowprops=dict(arrowstyle="->", lw=1.2, color=COL["line"]),
     )
-    ax.text(f.max() + 0.16, 0, r"$f$", ha="left", va="center", fontsize=15, color=COL["text"])
+    ax.text(f.max() + 0.16, 0, r"$\ell$", ha="left", va="center",
+            fontsize=15, color=COL["text"])
 
     ax.plot(f, windows[0], color=COL["gray"], lw=2.0, ls="--", alpha=0.75)
     ax.plot(f, windows[1], color=COL["line"], lw=2.4, alpha=1.0)
     ax.plot(f, windows[2], color=COL["gray"], lw=2.0, ls="--", alpha=0.55)
 
-    labels = [r"$f_{m-1}$", r"$f_m$", r"$f_{m+1}$"]
-    phi_labels = [r"$\tilde{\varphi}_{m-1}(f)$", r"$\tilde{\varphi}_{m}(f)$", r"$\tilde{\varphi}_{m+1}(f)$"]
+    labels = [r"$(m-1)N_t/2$", r"$mN_t/2$", r"$(m+1)N_t/2$"]
+    phi_labels = [
+        r"$\tilde{\varphi}_{m-1}[\ell]$",
+        r"$\tilde{\varphi}_{m}[\ell]$",
+        r"$\tilde{\varphi}_{m+1}[\ell]$",
+    ]
     colors = [COL["gray"], COL["text"], COL["gray"]]
     for c, lab, plab, col in zip(centers, labels, phi_labels, colors):
         ax.plot([c, c], [0, 1.02], color=COL["grid"], lw=1.0, ls=":")
-        ax.text(c, -0.11, lab, ha="center", va="top", fontsize=13, color=col)
-        ax.text(c, 1.12, plab, ha="center", va="bottom", fontsize=14, color=col)
+        ax.text(c, -0.11, lab, ha="center", va="top", fontsize=10, color=col)
+        ax.text(c, 1.12, plab, ha="center", va="bottom", fontsize=11, color=col)
 
     ax.annotate(
         "",
@@ -156,82 +196,161 @@ def save_phi_panel(
         xytext=(centers[2], -0.35),
         arrowprops=dict(arrowstyle="<->", lw=1.0, linestyle="-", color=COL["accent"]),
     )
-    ax.text(centers[1], -0.42, r"shift $\tilde{\varphi}(f)$ along $N_f$ channels", ha="center", va="top", fontsize=11, color=COL["accent"])
+    ax.text(centers[1], -0.42,
+            r"shift $\tilde{\varphi}(f)$ along $N_f$ channels",
+            ha="center", va="top", fontsize=11, color=COL["accent"])
 
     save(fig, outpath, transparent=transparent)
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 3 — x_m[n] = IFFT{ x̃[ℓ] · φ̃_m[ℓ] }
+# Horizontal time axis, single Gaussian-enveloped cosine waveform,
+# dashed envelope curves. Same proportions and line style as Stage 1.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def save_atom_panel(
+    outpath: Path,
+    *,
+    Nt: int = 48,
+    m_channel: int = 5,
+    figsize: tuple[float, float] = (4.0, 2.6),
+    transparent: bool = True,
+) -> None:
+    fig, ax = plt.subplots(figsize=figsize)
+    fig.subplots_adjust(left=0.08, right=0.95, top=0.82, bottom=0.22)
+    clean_axis(ax)
+
+    # Continuous time array for smooth curve
+    t = np.linspace(0, 1, 800)
+
+    # Gaussian envelope
+    sigma = 0.18
+    envelope = np.exp(-0.5 * ((t - 0.5) / sigma) ** 2)
+
+    # Carrier oscillation
+    carrier = np.cos(2 * np.pi * m_channel * t)
+
+    # Waveform
+    waveform = envelope * carrier
+
+    # Axis limits
+    ax.set_xlim(-0.08, 1.08)
+    ax.set_ylim(-0.55, 1.15)
+
+    # Horizontal axis line
+    ax.plot([0, 1], [0, 0], color=COL["line"], lw=1.6, solid_capstyle="butt")
+
+    # Endpoint ticks
+    tick_h = 0.06
+    ax.plot([0, 0], [-tick_h, tick_h], color=COL["line"], lw=1.6)
+    ax.plot([1, 1], [-tick_h, tick_h], color=COL["line"], lw=1.6)
+
+    # Endpoint labels
+    ax.text(0, -0.14, r"$0$", ha="center", va="top",
+            fontsize=14, color=COL["text"])
+    ax.text(1, -0.14, r"$N_t - 1$", ha="center", va="top",
+            fontsize=14, color=COL["text"])
+
+    # n-axis arrow
+    ax.annotate(
+        "",
+        xy=(1.06, 0),
+        xytext=(-0.06, 0),
+        arrowprops=dict(arrowstyle="->", lw=1.2, color=COL["line"]),
+    )
+    ax.text(1.07, -0.02, r"$n$", ha="left", va="top",
+            fontsize=15, color=COL["text"])
+
+    # Dashed Gaussian envelope (above and below)
+    ax.plot(t, envelope, color=COL["gray"], lw=1.0, ls="--", alpha=0.55)
+    ax.plot(t, -envelope, color=COL["gray"], lw=1.0, ls="--", alpha=0.55)
+
+    # Waveform
+    ax.plot(t, waveform, color=COL["line"], lw=1.8)
+
+    # Top-left variable label
+    ax.text(0.0, 1.05,
+            r"$x_m[n] = \mathrm{IFFT}\{\tilde{x}[\ell]\cdot\tilde{\varphi}_m[\ell]\}$",
+            ha="left", va="top", transform=ax.transAxes,
+            fontsize=16, color=COL["text"])
+
+    save(fig, outpath, transparent=transparent)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 4 — C_{nm}
+# Existing Cnm panel, unchanged.
+# ─────────────────────────────────────────────────────────────────────────────
 
 def save_cnm_panel(
     outpath: Path,
     *,
     n_periods: int = 2,
-    figsize: tuple[float, float] = (2.45, 2.55),
+    figsize: tuple[float, float] = (2.8, 2.6),
     transparent: bool = True,
 ) -> None:
-
     size = 2 * n_periods
     fig, ax = plt.subplots(figsize=figsize)
-    
-    # 1. ADD TICKS & LABELS
-    # Using standard ticks keeps everything perfectly aligned
+
     ax.set_xticks(np.arange(size) + 0.5)
     ax.set_yticks(np.arange(size) + 0.5)
     ax.set_xticklabels(range(size), fontsize=10)
     ax.set_yticklabels(range(size), fontsize=10)
-    
-    # Label the axes with better spacing
+
     ax.set_xlabel(r"$n$", fontsize=12, labelpad=8)
     ax.set_ylabel(r"$m$", fontsize=12, labelpad=8)
-    
-    # Remove the tick marks themselves, keep labels
     ax.tick_params(length=0)
 
-    # 2. DRAW THE GRID
     for n in range(size):
         for m in range(size):
             even = (n + m) % 2 == 0
             face = "white" if even else COL["accent_light"]
-            ax.add_patch(Rectangle((n, m), 1, 1, facecolor=face, edgecolor=COL["grid"], lw=0.8))
-            ax.text(n + 0.5, m + 0.5, r"$1$" if even else r"$i$", 
+            ax.add_patch(Rectangle(
+                (n, m), 1, 1,
+                facecolor=face, edgecolor=COL["grid"], lw=0.8,
+            ))
+            ax.text(n + 0.5, m + 0.5, r"$1$" if even else r"$i$",
                     ha="center", va="center", fontsize=15, color=COL["text"])
 
-    # 3. OPEN-ENDED INDICATORS (Dots)
-    # Use a lighter color for dots so they don't draw too much focus
     dot_col = COL["grid"]
     dot_y = size + 0.2
     dot_x = size + 0.3
-    
-    for i in range(size):
-        ax.text(i + 0.5, dot_y, r"$\vdots$", ha="center", va="bottom", color=dot_col)
-        ax.text(dot_x, i + 0.5, r"$\dots$", ha="left", va="center", color=dot_col)
-    
-    # Diagonal dot to finish the look
-    ax.text(dot_x, dot_y, r"$\ddots$", ha="left", va="bottom", color=dot_col)
 
-    # 4. POLISH
+    for i in range(size):
+        ax.text(i + 0.5, dot_y, r"$\vdots$", ha="center", va="bottom",
+                color=dot_col)
+        ax.text(dot_x, i + 0.5, r"$\dots$", ha="left", va="center",
+                color=dot_col)
+
+    ax.text(dot_x, dot_y, r"$\ddots$", ha="left", va="bottom",
+            color=dot_col)
+
     ax.set_title(r"$C_{nm}$", fontsize=22, pad=20)
     ax.set_aspect("equal")
-    
-    # Spines make the "L" shape you wanted
+
     ax.spines[:].set_visible(False)
     ax.spines["left"].set_visible(True)
     ax.spines["bottom"].set_visible(True)
     ax.spines["left"].set_linewidth(0.8)
     ax.spines["bottom"].set_linewidth(0.8)
 
-    # Tight limits to keep the "dots" close to the grid
     ax.set_xlim(0, size + 0.8)
     ax.set_ylim(0, size + 0.8)
     save(fig, outpath, transparent=transparent)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 5 — W_{nm}
+# Existing Wnm panel with w_{nm} callout on the highlighted cell.
+# ─────────────────────────────────────────────────────────────────────────────
 
 def save_wnm_panel(
     outpath: Path,
     *,
     nt: int = 10,
     nf: int = 8,
-    figsize: tuple[float, float] = (5.7, 5.2),
+    figsize: tuple[float, float] = (6.8, 5.0),
     transparent: bool = True,
 ) -> None:
     fig, ax = plt.subplots(figsize=figsize)
@@ -241,68 +360,129 @@ def save_wnm_panel(
     ax.set_xlim(-1.15, nt + 2.55)
     ax.set_ylim(-1.55, nf + 2.15)
 
+    # Grid cells
     for n in range(nt):
         for m in range(nf + 1):
             face = COL["edge"] if m in (0, nf) else COL["light"]
             alpha = 0.52 if m in (0, nf) else 0.78
-            ax.add_patch(Rectangle((n, m), 1, 1, facecolor=face, edgecolor=COL["grid"], lw=0.55, alpha=alpha))
+            ax.add_patch(Rectangle(
+                (n, m), 1, 1,
+                facecolor=face, edgecolor=COL["grid"], lw=0.55, alpha=alpha,
+            ))
 
-    ax.add_patch(Rectangle((0, 0), nt, nf + 1, facecolor="none", edgecolor=COL["line"], lw=1.2))
+    # Outer border
+    ax.add_patch(Rectangle(
+        (0, 0), nt, nf + 1,
+        facecolor="none", edgecolor=COL["line"], lw=1.2,
+    ))
 
+    # Highlighted cell
     n0 = int(0.62 * nt)
     m0 = int(0.52 * nf)
-    ax.add_patch(Rectangle((n0, m0), 1, 1, facecolor=COL["accent"], edgecolor=COL["line"], lw=1.2, alpha=0.82, zorder=5))
+    ax.add_patch(Rectangle(
+        (n0, m0), 1, 1,
+        facecolor=COL["accent"], edgecolor=COL["line"],
+        lw=1.2, alpha=0.82, zorder=5,
+    ))
 
-    ax.annotate("", xy=(n0, m0 - 0.34), xytext=(n0 + 1, m0 - 0.34), arrowprops=dict(arrowstyle="<->", lw=1.0, color=COL["line"]), zorder=6)
-    ax.text(n0 + 0.5, m0 - 0.56, r"$\Delta T$", ha="center", va="top", fontsize=13, color=COL["text"])
+    # ΔT indicator
+    ax.annotate(
+        "", xy=(n0, m0 - 0.34), xytext=(n0 + 1, m0 - 0.34),
+        arrowprops=dict(arrowstyle="<->", lw=1.0, color=COL["line"]),
+        zorder=6,
+    )
+    ax.text(n0 + 0.5, m0 - 0.56, r"$\Delta T$", ha="center", va="top",
+            fontsize=13, color=COL["text"])
 
-    ax.annotate("", xy=(n0 - 0.34, m0), xytext=(n0 - 0.34, m0 + 1), arrowprops=dict(arrowstyle="<->", lw=1.0, color=COL["line"]), zorder=6)
-    ax.text(n0 - 0.57, m0 + 0.5, r"$\Delta F$", ha="right", va="center", fontsize=13, color=COL["text"])
+    # ΔF indicator
+    ax.annotate(
+        "", xy=(n0 - 0.34, m0), xytext=(n0 - 0.34, m0 + 1),
+        arrowprops=dict(arrowstyle="<->", lw=1.0, color=COL["line"]),
+        zorder=6,
+    )
+    ax.text(n0 - 0.57, m0 + 0.5, r"$\Delta F$", ha="right", va="center",
+            fontsize=13, color=COL["text"])
 
-    # ax.plot(n0 + 1.20, m0 + 0.55, marker="o", ms=2.8, color=COL["line"], zorder=7)
-    # ax.annotate(r"$W[n,m]$", xy=(n0 + 1.20, m0 + 0.55), xytext=(nt + 0.55, m0 + 0.82), ha="left", va="center", fontsize=16, arrowprops=dict(arrowstyle="-", lw=1.0, color=COL["line"]), color=COL["text"])
+    # ── w_{nm} callout ──
+    ax.plot(n0 + 1.20, m0 + 0.55, marker="o", ms=2.8,
+            color=COL["line"], zorder=7)
+    ax.annotate(
+        r"$w_{nm} = \mathrm{Re}\!\left[C^*_{nm}\,x_m[n]\right]$",
+        xy=(n0 + 1.20, m0 + 0.55),
+        xytext=(nt + 0.45, m0 + 0.82),
+        ha="left", va="center", fontsize=12,
+        arrowprops=dict(arrowstyle="-", lw=1.0, color=COL["line"]),
+        color=COL["text"],
+    )
 
-    ax.text(0.5, -0.10, r"$0$", ha="center", va="top", fontsize=13, color=COL["text"])
-    ax.text(nt - 0.5, -0.10, r"$N_t-1$", ha="center", va="top", fontsize=13, color=COL["text"])
-    ax.annotate("", xy=(nt - 0.35, -0.88), xytext=(1.1, -0.88), arrowprops=dict(arrowstyle="->", lw=1.0, linestyle="-", color=COL["gray"]))
-    ax.text(nt / 2, -1.08, r"time bins $n$ ($N_t$)", ha="center", va="top", fontsize=12, color=COL["text"])
+    # x-axis labels
+    ax.text(0.5, -0.10, r"$0$", ha="center", va="top",
+            fontsize=13, color=COL["text"])
+    ax.text(nt - 0.5, -0.10, r"$N_t-1$", ha="center", va="top",
+            fontsize=13, color=COL["text"])
+    ax.annotate(
+        "", xy=(nt - 0.35, -0.88), xytext=(1.1, -0.88),
+        arrowprops=dict(arrowstyle="->", lw=1.0, linestyle="-",
+                        color=COL["gray"]),
+    )
+    ax.text(nt / 2, -1.08, r"time bins $n$ ($N_t$)", ha="center", va="top",
+            fontsize=12, color=COL["text"])
 
-    ax.text(-0.25, 0.5, r"$0$", ha="right", va="center", fontsize=13, color=COL["text"])
-    ax.text(-0.25, nf + 0.5, r"$N_f$", ha="right", va="center", fontsize=13, color=COL["text"])
-    ax.annotate("", xy=(-0.72, nf + 0.25), xytext=(-0.72, 1.0), arrowprops=dict(arrowstyle="->", lw=1.0, linestyle="-", color=COL["gray"]))
-    ax.text(-0.92, (nf + 1) / 2, r"frequency bins $m$ ($N_f +1$)", ha="right", va="center", fontsize=13, color=COL["text"], rotation="vertical")
-    # ax.text(0.05, nf + 1.16, r"channel $m$", ha="left", va="bottom", fontsize=12, color=COL["text"])
+    # y-axis labels
+    ax.text(-0.25, 0.5, r"$0$", ha="right", va="center",
+            fontsize=13, color=COL["text"])
+    ax.text(-0.25, nf + 0.5, r"$N_f$", ha="right", va="center",
+            fontsize=13, color=COL["text"])
+    ax.annotate(
+        "", xy=(-0.72, nf + 0.25), xytext=(-0.72, 1.0),
+        arrowprops=dict(arrowstyle="->", lw=1.0, linestyle="-",
+                        color=COL["gray"]),
+    )
+    ax.text(-0.92, (nf + 1) / 2,
+            r"frequency bins $m$ ($N_f +1$)",
+            ha="right", va="center", fontsize=13, color=COL["text"],
+            rotation="vertical")
 
-    ax.text(nt + 0.22, 0.5, "DC", ha="left", va="center", fontsize=11, color=COL["gray"])
-    ax.text(nt + 0.22, nf + 0.5, "Nyquist", ha="left", va="center", fontsize=11, color=COL["gray"])
+    # Edge channel labels
+    ax.text(nt + 0.22, 0.5, "DC", ha="left", va="center",
+            fontsize=11, color=COL["gray"])
+    ax.text(nt + 0.22, nf + 0.5, "Nyquist", ha="left", va="center",
+            fontsize=11, color=COL["gray"])
     ax.plot([nt, nt + 0.16], [0.5, 0.5], color=COL["gray"], lw=0.9)
     ax.plot([nt, nt + 0.16], [nf + 0.5, nf + 0.5], color=COL["gray"], lw=0.9)
 
-    ax.text(nt / 2, nf + 1.62, r"Packed coefficients $W_{nm}$", ha="center", va="center", fontsize=23, color=COL["text"])
-    # ax.text(nt / 2, -1.42, r"$(N_t,\;N_f+1)$", ha="center", va="top", fontsize=14, color=COL["text"])
+    # Title
+    ax.text(nt / 2, nf + 1.62, r"Packed coefficients $W_{nm}$",
+            ha="center", va="center", fontsize=23, color=COL["text"])
 
     save(fig, outpath, transparent=transparent)
 
 
-
+# ─────────────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate modular WDM infographic panels as transparent PNGs.")
-    parser.add_argument("--outdir", type=Path, default=Path("wdm_panels_clean"), help="Output directory for generated panels.")
+    parser = argparse.ArgumentParser(
+        description="Generate WDM infographic panels."
+    )
     args = parser.parse_args()
 
     set_style()
-    transparent = False  # Set to True for manuscript, False for presentation (white background)
-    out = args.outdir
+    transparent = False
+    out = paths.figures / "wdm_overview"
     out.mkdir(parents=True, exist_ok=True)
 
-    save_xtilde_panel(out / "wdm_xtilde.png", transparent=transparent)
-    save_phi_panel(out / "wdm_phi_windows.png", transparent=transparent)
-    save_cnm_panel(out / "wdm_Cnm.png", transparent=transparent)
-    save_wnm_panel(out / "wdm_Wnm.png", transparent=transparent)
+    save_xtilde_panel(out / "wdm_xtilde.pdf", transparent=transparent)
+    save_phi_panel(out / "wdm_phi_windows.pdf", transparent=transparent)
+    save_atom_panel(out / "wdm_atom.pdf", transparent=transparent)
+    save_cnm_panel(out / "wdm_Cnm.pdf", transparent=transparent)
+    save_wnm_panel(out / "wdm_Wnm.pdf", transparent=transparent)
 
-
-    print(f"Saved WDM panels to: {out.resolve()}")
+    print(f"Saved to: {out.resolve()}")
+    print("  Stage 1: wdm_xtilde.pdf")
+    print("  Stage 2: wdm_phi_windows.pdf")
+    print("  Stage 3: wdm_atom.pdf")
+    print("  Stage 4: wdm_Cnm.pdf")
+    print("  Stage 5: wdm_Wnm.pdf")
 
 
 if __name__ == "__main__":
