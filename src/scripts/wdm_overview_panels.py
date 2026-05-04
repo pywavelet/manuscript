@@ -7,6 +7,14 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import paths
 
+from __future__ import annotations
+
+from pathlib import Path
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+
 COL = {
     "text": "#222222",
     "text_dim": "#555555",
@@ -66,11 +74,11 @@ def phi_unit(freqs: np.ndarray, *, center: float = 0.0, a: float = 0.20) -> np.n
 def save_xtilde_panel(
     outpath: Path,
     *,
-    figsize: tuple[float, float] = (4.0, 2.6),
+    figsize: tuple[float, float] = (4.0, 1.8),
     transparent: bool = True,
 ) -> None:
     fig, ax = plt.subplots(figsize=figsize)
-    fig.subplots_adjust(left=0.08, right=0.95, top=0.82, bottom=0.22)
+    fig.subplots_adjust(left=0.08, right=0.95, top=0.78, bottom=0.22)
     clean_axis(ax)
 
     indices = [-3, -2, -1, 0, 1, 3]
@@ -94,47 +102,44 @@ def save_xtilde_panel(
     # Frequency labels
     lbl_y = 0.45
     ax.text(0, lbl_y, r"$0$", ha="center", va="bottom",
-            fontsize=16, color=COL["text"])
+            fontsize=12, color=COL["text"])
     ax.text(x0, lbl_y, r"$-N\Delta f/2$", ha="center", va="bottom",
-            fontsize=14, color=COL["text"])
+            fontsize=11, color=COL["text"])
     ax.text(x1, lbl_y, r"$\left(\frac{N}{2}-1\right)\Delta f$",
-            ha="center", va="bottom", fontsize=14, color=COL["text"])
+            ha="center", va="bottom", fontsize=11, color=COL["text"])
 
     # ── Channel m: two vertical dashed lines + bracket above ──
-    ch_left  = 0.5    # left edge of channel m
-    ch_right = 2.5    # right edge (width = N_t bins)
+    ch_left  = 0.5
+    ch_right = 2.5
     ch_centre = (ch_left + ch_right) / 2
-    bracket_y = 0.62  # height of the horizontal bracket bar
+    bracket_y = 0.62
 
-    # Vertical dashed lines
     ax.plot([ch_left,  ch_left],  [0, bracket_y], color=COL["line"],
             lw=1.0, ls="--")
     ax.plot([ch_right, ch_right], [0, bracket_y], color=COL["line"],
             lw=1.0, ls="--")
-
-    # Horizontal bracket bar connecting the two lines
     ax.plot([ch_left, ch_right], [bracket_y, bracket_y],
             color=COL["line"], lw=1.0)
 
-    # Short serifs at each end of the bracket
     serif_h = 0.06
     ax.plot([ch_left,  ch_left],  [bracket_y - serif_h, bracket_y],
             color=COL["line"], lw=1.0)
     ax.plot([ch_right, ch_right], [bracket_y - serif_h, bracket_y],
             color=COL["line"], lw=1.0)
 
-    # N_t label above the bracket
     ax.text(ch_centre, bracket_y + 0.06, r"$N_t$", ha="center", va="bottom",
-            fontsize=14, color=COL["text"])
+            fontsize=12, color=COL["text"])
 
-    # mN_t/2 tick label below axis at channel centre
     ax.plot([ch_centre, ch_centre], [0, -0.12], color=COL["line"], lw=1.0)
     ax.text(ch_centre, -0.18, r"$mN_t/2$", ha="center", va="top",
-            fontsize=13, color=COL["text"])
+            fontsize=11, color=COL["text"])
 
-    # Top-left variable label
-    ax.text(0.0, 1.05, r"$\tilde{x}[\ell]$", ha="left", va="top",
-            transform=ax.transAxes, fontsize=24, color=COL["text"])
+    # Panel letter + variable label
+    ax.text(0.0, 1.05, r"$(a)$", ha="left", va="top",
+            transform=ax.transAxes, fontsize=12, color=COL["text"],
+            fontstyle="italic")
+    ax.text(0.12, 1.05, r"$\tilde{x}[\ell]$", ha="left", va="top",
+            transform=ax.transAxes, fontsize=18, color=COL["text"])
 
     save(fig, outpath, transparent=transparent)
 
@@ -149,7 +154,7 @@ def save_phi_panel(
     *,
     n: int = 1600,
     a: float = 0.20,
-    figsize: tuple[float, float] = (2.8, 2.6),
+    figsize: tuple[float, float] = (2.8, 1.8),
     transparent: bool = True,
 ) -> None:
     b = 1.0 - 2.0 * a
@@ -160,10 +165,10 @@ def save_phi_panel(
     windows = [phi_unit(f, center=c, a=a) for c in centers]
 
     fig, ax = plt.subplots(figsize=figsize)
-    fig.subplots_adjust(left=0.04, right=0.96, top=0.92, bottom=0.17)
+    fig.subplots_adjust(left=0.04, right=0.96, top=0.88, bottom=0.22)
     clean_axis(ax)
     ax.set_xlim(f.min() - 0.02, f.max() + 0.18)
-    ax.set_ylim(-0.42, 1.32)
+    ax.set_ylim(-0.42, 1.45)
 
     ax.annotate(
         "",
@@ -172,7 +177,7 @@ def save_phi_panel(
         arrowprops=dict(arrowstyle="->", lw=1.2, color=COL["line"]),
     )
     ax.text(f.max() + 0.16, 0, r"$\ell$", ha="left", va="center",
-            fontsize=15, color=COL["text"])
+            fontsize=12, color=COL["text"])
 
     ax.plot(f, windows[0], color=COL["gray"], lw=2.0, ls="--", alpha=0.75)
     ax.plot(f, windows[1], color=COL["line"], lw=2.4, alpha=1.0)
@@ -187,8 +192,8 @@ def save_phi_panel(
     colors = [COL["gray"], COL["text"], COL["gray"]]
     for c, lab, plab, col in zip(centers, labels, phi_labels, colors):
         ax.plot([c, c], [0, 1.02], color=COL["grid"], lw=1.0, ls=":")
-        ax.text(c, -0.11, lab, ha="center", va="top", fontsize=10, color=col)
-        ax.text(c, 1.12, plab, ha="center", va="bottom", fontsize=11, color=col)
+        ax.text(c, -0.11, lab, ha="center", va="top", fontsize=9, color=col)
+        ax.text(c, 1.10, plab, ha="center", va="bottom", fontsize=10, color=col)
 
     ax.annotate(
         "",
@@ -197,8 +202,15 @@ def save_phi_panel(
         arrowprops=dict(arrowstyle="<->", lw=1.0, linestyle="-", color=COL["accent"]),
     )
     ax.text(centers[1], -0.42,
-            r"shift $\tilde{\varphi}(f)$ along $N_f$ channels",
-            ha="center", va="top", fontsize=11, color=COL["accent"])
+            r"shift along $N_f$ channels",
+            ha="center", va="top", fontsize=9, color=COL["accent"])
+
+    # Panel letter + variable label
+    ax.text(0.0, 1.05, r"$(b)$", ha="left", va="top",
+            transform=ax.transAxes, fontsize=12, color=COL["text"],
+            fontstyle="italic")
+    ax.text(0.18, 1.05, r"$\tilde{\varphi}_m[\ell]$", ha="left", va="top",
+            transform=ax.transAxes, fontsize=14, color=COL["text"])
 
     save(fig, outpath, transparent=transparent)
 
@@ -214,45 +226,33 @@ def save_atom_panel(
     *,
     Nt: int = 48,
     m_channel: int = 5,
-    figsize: tuple[float, float] = (4.0, 2.6),
+    figsize: tuple[float, float] = (4.0, 1.8),
     transparent: bool = True,
 ) -> None:
     fig, ax = plt.subplots(figsize=figsize)
-    fig.subplots_adjust(left=0.08, right=0.95, top=0.82, bottom=0.22)
+    fig.subplots_adjust(left=0.08, right=0.95, top=0.78, bottom=0.22)
     clean_axis(ax)
 
-    # Continuous time array for smooth curve
     t = np.linspace(0, 1, 800)
-
-    # Gaussian envelope
     sigma = 0.18
     envelope = np.exp(-0.5 * ((t - 0.5) / sigma) ** 2)
-
-    # Carrier oscillation
     carrier = np.cos(2 * np.pi * m_channel * t)
-
-    # Waveform
     waveform = envelope * carrier
 
-    # Axis limits
     ax.set_xlim(-0.08, 1.08)
     ax.set_ylim(-0.55, 1.15)
 
-    # Horizontal axis line
     ax.plot([0, 1], [0, 0], color=COL["line"], lw=1.6, solid_capstyle="butt")
 
-    # Endpoint ticks
     tick_h = 0.06
     ax.plot([0, 0], [-tick_h, tick_h], color=COL["line"], lw=1.6)
     ax.plot([1, 1], [-tick_h, tick_h], color=COL["line"], lw=1.6)
 
-    # Endpoint labels
     ax.text(0, -0.14, r"$0$", ha="center", va="top",
-            fontsize=14, color=COL["text"])
+            fontsize=11, color=COL["text"])
     ax.text(1, -0.14, r"$N_t - 1$", ha="center", va="top",
-            fontsize=14, color=COL["text"])
+            fontsize=11, color=COL["text"])
 
-    # n-axis arrow
     ax.annotate(
         "",
         xy=(1.06, 0),
@@ -260,20 +260,18 @@ def save_atom_panel(
         arrowprops=dict(arrowstyle="->", lw=1.2, color=COL["line"]),
     )
     ax.text(1.07, -0.02, r"$n$", ha="left", va="top",
-            fontsize=15, color=COL["text"])
+            fontsize=12, color=COL["text"])
 
-    # Dashed Gaussian envelope (above and below)
-    ax.plot(t, envelope, color=COL["gray"], lw=1.0, ls="--", alpha=0.55)
+    ax.plot(t, envelope,  color=COL["gray"], lw=1.0, ls="--", alpha=0.55)
     ax.plot(t, -envelope, color=COL["gray"], lw=1.0, ls="--", alpha=0.55)
+    ax.plot(t, waveform,  color=COL["line"], lw=1.8)
 
-    # Waveform
-    ax.plot(t, waveform, color=COL["line"], lw=1.8)
-
-    # Top-left variable label
-    ax.text(0.0, 1.05,
-            r"$x_m[n] = \mathrm{IFFT}\{\tilde{x}[\ell]\cdot\tilde{\varphi}_m[\ell]\}$",
-            ha="left", va="top", transform=ax.transAxes,
-            fontsize=16, color=COL["text"])
+    # Panel letter + short variable label only
+    ax.text(0.0, 1.05, r"$(c)$", ha="left", va="top",
+            transform=ax.transAxes, fontsize=12, color=COL["text"],
+            fontstyle="italic")
+    ax.text(0.12, 1.05, r"$x_m[n]$", ha="left", va="top",
+            transform=ax.transAxes, fontsize=16, color=COL["text"])
 
     save(fig, outpath, transparent=transparent)
 
@@ -287,7 +285,7 @@ def save_cnm_panel(
     outpath: Path,
     *,
     n_periods: int = 2,
-    figsize: tuple[float, float] = (2.8, 2.6),
+    figsize: tuple[float, float] = (2.8, 1.8),
     transparent: bool = True,
 ) -> None:
     size = 2 * n_periods
@@ -326,7 +324,7 @@ def save_cnm_panel(
     ax.text(dot_x, dot_y, r"$\ddots$", ha="left", va="bottom",
             color=dot_col)
 
-    ax.set_title(r"$C_{nm}$", fontsize=22, pad=20)
+    ax.set_title(r"$(d)\ \ C_{nm}$", fontsize=14, pad=12)
     ax.set_aspect("equal")
 
     ax.spines[:].set_visible(False)
@@ -348,9 +346,9 @@ def save_cnm_panel(
 def save_wnm_panel(
     outpath: Path,
     *,
-    nt: int = 10,
-    nf: int = 8,
-    figsize: tuple[float, float] = (6.8, 5.0),
+    nt: int = 7,
+    nf: int = 5,
+    figsize: tuple[float, float] = (4.5, 3.2),
     transparent: bool = True,
 ) -> None:
     fig, ax = plt.subplots(figsize=figsize)
@@ -451,9 +449,9 @@ def save_wnm_panel(
     ax.plot([nt, nt + 0.16], [0.5, 0.5], color=COL["gray"], lw=0.9)
     ax.plot([nt, nt + 0.16], [nf + 0.5, nf + 0.5], color=COL["gray"], lw=0.9)
 
-    # Title
-    ax.text(nt / 2, nf + 1.62, r"Packed coefficients $W_{nm}$",
-            ha="center", va="center", fontsize=23, color=COL["text"])
+    # Title with panel letter
+    ax.text(nt / 2, nf + 1.62, r"$(e)\ \ $Packed coefficients $W_{nm}$",
+            ha="center", va="center", fontsize=14, color=COL["text"])
 
     save(fig, outpath, transparent=transparent)
 
@@ -468,7 +466,7 @@ def main() -> None:
 
     set_style()
     transparent = False
-    out = paths.figures / "wdm_overview"
+    out = paths.figures 
     out.mkdir(parents=True, exist_ok=True)
 
     save_xtilde_panel(out / "wdm_xtilde.pdf", transparent=transparent)
