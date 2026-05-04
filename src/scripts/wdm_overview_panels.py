@@ -25,10 +25,12 @@ def set_style() -> None:
         {
             "font.size": 12,
             "axes.labelsize": 12,
-            "mathtext.fontset": "dejavuserif",
-            "font.family": "DejaVu Sans",
+            "mathtext.fontset": "cm",
+            "font.family": "serif",
             "figure.dpi": 160,
             "savefig.dpi": 300,
+            "pdf.fonttype": 42,
+            "ps.fonttype": 42,
         }
     )
 
@@ -70,14 +72,14 @@ def save_xtilde_panel(
     transparent: bool = True,
 ) -> None:
     fig, ax = plt.subplots(figsize=figsize)
-    fig.subplots_adjust(left=0.05, right=0.95, top=0.72, bottom=0.18)
+    fig.subplots_adjust(left=0.05, right=0.95, top=0.74, bottom=0.22)
     clean_axis(ax)
 
     indices = [-3, -2, -1, 0, 1, 3]
     x0, x1 = -3.0, 3.0
 
     ax.set_xlim(x0 - 0.5, x1 + 0.5)
-    ax.set_ylim(-0.60, 1.30)
+    ax.set_ylim(-0.62, 1.32)
 
     # Main horizontal axis
     ax.plot([x0, x1], [0, 0], color=COL["line"], lw=2.2, solid_capstyle="butt")
@@ -93,7 +95,7 @@ def save_xtilde_panel(
 
     # Frequency labels — smaller to avoid crowding
     lbl_y = 0.34
-    ax.text(0,  lbl_y, r"$0$", ha="center", va="bottom",
+    ax.text(0,  lbl_y + 0.03, r"$0$", ha="center", va="bottom",
             fontsize=11, color=COL["text"])
     ax.text(x0, lbl_y, r"$-N\Delta f/2$", ha="center", va="bottom",
             fontsize=10, color=COL["text"])
@@ -102,8 +104,8 @@ def save_xtilde_panel(
 
     # ── Channel m bracket: centred at -1 so it sits clearly left of x=1 ──
     # and well away from the right endpoint label
-    ch_left   = -1.8
-    ch_right  =  0.2
+    ch_left   = -1.95
+    ch_right  = -0.15
     ch_centre = (ch_left + ch_right) / 2   # = -0.8
     bracket_y = 0.52
 
@@ -120,15 +122,15 @@ def save_xtilde_panel(
 
     # Centre tick + label below axis
     ax.plot([ch_centre, ch_centre], [0, -0.10], color=COL["line"], lw=1.0)
-    ax.text(ch_centre, -0.14, r"$mN_t/2$", ha="center", va="top",
+    ax.text(ch_centre, -0.16, r"$mN_t/2$", ha="center", va="top",
             fontsize=10, color=COL["text"])
 
     # Panel letter inside top-left of axes (axes coords), variable label beside it
     ax.text(0.01, 0.97, r"$(a)$", ha="left", va="top",
             transform=ax.transAxes, fontsize=11, color=COL["text"],
             fontstyle="italic")
-    ax.text(0.10, 0.99, r"$\tilde{x}[\ell]$", ha="left", va="top",
-            transform=ax.transAxes, fontsize=16, color=COL["text"])
+    ax.text(0.12, 0.99, r"$\tilde{x}[\ell]$", ha="left", va="top",
+            transform=ax.transAxes, fontsize=15, color=COL["text"])
 
     save(fig, outpath, transparent=transparent)
 
@@ -154,10 +156,10 @@ def save_phi_panel(
     windows = [phi_unit(f, center=c, a=a) for c in centers]
 
     fig, ax = plt.subplots(figsize=figsize)
-    fig.subplots_adjust(left=0.04, right=0.90, top=0.82, bottom=0.28)
+    fig.subplots_adjust(left=0.06, right=0.92, top=0.70, bottom=0.30)
     clean_axis(ax)
     ax.set_xlim(f.min() - 0.02, f.max() + 0.18)
-    ax.set_ylim(-0.55, 1.55)
+    ax.set_ylim(-0.55, 1.48)
 
     ax.annotate(
         "",
@@ -173,16 +175,10 @@ def save_phi_panel(
     ax.plot(f, windows[2], color=COL["gray"], lw=2.0, ls="--", alpha=0.55)
 
     labels = [r"$(m{-}1)N_t/2$", r"$mN_t/2$", r"$(m{+}1)N_t/2$"]
-    phi_labels = [
-        r"$\tilde{\varphi}_{m-1}[\ell]$",
-        r"$\tilde{\varphi}_{m}[\ell]$",
-        r"$\tilde{\varphi}_{m+1}[\ell]$",
-    ]
     colors = [COL["gray"], COL["text"], COL["gray"]]
-    for c, lab, plab, col in zip(centers, labels, phi_labels, colors):
+    for c, lab, col in zip(centers, labels, colors):
         ax.plot([c, c], [0, 1.02], color=COL["grid"], lw=1.0, ls=":")
         ax.text(c, -0.14, lab, ha="center", va="top", fontsize=8, color=col)
-        ax.text(c, 1.08, plab, ha="center", va="bottom", fontsize=9, color=col)
 
     ax.annotate(
         "",
@@ -190,16 +186,15 @@ def save_phi_panel(
         xytext=(centers[2], -0.44),
         arrowprops=dict(arrowstyle="<->", lw=1.0, linestyle="-", color=COL["accent"]),
     )
-    ax.text(centers[1], -0.52,
-            r"shift along $N_f$ channels",
+    ax.text(centers[1], -0.52, r"$N_f$-channel shift",
             ha="center", va="top", fontsize=8, color=COL["accent"])
 
     # Panel letter inside top-left corner, variable label beside
     ax.text(0.02, 0.97, r"$(b)$", ha="left", va="top",
             transform=ax.transAxes, fontsize=11, color=COL["text"],
             fontstyle="italic")
-    ax.text(0.18, 0.99, r"$\tilde{\varphi}_m[\ell]$", ha="left", va="top",
-            transform=ax.transAxes, fontsize=13, color=COL["text"])
+    ax.text(0.20, 0.99, r"$\tilde{\varphi}_m[\ell]$", ha="left", va="top",
+            transform=ax.transAxes, fontsize=12, color=COL["text"])
 
     save(fig, outpath, transparent=transparent)
 
@@ -229,7 +224,7 @@ def save_atom_panel(
     waveform = envelope * carrier
 
     ax.set_xlim(-0.08, 1.12)
-    ax.set_ylim(-0.60, 1.10)
+    ax.set_ylim(-0.62, 1.10)
 
     ax.plot([0, 1], [0, 0], color=COL["line"], lw=1.6, solid_capstyle="butt")
 
@@ -240,14 +235,14 @@ def save_atom_panel(
     ax.text(0,  -0.12, r"$0$",       ha="center", va="top", fontsize=11, color=COL["text"])
     ax.text(1,  -0.12, r"$N_t{-}1$", ha="center", va="top", fontsize=11, color=COL["text"])
 
-    # Single arrow + label at tip — no separate n text that can merge
     ax.annotate(
-        r"$n$",
+        "",
         xy=(1.08, 0),
-        xytext=(-0.06, 0),
-        fontsize=12, color=COL["text"], ha="left", va="center",
+        xytext=(0, 0),
         arrowprops=dict(arrowstyle="->", lw=1.2, color=COL["line"]),
     )
+    ax.text(-0.035, 0, r"$n$", fontsize=12, color=COL["text"],
+            ha="right", va="center")
 
     ax.plot(t,  envelope, color=COL["gray"], lw=1.0, ls="--", alpha=0.55)
     ax.plot(t, -envelope, color=COL["gray"], lw=1.0, ls="--", alpha=0.55)
@@ -320,9 +315,9 @@ def save_cnm_panel(
     ax.set_ylim(0, size + 0.8)
 
     # Panel letter and title via fig.text so they sit snugly above the grid
-    fig.text(0.03, 0.93, r"$(d)$", ha="left", va="top",
+    fig.text(0.04, 0.93, r"$(d)$", ha="left", va="top",
              fontsize=11, color=COL["text"], fontstyle="italic")
-    fig.text(0.18, 0.95, r"$C_{nm}$", ha="left", va="top",
+    fig.text(0.22, 0.95, r"$C_{n m}$", ha="left", va="top",
              fontsize=14, color=COL["text"])
 
     save(fig, outpath, transparent=transparent)
@@ -342,11 +337,11 @@ def save_wnm_panel(
     transparent: bool = True,
 ) -> None:
     fig, ax = plt.subplots(figsize=figsize)
-    fig.subplots_adjust(left=0.18, right=0.82, top=0.88, bottom=0.18)
+    fig.subplots_adjust(left=0.19, right=0.88, top=0.86, bottom=0.20)
     clean_axis(ax)
     ax.set_aspect("equal")
-    ax.set_xlim(-1.4, nt + 3.2)
-    ax.set_ylim(-1.55, nf + 2.0)
+    ax.set_xlim(-1.35, nt + 1.65)
+    ax.set_ylim(-1.50, nf + 1.45)
 
     # Grid cells
     for n in range(nt):
@@ -391,14 +386,13 @@ def save_wnm_panel(
     ax.text(n0 - 0.50, m0 + 0.5, r"$\Delta F$", ha="right", va="center",
             fontsize=11, color=COL["text"])
 
-    # w_{nm} callout — anchored to right edge of highlighted cell
     ax.plot(n0 + 0.5, m0 + 0.5, marker="o", ms=2.5,
             color=COL["line"], zorder=7)
     ax.annotate(
-        r"$w_{nm} = \mathrm{Re}[C^*_{nm}\,x_m[n]]$",
+        r"$w_{nm}$",
         xy=(n0 + 0.5, m0 + 0.5),
-        xytext=(nt + 0.3, m0 + 0.5),
-        ha="left", va="center", fontsize=10,
+        xytext=(nt + 0.45, m0 + 0.5),
+        ha="left", va="center", fontsize=11,
         arrowprops=dict(arrowstyle="-", lw=0.9, color=COL["line"]),
         color=COL["text"],
     )
@@ -426,16 +420,16 @@ def save_wnm_panel(
              color=COL["text"], rotation="vertical")
 
     # Edge channel labels
-    ax.text(nt + 0.18, 0.5,      "DC",      ha="left", va="center", fontsize=10, color=COL["gray"])
-    ax.text(nt + 0.18, nf + 0.5, "Nyquist", ha="left", va="center", fontsize=10, color=COL["gray"])
+    ax.text(nt + 0.18, 0.5,      "DC",      ha="left", va="center", fontsize=9, color=COL["gray"])
+    ax.text(nt + 0.18, nf + 0.5, "Nyquist", ha="left", va="center", fontsize=9, color=COL["gray"])
     ax.plot([nt, nt + 0.14], [0.5,      0.5     ], color=COL["gray"], lw=0.9)
     ax.plot([nt, nt + 0.14], [nf + 0.5, nf + 0.5], color=COL["gray"], lw=0.9)
 
     # Panel letter + title via fig.text
-    fig.text(0.18, 0.95, r"$(e)$", ha="left", va="top",
+    fig.text(0.20, 0.94, r"$(e)$", ha="left", va="top",
              fontsize=11, color=COL["text"], fontstyle="italic")
-    fig.text(0.28, 0.96, r"Packed coefficients $W_{nm}$", ha="left", va="top",
-             fontsize=12, color=COL["text"])
+    fig.text(0.34, 0.95, r"$W_{nm}$", ha="left", va="top",
+             fontsize=14, color=COL["text"])
 
     save(fig, outpath, transparent=transparent)
 
@@ -457,18 +451,18 @@ def main() -> None:
     out = paths.figures
     out.mkdir(parents=True, exist_ok=True)
 
-    save_xtilde_panel(out / "wdm_xtilde.png", transparent=transparent)
-    save_phi_panel(out / "wdm_phi_windows.png", transparent=transparent)
-    save_atom_panel(out / "wdm_atom.png", transparent=transparent)
-    save_cnm_panel(out / "wdm_Cnm.png", transparent=transparent)
-    save_wnm_panel(out / "wdm_Wnm.png", transparent=transparent)
+    save_xtilde_panel(out / "wdm_xtilde.pdf", transparent=transparent)
+    save_phi_panel(out / "wdm_phi_windows.pdf", transparent=transparent)
+    save_atom_panel(out / "wdm_atom.pdf", transparent=transparent)
+    save_cnm_panel(out / "wdm_Cnm.pdf", transparent=transparent)
+    save_wnm_panel(out / "wdm_Wnm.pdf", transparent=transparent)
 
     print(f"Saved to: {out.resolve()}")
-    print("  Stage 1: wdm_xtilde.png")
-    print("  Stage 2: wdm_phi_windows.png")
-    print("  Stage 3: wdm_atom.png")
-    print("  Stage 4: wdm_Cnm.png")
-    print("  Stage 5: wdm_Wnm.png")
+    print("  Stage 1: wdm_xtilde.pdf")
+    print("  Stage 2: wdm_phi_windows.pdf")
+    print("  Stage 3: wdm_atom.pdf")
+    print("  Stage 4: wdm_Cnm.pdf")
+    print("  Stage 5: wdm_Wnm.pdf")
 
 
 if __name__ == "__main__":
