@@ -7,14 +7,6 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import paths
 
-from __future__ import annotations
-
-from pathlib import Path
-import argparse
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-
 COL = {
     "text": "#222222",
     "text_dim": "#555555",
