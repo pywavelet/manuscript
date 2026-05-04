@@ -193,13 +193,18 @@ bin is centred in the array.
 (standard DFT ordering), yet the frequency list is zero-centred.  Should we
 state explicitly that a subsequent \texttt{fftshift} is implied, or rewrite
 the frequency list to match the raw DFT output before clarifying the shift?}
+\textcolor{blue}{I have homogenized the notation in order to have the fftfreq frequencies $(-N/2\leq l<N/2)$, which is also what we implemented in the code. I believe that what you just wrote above is fine, or adding in eq.\eqref{eq:dft-definition} also the inverse:
+\begin{align}
+\tilde x[k] = \sum_{l = -N/2}^{N/2-1} \tilde x[l]e^{-2\pi i l k/N}
+\end{align}
+}
 
 \subsection{Time and Frequency Domains}
 We assume that the output of a gravitational wave detector, $x(t)$,
 is expressed as a linear combination of a signal, $h(t| \vec{\mu})$,
 determined by a finite set of (unknown) parameters, $\vec{\mu}$, and
 instrumental noise, $n(t)$. If we ignore the presence of calibration
-errors~\cite{Savalle_2022}, the content of a single data stream,
+errors~\cite{Savalle_2022} \textcolor{blue}{which paper should it be?}, the content of a single data stream,
 i.e., one output channel from one detector, can be written in the
 time and frequency domain as:
 \begin{align}
@@ -212,7 +217,7 @@ In a gravitational wave context it is usual to further assume that
 the instrumental noise follows a Gaussian distribution characterized
 by a one-sided PSD, $S_n(f)$, defined such that
 \begin{equation}\label{eq:psd_definition}
-  \langle \tilde{n}^*[l] \tilde{n}[l'] \rangle = \frac{1}{2} P[l] \delta_{ll'},
+  \langle \tilde{n}^*[l] \tilde{n}[l'] \rangle = \frac{1}{2} P\big[|l|\big] \delta_{ll'},
 \end{equation}
 where the expectation value $\langle \, \rangle$ is taken over the
 data generating process. The delta function in the previous equation
@@ -220,7 +225,7 @@ implies that different frequencies are not correlated.
 
 In reality the noise model is not known perfectly and could vary from
 the assumption above in a number of ways. For example, the PSD might
-have a different shape from the reference one \cite{babak2021lisa},
+have a different shape from the reference one \cite{babak2021lisa} \textcolor{blue}{which paper should it be?},
 the probability distribution of the noise might not be Gaussian, or
 the noise might not be stationary, leading to correlations between frequencies.
 
@@ -318,7 +323,7 @@ where $n$ corresponds to the time index and $m$ corresponds to the
 frequency-channel index. The functions $g_{nm}[k]$ are the WDM
 basis elements, which are chosen to be (quasi-)orthonormal:
 \begin{align}\label{eq:orthonormality}
-\sum_{l=0}^{N-1}g^*_{nm}[l]g_{pq}[l]=\delta_{(nm),(pq)}\;,\nonumber\\
+\sum_{l=-N/2}^{N/2-1}g^*_{nm}[l]g_{pq}[l]=\delta_{(nm),(pq)}\;,\nonumber\\
 \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}g^*_{nm}[l]g_{nm}[l']=\delta_{ll'}\;,
 \end{align}
 This orthonormality is the key reason that WDM coefficients can
@@ -326,14 +331,20 @@ become statistically simple for stationary noise. If the
 Fourier-domain noise satisfies Eq.~\eqref{eq:psd_definition}, then
 the covariance between two WDM noise coefficients is
 \begin{align}
-  \left\langle w_{nm} w_{pq} \right\rangle
-  = \frac{1}{2}\sum_l P[l]\,\tilde g_{nm}(l)\tilde g_{pq}^*(l).
+\left\langle w_{nm} w_{pq} \right\rangle = \frac{1}{2}\sum_l P[l]\,\tilde g_{nm}[l]\tilde g_{pq}^*[l].
 \end{align}
 \TODO{Confirm that $\langle w_{nm} w_{pq}\rangle$ (rather than
 $\langle w_{nm} w_{pq}^*\rangle$) is correct here given that $w_{nm}$
 is real, and verify the factor of $\tfrac{1}{2}$ against the PSD
 normalisation convention in Eq.~\eqref{eq:psd_definition}.
 Can we add a unit test / script that checks this numerically?}
+\textcolor{blue}{In fact if you start with \eqref{eq:psd_definition} you obtain
+\begin{align}
+\left\langle w_{nm} w_{pq} \right\rangle&=\left\langle w_{nm}^* w_{pq} \right\rangle=\sum_l\sum_{l'}\tilde g_{nm}[l]\tilde g_{pq}^*[l']\left\langle \tilde x^*[l]\tilde x[l']\right\rangle=\nonumber\\
+&=\sum_l\sum_{l'}\tilde g_{nm}[l]\tilde g_{pq}^*[l']P[|l|]\delta_{ll'}
+\end{align}
+where the first equality holds because the coefficients are real
+}
 In the ideal orthonormal limit, whitened noise — or more generally
 noise with $P[l]$ effectively constant across the support of each
 atom — reduces this covariance to diagonal form. In that case the WDM
@@ -369,8 +380,8 @@ noise realizations.
     Middle: empirical correlation matrix of interior WDM coefficients
     estimated from many realizations of white Gaussian noise; most
     off-diagonal entries remain small. Right: the same calculation for
-    colored stationary noise, where visibly stronger off-diagonal
-  correlations appear.}
+    colored stationary noise \textcolor{red}{What PSD was it?}, where visibly stronger off-diagonal
+  correlations appear, in agreement with \cite{cornish_nonstationary_wdm}, where the correlations between $(n,m)$ and $(n',m')$ appear only at the closest two values of $m'=0,\pm1$ and decaying with $|n-n'|$. A total number of samples $N=64$ is assumed, and the WDM transform is obtained with $N_t=N_f=8$.}
   \label{fig:wdm_orthogonality_decorrelation}
   \script{wdm_orthogonality_decorrelation.py}
 \end{figure*}
@@ -402,17 +413,17 @@ $N_t(N_f+1)$ stored entries versus the $N = N_tN_f$ independent samples.
 The window $\tilde\varphi$ is the Meyer window, defined in the
 frequency domain by
 \begin{align}\label{eq:meyer_window}
-  \tilde\varphi(\omega) &=
+  \tilde\varphi(f) &=
   \begin{cases}
-    \frac{1}{\sqrt{\Delta \Omega}} & |\omega|<A \\
-    \frac{1}{\sqrt{\Delta \Omega}} \cos \left[\frac{\pi}{2}\,\left(
-    \frac{|\omega|-A}{B}\right)\right] & A \leq|\omega| \leq A+B \\
+    \frac{1}{\sqrt{\Delta \tilde{F}}} & |f|<A \\
+    \frac{1}{\sqrt{\Delta \tilde{F}}} \cos \left[\frac{\pi}{2}\,\left(
+    \frac{|f|-A}{B}\right)\right] & A \leq|f| \leq A+B \\
     0 & \text{otherwise,}
   \end{cases}
 \end{align}
-where $\omega = 2 \pi f$ are angular frequencies, which are discretized as
+where the frequencies are discretized as
 \begin{equation}
-  \omega_l = \frac{2\pi l}{N \Delta t}
+  f_l = \frac{l}{N \Delta t}
 \end{equation}
 By construction, $\tilde\varphi$ has a limited frequency bandwidth
 which is controlled by the parameter $A$. In this work, we restrict
@@ -429,20 +440,16 @@ generalizations.\footnote{Cornish~\cite{Cornish:2020odn} uses $d=4$,
   suppression against temporal compactness of the window; for the
   applications considered in this paper the $d=1$ window provides
   adequate frequency separation while keeping the implementation simple
-and the time-domain filter short.} The parameter $\Delta \Omega$
+and the time-domain filter short.} The parameter $\Delta \tilde{F}$
 depends on the frequency resolution
-\begin{equation}
-  \Delta\Omega = 2 \pi \Delta \tilde{F},
-\end{equation}
-where $\Delta \tilde{F} = \Delta F \Delta t$ is the normalized
-frequency resolution.
+$\Delta \tilde{F} = \Delta F \Delta t$.
 The parameter $B$ depends on $\Delta\Omega$ and $A$ as
 \begin{equation}
-  B = \Delta\Omega - 2A
+  B = \Delta F - 2A
 \end{equation}
-In our implementation, we set $A =\Delta\Omega/4$ and therefore $B =
-\Delta\Omega/2$. This means that the window is non-zero when
-$|\omega| \leq 3 \Delta\Omega/4$. 
+In our implementation, we set $A =\Delta \tilde{F}/4$ and therefore $B =
+\Delta \tilde{F}/2$. This means that the window is non-zero when
+$|f| \leq 3 \Delta \tilde{F}/4$. 
 
 These are the main ingredients behind the packed WDM grid. A single
 window shape is shifted across
@@ -478,10 +485,10 @@ Starting from Eq.~\eqref{wnm_def} with the interior-channel basis
 element from Eq.~\eqref{eq:gnm_full}, the forward transform can be
 evaluated in the Fourier domain using
 \begin{align}
-  w_{nm} = \sum_{l=0}^{N-1} \tilde{x}_l\,\tilde{g}_{nm}^*(f[l])\,,
+  w_{nm} = \sum_{l=-N/2}^{N/2-1} \tilde{x}_l\,\tilde{g}_{nm}^*(f[l])\,,
 \end{align}
-where $\tilde{x}_l = X[l]$ is the DFT of the input data. For a
-real-valued input signal, $\tilde{x}_{N-l} = \tilde{x}_l^*$, and the
+where $\tilde{x}_l$ is the DFT of the input data. For a
+real-valued input signal, $\tilde{x}_{-l} = \tilde{x}_l^*$, and the
 window satisfies $\tilde{\varphi}(-f) = \tilde{\varphi}(f)$.
 Splitting the sum into positive and negative frequency halves and
 using these symmetries, the negative-frequency contribution is the
@@ -986,7 +993,7 @@ long-duration gravitational-wave signals.
 We have presented a self-contained, pedagogical account of the
 Wilson--Daubechies--Meyer (WDM) wavelet-packet transform, building on
 the theoretical foundations established in prior
-work~\cite{Necula_2012,Klimenko:2005xv,Klimenko:2015ypf,Cornish:2020odn},
+work~\cite{Necula_2012,Klimenko:2005xv,Klimenko:2015ypf,Cornish:2020odn} \textcolor{blue}{citations broken},
 and its implementation in the open-source \package\ package.  The
 primary goal of this work is to make the discrete, sampled WDM
 implementation explicit and reproducible for practitioners new to the
@@ -1044,14 +1051,13 @@ construction of a WDM tiling, application of the forward transform, and
 round-trip reconstruction with the inverse transform.
 
 \begin{acknowledgments}
-  GM acknowledges support from the Imperial College London
-  Schr\"odinger Scholarship scheme.
+GM acknowledges support from the ANR grant AAPG2024 PRC - GalaxyFIT.
 \end{acknowledgments}
 
 \appendix
 \onecolumngrid
 
-\section{Normality condition of the $g_{nm}(f)$ basis}
+\section{Normality condition of the $g_{nm}$ basis}
 We introduce the basis $\tilde g_{nm}(f)$ in the discrete case:
 %
 \begin{align}
@@ -1142,16 +1148,9 @@ compact expressions for the forward WDM coefficients presented in
 Section~\ref{sec:wdm}. We work in the Fourier domain throughout,
 writing the forward transform as
 \begin{align}
-  w_{nm}=\sum_{l=0}^{N-1} \tilde{x}_l\,\tilde{g}_{nm}^*(f[l])\,,
+  w_{nm}=\sum_{l=-N/2}^{N/2-1} \tilde{x}_l\,\tilde{g}_{nm}^*(f[l])\,,
 \end{align}
-where the discrete frequencies are mapped as
-\begin{align}
-  f[l]=
-  \begin{cases}
-    l & 0\leq l< N/2 \\
-    l-N & N/2\leq l<N
-  \end{cases}\times df\,,\qquad df = \frac{1}{T}\,.
-\end{align}
+where the discrete frequencies are mapped as $f[l]=l\,df=l/T$.
 
 \subsection{Interior channels ($0<m<N_f$)}
 
@@ -1159,16 +1158,14 @@ Inserting the interior-channel basis element from
 Eq.~\eqref{eq:gnm_full} and splitting the sum over positive and
 negative frequencies gives
 \begin{align}
-  w_{nm}&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{2\pi
-  iln/N_t}\left[C_{nm}^*\tilde{\varphi}\!\left(\!(l-\tfrac{mN_t}{2})df\right)+C_{nm}\tilde{\varphi}\!\left(\!(l+\tfrac{mN_t}{2})df\right)\right]\nonumber\\
-  &+\frac{1}{\sqrt{2}}\sum_{l=N/2+1}^{N-1} \tilde{x}_l\, e^{2\pi
-  i(l-N)n/N_t}\left[C_{nm}^*\tilde{\varphi}\!\left(\!(l\!-\!N\!-\!\tfrac{mN_t}{2})df\right)+C_{nm}\tilde{\varphi}\!\left(\!(l\!-\!N\!+\!\tfrac{mN_t}{2})df\right)\right].
+w_{nm}&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{2\pi iln/N_t}\left[C_{nm}^*\tilde{\varphi}\!\left(\!(l-\tfrac{mN_t}{2})df\right)+C_{nm}\tilde{\varphi}\!\left(\!(l+\tfrac{mN_t}{2})df\right)\right]\nonumber\\
+&+\frac{1}{\sqrt{2}}\sum_{l=-N/2}^{-1} \tilde{x}_l\, e^{2\pi iln/N_t}\left[C_{nm}^*\tilde{\varphi}\!\left(\!(l\!-\!\tfrac{mN_t}{2})df\right)+C_{nm}\tilde{\varphi}\!\left(\!(l\!+\!\tfrac{mN_t}{2})df\right)\right].
 \end{align}
-Substituting $l \to N-l$ in the second sum and using the reality
-condition $\tilde{x}_{N-l} = \tilde{x}_l^*$ together with the
+Using the reality
+condition $\tilde{x}_{-l} = \tilde{x}_l^*$ together with the
 symmetry $\tilde{\varphi}(-f) = \tilde{\varphi}(f)$, the second sum
 is the complex conjugate of the first. The boundary terms at $l=0$
-and $l=N/2$ vanish because the window support does not extend to
+and $l=-N/2$ vanish because the window support does not extend to
 those frequencies for interior channels. We therefore obtain
 \begin{align}\label{eq:app_wnm_general}
   w_{nm}&=\sqrt{2}\,\Re\sum_{l=1}^{N/2-1} \tilde{x}_l\, e^{2\pi
@@ -1191,8 +1188,8 @@ splitting yields
 \begin{align}
   w_{n0}&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{4\pi
   iln/N_t}\,\tilde{\varphi}(l\,df)
-  +\frac{1}{\sqrt{2}}\sum_{l=N/2}^{N-1} \tilde{x}_l\, e^{4\pi
-  i(l-N)n/N_t}\,\tilde{\varphi}((l-N)\,df)
+  +\frac{1}{\sqrt{2}}\sum_{l=-N/2}^{-1} \tilde{x}_l\, e^{4\pi
+  iln/N_t}\,\tilde{\varphi}(l\,df)
   \nonumber\\
   &=\,\sqrt{2}\Re\left[\sum_{l=1}^{N_t/2} \tilde{x}_{l}\, e^{4\pi
   iln/N_t}\,\tilde{\varphi}(l\,df)\right]+\frac{1}{\sqrt{2}}\tilde{x}_0\,\tilde{\varphi}(0)\,,
@@ -1201,12 +1198,10 @@ which is Eq.~\eqref{eq:wn0} of the main text.
 \subsection{Nyquist channel ($m=N_f$)}
 
 \begin{align}
-  w_{nm}&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{2\pi
-  iln/N_t}\left[\tilde{\varphi}\!\left(\!(l-\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(l+\tfrac{N}{2})df\right)\right]+\frac{1}{\sqrt{2}}\sum_{l=N/2}^{N-1} \tilde{x}_l\, e^{2\pi
-  i(l-N)n/N_t}\left[\tilde{\varphi}\!\left(\!(l\!-\!N\!-\!\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(l\!-\!N\!+\!\tfrac{N}{2})df\right)\right]\nonumber\\
-  &=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{2\pi
-  iln/N_t}\left[\tilde{\varphi}\!\left(\!(l-\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(l+\tfrac{N}{2})df\right)\right]+\frac{1}{\sqrt{2}}\sum_{l=1}^{N/2} \tilde{x}_{N-l}\, e^{-2\pi
-  iln/N_t}\left[\tilde{\varphi}\!\left(\!(-l\!-\!\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(-l\!+\!\tfrac{N}{2})df\right)\right].
+w_{nm}&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{2\pi iln/N_t}\left[\tilde{\varphi}\!\left(\!(l-\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(l+\tfrac{N}{2})df\right)\right]+
+\frac{1}{\sqrt{2}}\sum_{l=-N/2}^{-1} \tilde{x}_l\, e^{2\pi iln/N_t}\left[\tilde{\varphi}\!\left(\!(l\!-\!\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(l\!+\!\tfrac{N}{2})df\right)\right]\nonumber\\
+&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}_l\, e^{2\pi iln/N_t}\left[\tilde{\varphi}\!\left(\!(l-\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(l+\tfrac{N}{2})df\right)\right]+
+\frac{1}{\sqrt{2}}\sum_{l=1}^{N/2} \tilde{x}_{-l}\, e^{-2\pi iln/N_t}\left[\tilde{\varphi}\!\left(\!(-l\!-\!\tfrac{N}{2})df\right)+\tilde{\varphi}\!\left(\!(-l\!+\!\tfrac{N}{2})df\right)\right].
 \end{align}
 %
 the $l=0$ term in the first summation vanishes, and the $l=N/2$ term is treated separately:
@@ -1224,7 +1219,7 @@ assuming an even value for $N_f$.
 
 \subsection{The inverse transform}
 
-We write the inverse transform of the $w_{nm}$ coefficients to recover the signal $x[l]$ for $l<N/2$ since we know that for $l\geq N/2$ the reality condition holds ($x[N-l]=x^*[l]$):
+We write the inverse transform of the $w_{nm}$ coefficients to recover the signal $x[l]$ for $l\geq 0$ since we know that for $l<0$ the reality condition holds ($x[-l]=x^*[l]$):
 %
 \begin{align}
 x[l]=\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}w_{nm}g_{nm}[l]&=\frac{1}{\sqrt{2}}\sum_{n}\sum_{0<m<N_f}w_{nm}e^{-2\pi iln/N_t}\left[C_{nm}\tilde{\varphi}\!\left(\!(l-\tfrac{mN_t}{2})df\right)+C^*_{nm}\tilde{\varphi}\!\left(\!(l+\tfrac{mN_t}{2})df\right)\right]\nonumber\\
@@ -1232,7 +1227,7 @@ x[l]=\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}w_{nm}g_{nm}[l]&=\frac{1}{\sqrt{2}}\sum_{
 &=\begin{cases}
 x_0[l]\qquad\qquad\qquad \qquad l<N_t/2\\
 x_m[l]\qquad\qquad\qquad m N_t/2\leq l<(m+1)N_t/2\\
-x_{N_f}[l]\qquad\qquad\qquad |l| \geq N/2-N_t/2
+x_{N_f}[l]\qquad\qquad\qquad l \geq N/2-N_t/2
 \end{cases}
 \end{align}
 %
