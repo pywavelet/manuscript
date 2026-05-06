@@ -21,7 +21,7 @@
 
 \preprint{APS/123-QED}
 
-\title{Python-based codes for WDM-transform for use within gravitational wave astronomy}
+\title{JAX-based codes for WDM-transform \\for use within gravitational wave astronomy}
 
 \author{Quentin Baghi}
 \affiliation{Universit\'e Paris Cit\'e, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France}
@@ -90,8 +90,7 @@ has a substantial history in gravitational-wave astronomy.  The fast
 Wilson--Daubechies transform was developed for transient
 gravitational-wave analysis by Necula, Klimenko, and
 Mitselmakher~\cite{Necula_2012}, and WDM representations have been
-used in coherent WaveBurst and related burst-search contexts.
-% TODO(Avi): Add citation for coherent WaveBurst WDM implementation.
+used in coherent WaveBurst and related burst-search contexts~\cite{2023PhRvD.107f2002S, 2021SoftX..1400678D}.
 These earlier papers and implementations established the theoretical
 and algorithmic basis of the transform for excess-power and
 time-frequency analyses, including its orthonormal structure,
@@ -196,7 +195,7 @@ We assume that the output of a gravitational wave detector, $x(t)$,
 is expressed as a linear combination of a signal, $h(t| \vec{\mu})$,
 determined by a finite set of (unknown) parameters, $\vec{\mu}$, and
 instrumental noise, $n(t)$. If we ignore the presence of calibration
-errors~\cite{Savalle_2022} \textcolor{blue}{which paper should it be?}, the content of a single data stream,
+errors~\cite{Savalle_2022}, the content of a single data stream,
 i.e., one output channel from one detector, can be written in the
 time and frequency domain as:
 \begin{align}
@@ -217,7 +216,7 @@ implies that different frequencies are not correlated.
 
 In reality the noise model is not known perfectly and could vary from
 the assumption above in a number of ways. For example, the PSD might
-have a different shape from the reference one \cite{babak2021lisa} \textcolor{blue}{which paper should it be?},
+have a different shape from the reference one \cite{babak2021lisa},
 the probability distribution of the noise might not be Gaussian, or
 the noise might not be stationary, leading to correlations between frequencies.
 
@@ -280,26 +279,26 @@ One immediately sees that,
 \end{align}
 This final expression shows how the Nyquist theorem still holds. Once
 you fix $N_t$ (or equivalently $N_f$, $\Delta T$ or $\Delta F$) the
-grid is uniquely identified. Figure~\ref{fig:wdm_packed_grid}
+grid is uniquely identified. Figure~\ref{fig:wdm_transform}
 summarizes the packed layout, including the DC and Nyquist edge
 channels and the alternating phase factor used for the interior
 coefficients.
 
 \begin{figure*}[ht]
     \centering
-    \includegraphics[width=0.8\linewidth]{figures/wdm_overview.pdf}%
+    \includegraphics[width=1.0\linewidth]{figures/wdm_overview.pdf}%
     \caption{
         Schematic illustration of the WDM forward transform.
-        (a)~The input DFT spectrum $\tilde{x}[\ell]$ with channel $m$ 
+        (a)~The input DFT spectrum $\tilde{x}[\ell]$ with channel $m$
         spanning $N_t$ bins centred at $mN_t/2$.
-        (b)~The Meyer window $\tilde{\varphi}_m[\ell]$ shifted across 
+        (b)~The Meyer window $\tilde{\varphi}_m[\ell]$ shifted across
         $N_f$ channels.
-        (c)~The time-domain atom $x_m[n]$ obtained by applying the 
+        (c)~The time-domain atom $x_m[n]$ obtained by applying the
         inverse DFT to the windowed channel.
-        (d)~The phase factor $C_{nm}$, alternating between $1$ and $i$ 
-        on a checkerboard pattern.
-        (e)~The packed coefficient array $W_{nm}$, with each cell 
-        $w_{nm} = \mathrm{Re}[C^*_{nm}\,x_m[n]]$.
+        (d)~The packed coefficient array $W_{nm}$, with each cell
+        $w_{nm} = \mathrm{Re}[C^*_{nm}\,x_m[n]]$; the phase factor
+        $C_{nm}$ alternates between $1$ and $i$ on a checkerboard
+        pattern (see legend).
     }
     \label{fig:wdm_transform}
     \script{wdm_overview_panels.py}
@@ -324,21 +323,21 @@ This orthonormality is the key reason that WDM coefficients can
 become statistically simple for stationary noise. If the
 Fourier-domain noise satisfies Eq.~\eqref{eq:psd_definition}, then
 the covariance between two WDM noise coefficients is
-\begin{align}
+\begin{align}\label{eq:wdm_noise_cov_exact}
 \left\langle w_{nm} w_{pq} \right\rangle = \frac{1}{2}\sum_l P[l]\,\tilde g_{nm}[l]\tilde g_{pq}^*[l].
 \end{align}
-\TODO{Confirm that $\langle w_{nm} w_{pq}\rangle$ (rather than
-$\langle w_{nm} w_{pq}^*\rangle$) is correct here given that $w_{nm}$
-is real, and verify the factor of $\tfrac{1}{2}$ against the PSD
-normalisation convention in Eq.~\eqref{eq:psd_definition}.
-Can we add a unit test / script that checks this numerically?}
-\textcolor{blue}{In fact if you start with \eqref{eq:psd_definition} you obtain
+Since $w_{nm}$ is real, $w_{nm}^* = w_{nm}$, so $\langle w_{nm} w_{pq}\rangle =
+\langle w_{nm}^* w_{pq}\rangle$.  Writing $w_{nm} = \sum_l \tilde{x}_l
+\tilde{g}_{nm}^*[l]$ and applying the PSD convention
+Eq.~\eqref{eq:psd_definition} gives
 \begin{align}
-\left\langle w_{nm} w_{pq} \right\rangle&=\left\langle w_{nm}^* w_{pq} \right\rangle=\sum_l\sum_{l'}\tilde g_{nm}[l]\tilde g_{pq}^*[l']\left\langle \tilde x^*[l]\tilde x[l']\right\rangle=\nonumber\\
-&=\sum_l\sum_{l'}\tilde g_{nm}[l]\tilde g_{pq}^*[l']P[|l|]\delta_{ll'}
+\langle w_{nm}^* w_{pq}\rangle
+  &= \sum_{l,l'}\tilde g_{nm}[l]\,\tilde g_{pq}^*[l']\,
+     \langle \tilde x^*[l]\,\tilde x[l']\rangle\nonumber\\
+  &= \frac{1}{2}\sum_l \tilde g_{nm}[l]\,\tilde g_{pq}^*[l]\,P[|l|],
 \end{align}
-where the first equality holds because the coefficients are real
-}
+confirming the symmetric (non-conjugate) form and the factor of
+$\tfrac{1}{2}$ in Eq.~\eqref{eq:wdm_noise_cov_exact}.
 In the ideal orthonormal limit, whitened noise — or more generally
 noise with $P[l]$ effectively constant across the support of each
 atom — reduces this covariance to diagonal form. In that case the WDM
@@ -367,14 +366,18 @@ noise realizations.
     decorrelation.} Left: Gram matrix of the interior sampled WDM
     atoms, showing the discrete inner products
     $\langle g_i, g_j\rangle$ after flattening the interior index pair
-    $(n,m)$ into a single label $i$. The matrix is visually
-    indistinguishable from the identity, and the annotated residuals
-    are at machine precision, providing a direct numerical
-    demonstration of orthonormality for the interior channels.
+    $(n,m)$ into a single label $i$. The packed-storage atoms used here
+    are mutually orthogonal but not unit-normalised, so the diagonal
+    of $G$ does not equal $1$; the relevant numerical check is that
+    the off-diagonal entries vanish at machine precision
+    ($\max_{i\neq j}|G_{ij}|\sim 10^{-14}$), providing a direct
+    demonstration of orthogonality for the interior channels.
     Middle: empirical correlation matrix of interior WDM coefficients
     estimated from many realizations of white Gaussian noise; most
     off-diagonal entries remain small. Right: the same calculation for
-    colored stationary noise \textcolor{red}{What PSD was it?}, where visibly stronger off-diagonal
+    colored stationary noise with a 4th-order Butterworth-type PSD
+    $S(f)\propto[1+(f/f_c)^{4}]^{-1}$, $f_c=0.06\,\mathrm{Hz}$ (unit sampling rate),
+    where visibly stronger off-diagonal
   correlations appear, in agreement with \cite{cornish_nonstationary_wdm}, where the correlations between $(n,m)$ and $(n',m')$ appear only at the closest two values of $m'=0,\pm1$ and decaying with $|n-n'|$. A total number of samples $N=64$ is assumed, and the WDM transform is obtained with $N_t=N_f=8$.}
   \label{fig:wdm_orthogonality_decorrelation}
   \script{wdm_orthogonality_decorrelation.py}
@@ -488,11 +491,17 @@ Splitting the sum into positive and negative frequency halves and
 using these symmetries, the negative-frequency contribution is the
 complex conjugate of the positive-frequency contribution (see
 Appendix~\ref{app:forward_derivation} for details), giving
-\begin{align}\label{eq:wnm_interior}
-  w_{nm} &=
-  \sqrt{2}\,(-1)^{nm}\,\Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2}\tilde{x}_{l'+mN_t/2}\,e^{2\pi
-  i l'n/N_t}\,\tilde{\varphi}(l'\,df)\right],
-\end{align}
+% \begin{align}\label{eq:wnm_interior}
+%   w_{nm} =
+%   \sqrt{2}\,(-1)^{nm}\,\Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2}\tilde{x}_{l'+mN_t/2}\,e^{2\pi
+%   i l'n/N_t}\,\tilde{\varphi}(l'\,df)\right],
+% \end{align}
+\begin{equation}\label{eq:wnm_interior}
+\begin{split}
+  w_{nm} = {} & \sqrt{2}\,(-1)^{nm} \\
+  & \times \Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2}\tilde{x}_{l'+mN_t/2}\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}(l'\,df)\right],
+\end{split}
+\end{equation}
 where $l' = l - mN_t/2$ and $df = 1/T$. The frequency shift
 $l = l' + mN_t/2$ contributes a phase $e^{2\pi i (mN_t/2) n/N_t}
 = e^{i\pi mn} = (-1)^{mn}$, so the result can be written compactly as
@@ -832,19 +841,25 @@ $[6\times 10^{-24},\,1.7\times 10^{-23}]$, respectively.
 
 The frequency-domain analysis uses a local A/E/T band centered on the
 prior support of the source and evaluates the Whittle likelihood
-\begin{align}
-  \ln \mathcal{L}_{\rm freq}(\theta)
-  &\propto
-  -\sum_{c\in\{A,E,T\}} \sum_k
-  \left[
-    \ln S_c(f_k)
-    + \frac{2\Delta f\,\bigl|\Delta t\,[d_{c,k}-h_{c,k}(\theta)]\bigr|^2}{S_c(f_k)}
-  \right],
-\end{align}
+% \begin{align}
+%   \ln \mathcal{L}_{\rm freq}(\theta)
+%   &\propto
+%   -\sum_{c\in\{A,E,T\}} \sum_k
+%   \left[
+%     \ln S_c(f_k)
+%     + \frac{2\Delta f\,\bigl|\Delta t\,[d_{c,k}-h_{c,k}(\theta)]\bigr|^2}{S_c(f_k)}
+%   \right],
+% \end{align}
+\begin{equation}
+\begin{split}
+  \ln \mathcal{L}_{\rm freq}(\theta) \propto {} & -\sum_{c\in\{A,E,T\}} \sum_k \bigg[ \ln S_c(f_k) \\
+  & + \frac{2\Delta f\,\bigl|\Delta t\,[d_{c,k}-h_{c,k}(\theta)]\bigr|^2}{S_c(f_k)} \bigg],
+\end{split}
+\end{equation}
 where $d_{c,k}$ and $h_{c,k}$ are the complex local Fourier modes and
-$S_c(f)$ is the stationary effective PSD, namely instrumental noise\footnote{\textcolor{red}{We adopted the Gaussian two-parameters model for the instrumental noise PSD, following equations (B14) and (B15) in \cite{LISACosmologyWorkingGroup:2022kbp}}}
+$S_c(f)$ is the stationary effective PSD, namely instrumental noise\footnote{We adopt the Gaussian two-parameter model for the instrumental noise PSD~\cite{LISACosmologyWorkingGroup:2022kbp}, using Eqs.~(B14) and~(B15) therein.}
 plus the time-averaged galactic
-foreground contribution in channel $c$ \textcolor{red}{Shall we expand a bit on how we generate the galactic background here?}. The WDM analysis starts from
+foreground contribution in channel $c$. The WDM analysis starts from
 the same local Fourier patch, embeds the template into that
 patch, and applies the WDM transform with
 $N_t=32$, $a=1/3$, and $d=1$. The resulting WDM likelihood is the
@@ -987,7 +1002,7 @@ long-duration gravitational-wave signals.
 We have presented a self-contained, pedagogical account of the
 Wilson--Daubechies--Meyer (WDM) wavelet-packet transform, building on
 the theoretical foundations established in prior
-work~\cite{Necula_2012,Klimenko:2005xv,Klimenko:2015ypf,Cornish:2020odn} \textcolor{blue}{citations broken},
+work~\cite{Necula_2012,Klimenko:2005xv,Klimenko:2015ypf,Cornish:2020odn},
 and its implementation in the open-source \package\ package.  The
 primary goal of this work is to make the discrete, sampled WDM
 implementation explicit and reproducible for practitioners new to the
