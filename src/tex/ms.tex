@@ -14,6 +14,11 @@
 
 \usepackage{wdmmanuscript}
 \usepackage{hyperref}
+\usepackage{fontawesome5}
+
+\newcommand{\codelink}[1]{%
+  \marginpar{\raggedleft\href{#1}{\scalebox{0.65}{\faGithub}}}%
+}
 
 \newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
 
@@ -399,7 +404,7 @@ Nyquist ($m=N_f$) the definitions differ:
     \quad + \tilde{\varphi}(f + N_f\Delta F)\Big), & m = N_f,
   \end{cases}
 \end{align}
-%
+\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/windows.py\#L129}%
 for $n = 0,\ldots,N_t-1$. The interior channels carry a $1/\sqrt{2}$
 normalization and the alternating phase factor $C_{nm}$, while the DC
 and Nyquist edge channels have a doubled time-shift exponent and no
@@ -422,6 +427,7 @@ where the frequencies are discretized as
 \begin{equation}
   f_l = \frac{l}{N \Delta t}
 \end{equation}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/windows.py\#L71}%
 By construction, $\tilde\varphi$ has a limited frequency bandwidth
 which is controlled by the parameter $A$. In this work, we restrict
 attention to the $d=1$ case, for which the Meyer window reduces to
@@ -474,6 +480,7 @@ alternates between real and imaginary depending on $n+m$:
   \begin{cases} 1 & n+m \text{ even,} \\ i & n+m \text{ odd.}
   \end{cases}
 \end{align}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/jax_backend.py\#L43}%
 We treat the three channel types separately.
 
 \subsubsection{Interior channels ($0 < m < N_f$)}
@@ -508,6 +515,7 @@ $l = l' + mN_t/2$ contributes a phase $e^{2\pi i (mN_t/2) n/N_t}
 \begin{align}\label{eq:wnm_compact}
   w_{nm} = \sqrt{2}\,(-1)^{nm}\,\Re\,C_{nm}^*\,x_m[n]\,,
 \end{align}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/fe8b6f1dd929fb90a36b023cef20351cbf112bdd/src/wdm_transform/transforms/jax_backend.py\#L66}%
 where
 \begin{align}\label{eq:xm_def}
   x_m[n] = \sum_{l=-N_t/2}^{N_t/2-1} e^{2\pi i l n/N_t}\,X[l +
@@ -557,6 +565,7 @@ Equivalently, in the Fourier domain the reconstruction reads
 \begin{align}\label{eq:inverse_fourier}
   \tilde{x}_l = \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}_{nm}[l]\,w_{nm}\,.
 \end{align}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/jax_backend.py\#L141}%
 That this is indeed the inverse of the forward transform follows from
 the (quasi-)orthonormality of the basis: inserting the forward
 transform~\eqref{wnm_def} into~\eqref{eq:inverse_fourier} and
