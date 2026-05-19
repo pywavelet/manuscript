@@ -254,17 +254,17 @@ used below~\cite{Daubechies:1991wv}.%
 % \ob{I'll take a look!}
 % \avi{went with Daubechies' Ten Lectures here since it's what Necula points to..}
 
-The word ``Wilson'' refers to the Wilson-basis construction, in which
-positive- and negative-frequency windowed Fourier atoms are combined
-with alternating phase factors to form a real, orthonormal basis. This
-is the origin of the paired terms centered at $+m\Delta F$ and
-$-m\Delta F$, and of the phase factor $C_{nm}$ in the basis definition
-below (see \eqref{eq:c_nm_def}) . The ``Daubechies--Meyer'' part refers to the smooth Meyer-type
-frequency window used to construct these atoms. In the present
-implementation this is the cosine-tapered $d=1$ Meyer window defined
-below. 
+The naming of the transform reflects two distinct ingredients: the
+\emph{Wilson}-basis pairing of positive- and negative-frequency atoms,
+introduced together with the phase factor $C_{nm}$
+in Sec.~\ref{sec:wdm} below, and the smooth
+\emph{Daubechies--Meyer} frequency window $\tilde\varphi$ used to
+construct those atoms, introduced together with its closed form in
+Sec.~\ref{sec:wdm} below. We motivate each in
+the section where its definition first appears, rather than upfront,
+to keep the narrative linear.%
 \ob{This paragraph, in my opinion, should be split throughout the latter parts of the text when these notions are first introduced. Otherwise, a new reader will be jumping backwards and forwards in the text. Perhaps move the ``wilson" part to the point after the $C_{nm}$ have been introduced. Similarly, when introducing the window $\varphi(f)$, discuss the daubechies--meyer bit?}
-\avi{agree this reads better split — planning to move the Wilson bit down to where $C_{nm}$ first appears (eq.~\ref{eq:c_nm_def}) and the Meyer bit to where $\tilde\varphi$ shows up. leaving as-is for this round so the diff is reviewable, will do the move in the next pass.}
+\avi{split as suggested, Wilson txt now lives next to the $C_{nm}$ definition (eq.~\ref{eq:c_nm_def}), and the Daubechies--Meyer txt sits next to the $\tilde\varphi$ definition (eq.~\ref{eq:meyer_window}). this short paragraph just marks the split.}
 
 The WDM transform maps the original $N$ samples to a packed
 coefficient grid with $N_t$ time bins and $N_f+1$ stored frequency
@@ -443,9 +443,15 @@ $N=N_tN_f$ time-domain degrees of freedom, with the edge channels
 overcomplete by exactly $N_t$ real numbers~\cite{Necula_2012,Cornish:2020odn}.%
 \ob{This is a nice place to introduce the ``Wilson" discussion in the intro of this section. Also we need citations here to the original manuscript that presented these equations. }
 \ob{Also, I'm not sure I fully understand this latter statement (and I believe it's important). Would you consider rewording? Or spelling it out for those not entirely familiar?}
-\avi{rewrote the DOF sentence to spell out the interior/edge accounting and added the Necula and Cornish citations. once I do the Wilson-paragraph move i reckon this section will be the location for that}
+\avi{rewrote the DOF sentence to spell out the interior/edge accounting and added the Necula and Cornish citations. (Wilson prose now lives next to the $C_{nm}$ definition at eq.~\ref{eq:c_nm_def}.)}
 
-The window $\tilde\varphi$ is the Meyer window, defined in the continuous frequency domain by
+The window $\tilde\varphi$ is the ``\emph{Daubechies--Meyer}''
+ingredient of the WDM construction: a smooth, compactly supported
+frequency window of the Meyer family, whose taper region overlaps
+between adjacent channels in a way that yields exact partition-of-unity
+reconstruction. In the present implementation we use the
+$d=1$ cosine-tapered member of this family, defined in the
+continuous frequency domain by
 %
 \begin{align}\label{eq:meyer_window}
   \tilde\varphi(f) &=
@@ -520,8 +526,13 @@ index pair $(n,m)$ already carries an approximate time-frequency location.
 
 We now derive the practical computational form of the forward WDM
 coefficients by inserting the basis functions~\eqref{eq:gnm_full}
-into the definition~\eqref{wnm_def}. The phase factor $C_{nm}$
-alternates between real and imaginary depending on $n+m$:
+into the definition~\eqref{wnm_def}. The phase factor $C_{nm}$ is the
+``\emph{Wilson}'' ingredient of the WDM construction: it combines the
+positive- and negative-frequency windowed Fourier atoms centered at
+$\pm m\Delta F$ into a single real, orthogonal pair, which is what
+makes the interior basis real-valued and Wilson-orthogonal in the
+discrete setting. Concretely, $C_{nm}$ alternates between real and
+imaginary depending on $n+m$:
 \begin{align}\label{eq:c_nm_def}
   C_{nm}=e^{\frac{i\pi}{4}(1-(-1)^{n+m})} =
   \begin{cases} 1 & n+m \text{ even,} \\ i & n+m \text{ odd.}
