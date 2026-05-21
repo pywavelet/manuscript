@@ -90,7 +90,9 @@ def main() -> None:
 
     keep = _interior_indices(nt, nf)
     analysis = _analysis_matrix(nt, nf, dt)
-    interior_gram = analysis[keep, :] @ analysis[keep, :].T
+    # NumPy's FFT convention leaves the raw analysis rows with norm sqrt(N).
+    # Divide by N to display the Gram matrix for unit-norm discrete atoms.
+    interior_gram = (analysis[keep, :] @ analysis[keep, :].T) / (nt * nf)
     white_corr = _correlation_matrix(_coefficient_samples(nt, nf, dt, kind="white")[:, keep])
     colored_corr = _correlation_matrix(_coefficient_samples(nt, nf, dt, kind="colored")[:, keep])
 
