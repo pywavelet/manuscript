@@ -1,0 +1,351 @@
+% This a new re-ordered section -- Ollie's changes 
+
+For a given frequency series $\tilde x[l]$, the WDM transform represents the data through the WDM coefficients $w_{nm}$
+\begin{align}\label{wnm_def}
+w_{nm}&=\sum_{l=0}^{N-1}\tilde x[l]\tilde g^*_{nm}[l]\,,
+\end{align}
+where $n$ corresponds to the time index and $m$ corresponds to the
+frequency-channel. \ob{code link needed above.}
+% with corresponding inverse transform
+% \begin{align}
+% \tilde x[l]&=\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}w_{nm}\tilde g_{nm}[l]\;, \label{eq:x_tilde_inverse}
+% \end{align}
+
+The basis elements $\tilde{g}$, FD window $\tilde{\varphi}$ and constants $C$ are defined in closed form in the discrete frequency domain below. For DC ($m=0$), interior channels ($0 < m < N_f$), , and
+Nyquist ($m=N_f$) we have that:
+\begin{widetext}
+\begin{align}
+\label{eq:gnm_full_discrete}
+\text{\textbf{Wilson Basis:}}\quad \tilde{g}_{nm}[l] &=
+\dfrac{1}{\sqrt{2}}\begin{cases}
+e^{-4\pi i n l/N_t}\, \tilde{\varphi}[l], & m=0, \\[6pt]
+e^{-2\pi i n l/N_t}\Big(C_{nm}\,\tilde{\varphi}[l - mN_t/2] + C_{nm}^*\,\tilde{\varphi}[l + mN_t/2]\Big), & 0 < m < N_f, \\[6pt]
+e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big), & m = N_f, 
+\end{cases}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/windows.py\#L129} \\
+\text{\textbf{Daubechies-Meyer:}} \quad  \tilde\varphi[l]&=\sqrt{\frac{2}{N_t}}\begin{cases}
+1 & |l_r|<A \\
+\cos \left[\frac{\pi}{2}\,\left(
+\frac{|l_r|-A}{B}\right)\right] & A \leq|l_r| < A+B\,, \\
+0 & \text{otherwise}\,,
+\end{cases} \qquad l_r =l\frac{2}{N_t}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/windows.py\#L71} \label{eq:DM_window_discrete}\\
+  C_{nm}&=e^{\frac{i\pi}{4}(1-(-1)^{n+m})} =
+  \begin{cases} 1 & n+m \text{ even,} \\ i & n+m \text{ odd.}\label{eq:c_nm_def}
+\end{cases}\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/jax_backend.py\#L43}
+\end{align}
+\begin{equation}\label{eq:A_B_condition}
+B = 1 - 2A \,, \quad \text{for}\ A\in[0,1/2]\,. 
+\end{equation}
+
+\end{widetext}
+\ob{I have checked, carefully, that the equations above correspond exactly to the code base and I feel this is what we should start with.}\gm{Love it}
+
+where, in the codebase, we represent the dimensionless frequency arrays via $\hat{f}[l] = f[l]/\Delta F$, for $\Delta F$ the spacing between frequencies in the WDM domain. Equation \eqref{eq:A_B_condition} gives freedom to the user to define the properties of the Daubechies-Meyer window defined in  Eq.\eqref{eq:DM_window_discrete}. 
+
+From this point onwards, we will provide an interpretation for each of the equations \eqref{eq:gnm_full_discrete} -- \eqref{eq:A_B_condition}. We begin by discussing the DC, Interior, Nyquist split of the basis functions $\tilde{g}$, an important feature of our codebase, and the practical and theoretical consequences of the Daubechies-Meyer window $\tilde{\varphi}$. 
+
+% This orthogonality is the key reason that the WDM formalism is adept for treating stationary noise processes for reasons that will be discussed later.
+
+From Eq.\eqref{eq:c_nm_def}, the interior channels carry an alternating phase factor $C_{nm}$, while the DC and Nyquist edge channels have a doubled time-shift exponent and no $C_{nm}$ modulation. The phase factor $C_{nm}$ is the
+``\emph{Wilson}'' ingredient of the WDM construction: it combines the
+positive- and negative-frequency windowed Fourier atoms centered at $mN_t/2$ into a single real, orthogonal pair, which is what
+makes the interior basis real-valued and Wilson-orthogonal, to be discussed later in this section, in the
+discrete setting. 
+
+These edge channels $m = 0$ and $m = N_f$ in \eqref{eq:gnm_full_discrete} each contribute $N_t$ real degrees of freedom to
+the packed grid: the interior block stores $N_t(N_f{-}1)$ real
+coefficients via the $C_{nm}$-modulated pairing of the
+$\pm mN_t/2$ atoms (the Wilson-basis construction), while the DC
+and Nyquist channels each contribute $N_t$ unpaired real coefficients.
+The total $N_t(N_f{+}1)$ stored entries therefore represent the same
+$N=N_tN_f$ time-domain degrees of freedom, with the edge channels
+overcomplete by exactly $N_t$ real numbers~\cite{Necula_2012,Cornish:2020odn}.% 
+
+The window $\tilde\varphi$ is the ``\emph{Daubechies--Meyer}''
+ingredient of the WDM construction: a smooth, compactly supported
+frequency window of the Meyer family, whose taper region overlaps
+between adjacent channels in a way that yields exact partition-of-unity
+reconstruction. In the present implementation, and in this work, we use the
+$d=1$ cosine-tapered member of this family. We do stress that the parameter $d$ is retained in the Application Programming Interface (API) only for
+possible future
+generalizations.\footnote{Cornish~\cite{Cornish:2020odn} uses $d=4$,
+  which yields a flatter passband and steeper roll-off at the expense
+  of a wider time-domain support (the window function must be truncated
+  at $\pm q\Delta T$ with $q=16$). The $d=1$ cosine taper used here has
+  a gentler roll-off but is more compact in time, requiring a smaller
+  $q$. In practice, the choice of $d$ trades spectral leakage
+  suppression against temporal compactness of the window; for the
+  applications considered in this paper the $d=1$ window provides
+  adequate frequency separation while keeping the implementation simple
+and the time-domain filter short.} By construction, $\tilde\varphi$ has a limited frequency bandwidth
+which is controlled by the parameter $A\in[0,1/2]$ in Eq.\eqref{eq:A_B_condition}. 
+
+For our implementation we use the default $A =1/4$ and
+hence $B = 1/2$, so the window is non-zero for the normalised frequencies
+$|\hat{f|} \leq 3/4$. This is a default, not a hard-coded
+constraint: $A$ is exposed in \texttt{wdm\_transform} as the
+parameter \texttt{a} of the \texttt{WDM} class (with $B=1-2A$ derived
+automatically), and any choice with $A\in(0,1/2)$ is admissible.%
+
+A final and essential (!) property of the WDM formalism is the principle of orthogonality. The wilson basis $\tilde{g}$ defined by Eq. \eqref{eq:gnm_full_discrete} combined with the Debauchies-Meyer window Eq.\eqref{eq:DM_window_discrete} with associated constants $\eqref{eq:c_nm_def}$ provide an orthogonal basis\footnote{Our definitions of the Wilson basis functions \eqref{eq:gnm_full_discrete} carefully include the $m=0$ and $m = N_f$ in order for orthogonality to hold.}:%
+\begin{align}\label{eq:orthonormality}
+\sum_{l=-N/2}^{N/2-1}\tilde{g}^*_{nm}[l]\tilde{g}_{pq}[l]&=\delta_{np}\delta_{mq}\;,\nonumber\\
+\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}^*_{nm}[l]\tilde{g}_{nm}[l']&=\delta_{ll'}\;,
+\end{align}
+The first equality is proved in ~\cite{proof_2003_orthonormality} and the second equality is proved in appendix \ref{app:normality_condition} using Eq.\eqref{eq:meyer_window} and Eq.\eqref{eq:c_nm_def}. The basis functions here are represented in the frequency domain and it is easily proved they are orthogonal in the time domain. Orthogonality is the one of the key reasons that the WDM formalism is adept for gravitational wave data analysis, which will be discussed at a later stage of this work.
+
+These are the main ingredients behind the packed WDM grid. A single
+window shape is shifted across
+frequency to define the channel index $m$, and each shifted window is
+then modulated in time to define the atom indexed by $n$. This is why
+one WDM coefficient can be read as the strength of one localized
+time-frequency pattern, rather than as the amplitude of a globally
+supported sinusoid. 
+
+More concretely, a single coefficient $w_{nm}$ answers the question:
+``how much does the data resemble the atom centered at time bin $n$
+and frequency bin $m$?'' A large magnitude means that the data
+contains a feature with roughly the same time localization, central
+frequency, and oscillatory phase structure as that atom. Reading the
+WDM plane coefficient-by-coefficient in this way is often much more
+intuitive than interpreting a global Fourier series, because the
+index pair $(n,m)$ already carries an approximate time-frequency location.
+
+
+% \ob{commented out the orthogonality section for now}
+% Orthogonality is the one of the key reasons that the WDM formalism is adept for gravitational wave data analysis. Equations \eqref{eq:DM_window_discrete} and \eqref{eq:c_nm_def} are crucial for the Wilson Basis $\tilde{g}$ defined in \eqref{eq:gnm_full_discrete} to form an orthogonal basis\footnote{Our definitions of the Wilson basis functions \eqref{eq:gnm_full} carefully include the $m=0$ and $m = N_f$ in order for orthogonality to hold.}:%
+% \begin{align}\label{eq:orthonormality}
+% \sum_{l=-N/2}^{N/2-1}g^*_{nm}[l]g_{pq}[l]&=\delta_{np}\delta_{mq}\;,\nonumber\\
+% \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}g^*_{nm}[l]g_{nm}[l']&=\delta_{ll'}\;,
+% \end{align}
+% The first equality is proved in ~\cite{proof_2003_orthonormality} using Eq.\eqref{eq:meyer_window} and Eq.\eqref{eq:c_nm_def} the second equality is proved in appendix \ref{app:normality_condition}.
+% Since $\tilde{g}$ is orthogonal, inverse transforms from WDM $\mapsto$ frequency domain are possible 
+% \begin{align}
+% \tilde x[l]&=\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}w_{nm}\tilde g_{nm}[l]\;. \label{eq:x_tilde_inverse}
+% \end{align}
+% Another attractive feature for data analysts is the result of analysing locally stationary noise processes in the WDM domain. If the
+% Fourier-domain noise satisfies Eq.~\eqref{eq:psd_definition}, then
+% the covariance between two WDM noise coefficients is
+% \begin{align}\label{eq:wdm_noise_cov_exact}
+% \mathbb{E} [ w_{nm} w_{pq}]= \frac{1}{2}\sum_l S_{n}[l]\,\tilde g_{nm}[l]\tilde g_{pq}^*[l].
+% \end{align}
+
+% Since $w_{nm}$ is real, $w_{nm}^* = w_{nm}$, so $\mathbb{E}[w_{nm} w_{pq}] =
+% \mathbb{E}[ w_{nm}^* w_{pq}]$.  Writing $w_{nm} = \sum_l \tilde{x}_l
+% \tilde{g}_{nm}^*[l]$ and applying the PSD convention
+% Eq.~\eqref{eq:psd_definition} gives
+% \begin{align}
+% \mathbb{E}[w_{nm}^* w_{pq}]
+%   &= \sum_{l,l'}\tilde g_{nm}[l]\,\tilde g_{pq}^*[l']\,
+%      \mathbb{E}[\tilde x^*[l]\,\tilde x[l']]\nonumber\\
+%   &= \frac{1}{2}\sum_l \tilde g_{nm}[l]\,\tilde g_{pq}^*[l]\,S_{n}[|l|],
+% \end{align}
+% confirming the symmetric (non-conjugate) form and the factor of
+% $\tfrac{1}{2}$ in Eq.~\eqref{eq:wdm_noise_cov_exact}.
+% In the ideal orthogonal limit, whitened noise --
+% noise with $S_n[l] \propto $ const. across the support of each
+% atom -- reduces this covariance to diagonal form. In that case the WDM
+% coefficients are uncorrelated, and for Gaussian noise they are
+% therefore independent. In the sampled packed implementation used here,
+% it is useful to distinguish two statements. First, the interior atoms
+% ($m=1,\ldots,N_f-1$) satisfy the discrete orthonormality relation to
+% machine precision. Second, the packed real-valued storage includes
+% special DC and Nyquist edge channels, so the full stored coefficient
+% array is best viewed as a convenient packed representation rather than
+% a minimal orthonormal basis.
+% For this reason, the decorrelation discussion below focuses on the
+% interior coefficients. For whitened noise their empirical
+% correlations remain very small, while for coloured, non-stationary, or
+% non-Gaussian noise off-diagonal structure becomes more visible and
+% the coefficients should be regarded as only approximately decorrelated
+% rather than strictly independent.
+% Figure~\ref{fig:wdm_orthogonality_decorrelation} illustrates these points
+% numerically for a small sampled transform and for white and coloured
+% noise realizations.
+
+% \begin{figure*}[t]
+%   \centering
+%   \includegraphics[width=1\linewidth]{figures/wdm_orthogonality_decorrelation.pdf}
+%   \caption{\textbf{Numerical checks of orthogonality and
+%     decorrelation.} Left: Gram matrix of the interior sampled WDM
+%     atoms, showing the discrete inner products
+%     $\langle g_i, g_j\rangle$ after flattening the interior index pair
+%     $(n,m)$ into a single label $i$. The packed-storage atoms used here
+%     are mutually orthogonal but not unit-normalised, so the diagonal
+%     of $G$ does not equal $1$; the relevant numerical check is that
+%     the off-diagonal entries vanish at machine precision
+%     ($\max_{i\neq j}|G_{ij}|\sim 10^{-14}$), providing a direct
+%     demonstration of orthogonality for the interior channels.
+%     Middle: empirical correlation matrix of interior WDM coefficients
+%     estimated from many realizations of white Gaussian noise; most
+%     off-diagonal entries remain small. Right: the same calculation for
+%     colored stationary noise with a 4th-order Butterworth-type PSD
+%     $S(f)\propto[1+(f/f_c)^{4}]^{-1}$, $f_c=0.06\,\mathrm{Hz}$ (unit sampling rate),
+%     where visibly stronger off-diagonal
+%   correlations appear, in agreement with \cite{cornish_nonstationary_wdm}, where the correlations between $(n,m)$ and $(n',m')$ appear only at the closest two values of $m'=0,\pm1$ and decaying with $|n-n'|$. 
+%   A total number of samples $N=64$ is assumed, and the WDM transform is obtained with $N_t=N_f=8$.}
+%   \label{fig:wdm_orthogonality_decorrelation}
+%   \script{wdm_orthogonality_decorrelation.py}
+% \end{figure*}
+
+In the next subsections, we will provide formulae for the $w_{nm}$ coefficients for both the interior, DC and nyquist channels separately. In our final subsection, we investigate the orthogonal nature of the Wilson-basis.  
+
+\subsubsection{Interior channels ($0 < m < N_f$)}
+
+Starting from Eq.~\eqref{wnm_def} with the interior-channel basis
+element from Eq.~\eqref{eq:gnm_full_discrete}, the forward transform can be
+evaluated in the Fourier domain using
+\begin{align}
+  w_{nm} = \sum_{l=-N/2}^{N/2-1} \tilde{x}_l\,\tilde{g}_{nm}^*(f[l])\,,
+\end{align}
+where $\tilde{x}_l = \tilde{x}[l]$ is the DFT of the input data with zeroth bin of $\tilde{x}$ placed in the middle of the spectrum. For a
+real-valued input signal, $\tilde{x}_{-l} = \tilde{x}_l^*$, and the
+real-valued window satisfies $\tilde{\varphi}[-l] = \tilde{\varphi}[l]$.
+Splitting the sum into positive and negative frequency halves and
+using these symmetries, the negative-frequency contribution is the
+complex conjugate of the positive-frequency contribution (see
+Appendix~\ref{app:forward_derivation} for details), giving
+% \begin{align}\label{eq:wnm_interior}
+%   w_{nm} =
+%   \sqrt{2}\,(-1)^{nm}\,\Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2}\tilde{x}_{l'+mN_t/2}\,e^{2\pi
+%   i l'n/N_t}\,\tilde{\varphi}(l'\,\Delta f)\right],
+% \end{align}
+\begin{equation}\label{eq:wnm_interior}
+\begin{split}
+  w_{nm} = {} & \sqrt{2}\,(-1)^{nm} \\
+  & \times \Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2}\tilde{x}_{l'+mN_t/2}\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\right],
+\end{split}
+\end{equation}
+where $l' = l - mN_t/2$ and $\Delta f = 1/T$.%
+
+The frequency shift
+$l = l' + mN_t/2$ contributes a phase $e^{2\pi i (mN_t/2) n/N_t}
+= e^{i\pi mn} = (-1)^{mn}$, so the result can be written compactly as
+\begin{align}\label{eq:wnm_compact}
+  w_{nm} = \sqrt{2}\,(-1)^{nm}\,\Re\,C_{nm}^*\,x_m[n]\,,
+\end{align}
+where
+\begin{align}\label{eq:xm_def}
+  x_m[n] = \sum_{l=-N_t/2}^{N_t/2-1} e^{2\pi i l n/N_t}\,X[l +
+  mN_t/2]\,\tilde{\varphi}[l]
+\end{align}
+is the windowed, shifted inverse DFT of length $N_t$. The quantity
+$x_m[n]$ can be computed using a length-$N_t$ FFT for each channel
+$m$, so the total cost of the interior channels is $N_f \times
+\mathcal{O}(N_t\log N_t)$.
+
+\subsubsection{DC channel ($m = 0$)}
+
+The DC edge channel has a doubled time-shift exponent and no $C_{nm}$
+factor in the basis definition~\eqref{eq:gnm_full_discrete}. Following the
+same Fourier-domain evaluation yields
+\begin{align}\label{eq:wn0}
+  w_{n0} = \sqrt{2\,}\Re\left[\sum_{l=1}^{N_t/2}\tilde{x}_l\,e^{4\pi i l
+  n/N_t}\,\tilde{\varphi}[l]\right] + \frac{1}{\sqrt{2}}\tilde{x}_0\,\tilde{\varphi}[0]\,.
+\end{align}
+Note the factor of $4\pi$ in the exponent (versus $2\pi$ for interior
+channels): the DC basis element oscillates at twice the rate in the
+time index because it sees both positive and negative frequency
+copies of the window centered at $f=0$.
+
+\subsubsection{Nyquist channel ($m = N_f$)}
+
+The Nyquist edge channel is handled analogously to the DC channel but
+centered at the Nyquist frequency $f_{\rm max}$. Its structure
+mirrors the DC case with appropriate frequency shifts. In practice,
+the Nyquist channel is computed using the same windowed-FFT machinery
+as the interior channels, with the frequency shift set to $mN_t/2 = N/2$.
+\begin{align}\label{eq:wnNf}
+  w_{nN_f} &= \sqrt{2}\,\Re\!\left[\sum_{l=N/2-N_t/2}^{N/2-1}
+    \tilde{x}_l\,e^{4\pi i l n/N_t}\,\tilde{\varphi}[l-N_t/2]\right]
+    \nonumber\\
+  &\quad + \frac{1}{\sqrt{2}}\,\tilde{x}_{N/2}\,\tilde{\varphi}[0]\,.
+\end{align}
+
+\ob{Need code links to the equations above. Also, check the equations above! Especially this last one. }
+
+Collecting the results of each of the $w_{nm}$ coefficients above, the forward transform reads
+\begin{widetext}
+\begin{align}
+\label{eq:forward_transform_discrete}
+w_{nm} = \sqrt{2}(-1)^{mn}\Re\,
+\begin{cases}
+\,\displaystyle\sum_{l=1}^{N_t/2 - 1} \tilde{x}[l]\, \tilde{\varphi}[l]\, e^{4\pi i n l/N_t}\,
++ \dfrac{1}{2}\, \tilde{x}[0]\, \tilde{\varphi}[0],
+& m = 0, \\[12pt]
+ C_{nm}^{*} \displaystyle\sum_{l' = -N_t/2}^{N_t/2 - 1} \tilde{x}[l' + mN_t/2]\, \tilde{\varphi}[l']\, e^{2\pi i l' n/N_t}\,,
+& 1 \le m \le N_f - 1, \\[12pt]
+\displaystyle\sum_{l = N/2 - N_t/2}^{N/2 - 1} \tilde{x}[l]\, \tilde{\varphi}[l - N/2]\, e^{4\pi i n l/N_t}
++ \dfrac{1}{2}\, \tilde{x}[N/2]\, \tilde{\varphi}[0],
+& m = N_f,
+\end{cases}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/jax_backend.py\#L64}
+\end{align}
+\end{widetext}
+holding true for $N_f \in 2\mathbb{N}$. 
+\subsubsection{Orthogonality implications}
+
+Orthogonality is the one of the key reasons that the WDM formalism is adept for gravitational wave data analysis -- analysing locally stationary noise. If the
+Fourier-domain noise satisfies Eq.~\eqref{eq:psd_definition}, then
+the covariance between two WDM noise coefficients is
+\begin{align}\label{eq:wdm_noise_cov_exact}
+\mathbb{E} [ w_{nm} w_{pq}]= \frac{1}{2}\sum_l S_{n}[l]\,\tilde g_{nm}[l]\tilde g_{pq}^*[l].
+\end{align}
+
+Since $w_{nm}$ is real, $w_{nm}^* = w_{nm}$, so $\mathbb{E}[w_{nm} w_{pq}] =
+\mathbb{E}[ w_{nm}^* w_{pq}]$.  Writing $w_{nm} = \sum_l \tilde{x}_l
+\tilde{g}_{nm}^*[l]$ and applying the PSD convention
+Eq.~\eqref{eq:psd_definition} gives
+\begin{align}
+\mathbb{E}[w_{nm}^* w_{pq}]
+  &= \sum_{l,l'}\tilde g_{nm}[l]\,\tilde g_{pq}^*[l']\,
+     \mathbb{E}[\tilde x^*[l]\,\tilde x[l']]\nonumber\\
+  &= \frac{1}{2}\sum_l \tilde g_{nm}[l]\,\tilde g_{pq}^*[l]\,S_{n}[|l|],
+\end{align}
+confirming the symmetric (non-conjugate) form and the factor of
+$\tfrac{1}{2}$ in Eq.~\eqref{eq:wdm_noise_cov_exact}.
+In the ideal orthogonal limit, whitened noise --
+noise with $S_n[l] \propto $ const. across the support of each
+atom -- reduces this covariance to diagonal form. In that case the WDM
+coefficients are uncorrelated, and for Gaussian noise they are
+therefore independent. In the sampled packed implementation used here,
+it is useful to distinguish two statements. First, the interior atoms
+($m=1,\ldots,N_f-1$) satisfy the discrete orthonormality relation to
+machine precision. Second, the packed real-valued storage includes
+special DC and Nyquist edge channels, so the full stored coefficient
+array is best viewed as a convenient packed representation rather than
+a minimal orthonormal basis.
+For this reason, the decorrelation discussion below focuses on the
+interior coefficients. For whitened noise their empirical
+correlations remain very small, while for coloured, non-stationary, or
+non-Gaussian noise off-diagonal structure becomes more visible and
+the coefficients should be regarded as only approximately decorrelated
+rather than strictly independent.
+Figure~\ref{fig:wdm_orthogonality_decorrelation} illustrates these points
+numerically for a small sampled transform and for white and coloured
+noise realizations.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=1\linewidth]{figures/wdm_orthogonality_decorrelation.pdf}
+  \caption{\textbf{Numerical checks of orthogonality and
+    decorrelation.} Left: Gram matrix of the interior sampled WDM
+    atoms, showing the discrete inner products
+    $\langle g_i, g_j\rangle$ after flattening the interior index pair
+    $(n,m)$ into a single label $i$. The packed-storage atoms used here
+    are mutually orthogonal but not unit-normalised, so the diagonal
+    of $G$ does not equal $1$; the relevant numerical check is that
+    the off-diagonal entries vanish at machine precision
+    ($\max_{i\neq j}|G_{ij}|\sim 10^{-14}$), providing a direct
+    demonstration of orthogonality for the interior channels.
+    Middle: empirical correlation matrix of interior WDM coefficients
+    estimated from many realizations of white Gaussian noise; most
+    off-diagonal entries remain small. Right: the same calculation for
+    colored stationary noise with a 4th-order Butterworth-type PSD
+    $S(f)\propto[1+(f/f_c)^{4}]^{-1}$, $f_c=0.06\,\mathrm{Hz}$ (unit sampling rate),
+    where visibly stronger off-diagonal
+  correlations appear, in agreement with \cite{cornish_nonstationary_wdm}, where the correlations between $(n,m)$ and $(n',m')$ appear only at the closest two values of $m'=0,\pm1$ and decaying with $|n-n'|$. 
+  A total number of samples $N=64$ is assumed, and the WDM transform is obtained with $N_t=N_f=8$.}
+  \label{fig:wdm_orthogonality_decorrelation}
+  \script{wdm_orthogonality_decorrelation.py}
+\end{figure*}
