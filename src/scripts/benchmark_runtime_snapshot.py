@@ -7,17 +7,15 @@ import paths
 # -----------------------
 # Load data
 # -----------------------
-data = pd.read_csv(
-    "https://raw.githubusercontent.com/pywavelet/wdm_transform/refs/heads/main/docs/_static/benchmark_data.csv"
-)
-
-data["label"] = (
-    data["library"].str.lower().map({"numpy": "NumPy", "jax": "JAX"})
-    + " "
-    + data["device"]
-)
+BASE_URL = "https://raw.githubusercontent.com/pywavelet/wdm_transform/refs/heads/main/docs/_static"
+data = pd.read_csv(f"{BASE_URL}/benchmark_data.csv")
+try:
+    fft_data = pd.read_csv(f"{BASE_URL}/benchmark_fft_data.csv")
+except Exception:
+    fft_data = pd.read_csv("docs/_static/benchmark_fft_data.csv")
 
 data["batch_s"] = data["batch_ms"] / 1000.0
+fft_data["batch_s"] = fft_data["batch_ms"] / 1000.0
 data["speedup_batch_vs_serial"] = data["serial_ms"] / data["batch_ms"]
 
 def make_label(row):
@@ -31,8 +29,21 @@ def make_label(row):
         return f"{row['library']} [{row['device']}]"
 
 data["label"] = data.apply(make_label, axis=1)
+fft_data["label"] = fft_data.apply(make_label, axis=1)
 
 order = ["NumPy", "JAX [CPU]", "JAX [GPU]"]
+
+
+def find_factorization(n):
+    """Match the benchmark suite's even-even factorization n = nt * nf."""
+    sqrt_n = int(np.sqrt(n))
+    for nt in range(sqrt_n, 1, -1):
+        if n % nt != 0:
+            continue
+        nf = n // nt
+        if nt % 2 == 0 and nf % 2 == 0:
+            return nt, nf
+    raise ValueError(f"No even-even factorization found for N={n}")
 
 # -----------------------
 # Paper-style plotting
@@ -84,11 +95,35 @@ for label in order:
         color=colors.get(label, "black"),
     )
 
-# N log N reference, anchored to final NumPy CPU point
+# FFT overlay (same color per backend, dashed)
+for label in order:
+    df = fft_data[fft_data["label"] == label].sort_values("N")
+    if df.empty:
+        continue
+    ax.loglog(
+        df["N"],
+        df["batch_s"],
+        marker="s",
+        ms=2.8,
+        lw=1.2,
+        ls="--",
+        color=colors.get(label, "black"),
+        alpha=0.85,
+    )
+
+# Legend handles for solid=WDM vs dashed=FFT
+from matplotlib.lines import Line2D
+style_handles = [
+    Line2D([0], [0], color="0.25", lw=1.6, ls="-", label="WDM"),
+    Line2D([0], [0], color="0.25", lw=1.2, ls="--", label="FFT"),
+]
+
+# N log Nt reference, anchored to final NumPy CPU point
 ref_df = data[data["label"] == "NumPy"].sort_values("N")
 N_ref = ref_df["N"].to_numpy()
 t_ref = ref_df["batch_s"].to_numpy()
-ref = N_ref * np.log2(N_ref)
+Nt_ref = np.asarray([find_factorization(int(n))[0] for n in N_ref])
+ref = N_ref * np.log2(Nt_ref)
 ref = ref / ref[-1] * t_ref[-1]
 
 ax.loglog(
@@ -98,13 +133,27 @@ ax.loglog(
     ls="-",
     lw=1.0,
     alpha=0.75,
-    label=r"$N\log_2 N$",
+    label=r"$N\log_2 N_t$",
 )
 
 ax.set_ylabel(r"runtime [s]")
 ax.grid(True, which="major", ls=":", lw=0.5, alpha=0.45)
 ax.grid(False, which="minor")
-ax.legend(frameon=False, loc="upper left", handlelength=2.2)
+backend_handles, backend_labels = ax.get_legend_handles_labels()
+leg1 = ax.legend(
+    backend_handles,
+    backend_labels,
+    frameon=False,
+    loc="upper left",
+    handlelength=2.2,
+)
+ax.add_artist(leg1)
+ax.legend(
+    handles=style_handles,
+    frameon=False,
+    loc="lower right",
+    handlelength=2.2,
+)
 
 # -----------------------
 # Bottom panel: batching speedup
