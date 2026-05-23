@@ -2,10 +2,10 @@
 
 For a given frequency series $\tilde x[l]$, the WDM transform represents the data through the WDM coefficients $w_{nm}$
 \begin{align}\label{wnm_def}
-w_{nm}&=\sum_{l=0}^{N-1}\tilde x[l]\tilde g^*_{nm}[l]\,,
+w_{nm}&=\sum_{l=0}^{N-1}\tilde x[l]\tilde g^*_{nm}[l]\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L225}
 \end{align}
 where $n$ corresponds to the time index and $m$ corresponds to the
-frequency-channel. \ob{code link needed above.}
+frequency-channel.
 % with corresponding inverse transform
 % \begin{align}
 % \tilde x[l]&=\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}w_{nm}\tilde g_{nm}[l]\;, \label{eq:x_tilde_inverse}
@@ -31,7 +31,7 @@ e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big)
 \end{cases} \qquad l_r =l\frac{2}{N_t}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/windows.py\#L71} \label{eq:DM_window_discrete}\\
   C_{nm}&=e^{\frac{i\pi}{4}(1-(-1)^{n+m})} =
   \begin{cases} 1 & n+m \text{ even,} \\ i & n+m \text{ odd.}\label{eq:c_nm_def}
-\end{cases}\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/jax_backend.py\#L43}
+\end{cases}\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/windows.py\#L58}
 \end{align}
 \begin{equation}\label{eq:A_B_condition}
 B = 1 - 2A \,, \quad \text{for}\ A\in[0,1/2]\,. 
@@ -215,6 +215,7 @@ Appendix~\ref{app:forward_derivation} for details), giving
   w_{nm} = {} & \sqrt{2}\,(-1)^{nm} \\
   & \times \Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2}\tilde{x}_{l'+mN_t/2}\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\right],
 \end{split}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L92-L102}
 \end{equation}
 where $l' = l - mN_t/2$ and $\Delta f = 1/T$.%
 
@@ -241,7 +242,7 @@ factor in the basis definition~\eqref{eq:gnm_full_discrete}. Following the
 same Fourier-domain evaluation yields
 \begin{align}\label{eq:wn0}
   w_{n0} = \sqrt{2\,}\Re\left[\sum_{l=1}^{N_t/2}\tilde{x}_l\,e^{4\pi i l
-  n/N_t}\,\tilde{\varphi}[l]\right] + \frac{1}{\sqrt{2}}\tilde{x}_0\,\tilde{\varphi}[0]\,.
+  n/N_t}\,\tilde{\varphi}[l]\right] + \frac{1}{\sqrt{2}}\tilde{x}_0\,\tilde{\varphi}[0]\,.\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L80-L90}
 \end{align}
 Note the factor of $4\pi$ in the exponent (versus $2\pi$ for interior
 channels): the DC basis element oscillates at twice the rate in the
@@ -259,10 +260,10 @@ as the interior channels, with the frequency shift set to $mN_t/2 = N/2$.
   w_{nN_f} &= \sqrt{2}\,\Re\!\left[\sum_{l=N/2-N_t/2}^{N/2-1}
     \tilde{x}_l\,e^{4\pi i l n/N_t}\,\tilde{\varphi}[l-N_t/2]\right]
     \nonumber\\
-  &\quad + \frac{1}{\sqrt{2}}\,\tilde{x}_{N/2}\,\tilde{\varphi}[0]\,.
+  &\quad + \frac{1}{\sqrt{2}}\,\tilde{x}_{N/2}\,\tilde{\varphi}[0]\,.\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L104-L114}
 \end{align}
 
-\ob{Need code links to the equations above. Also, check the equations above! Especially this last one. }
+\ob{Check the equations above! Especially this last one. }
 
 Collecting the results of each of the $w_{nm}$ coefficients above, the forward transform reads
 \begin{widetext}
@@ -279,7 +280,7 @@ w_{nm} = \sqrt{2}(-1)^{mn}\Re\,
 + \dfrac{1}{2}\, \tilde{x}[N/2]\, \tilde{\varphi}[0],
 & m = N_f,
 \end{cases}
-\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/jax_backend.py\#L64}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L65-L116}
 \end{align}
 \end{widetext}
 holding true for $N_f \in 2\mathbb{N}$. 

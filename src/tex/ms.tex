@@ -374,7 +374,7 @@ From the orthogonality condition of the Wilson basis, the inverse WDM transform 
 % \end{align}
 % Equivalently, in the Fourier domain the reconstruction reads
 \begin{align}\label{eq:inverse_fourier}
-  \tilde{x}_l = \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}_{nm}[l]\,w_{nm}\,,
+  \tilde{x}_l = \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}_{nm}[l]\,w_{nm}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L366}
 \end{align}
 found via direct computation
 %
@@ -419,7 +419,7 @@ verified numerically in Section~\ref{sec:code_package}. We derive explicit formu
 \tilde{\varphi}[l - N/2]\, \displaystyle\sum_{n=0}^{N_t - 1} w_{nN_f}\, e^{-4\pi i n l / N_t},
 & m = N_f,\ \ N/2 - N_t/2 \le l \le N/2,
 \end{cases}
-\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/jax_backend.py\#L141}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L119-L176}
 \end{align}
 \end{widetext}
 where the original Fourier domain expression $\tilde{x}[l]$ on the output data is given via
@@ -595,7 +595,7 @@ the atom's frequency support~\cite{Cornish:2020odn}:%
 % \gm{The beginning of the study you want is in \cite{cornish_nonstationary_wdm}, but there is a lot to do...future work}
 % \ob{Hahaha fair enough!}
 \begin{align}\label{eq:snm_stationary}
-  S_{nm} \approx S(f_m)\,\Delta F\,.
+  S_{nm} \approx S(f_m)\,\Delta F\,.\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/signal_processing.py\#L63-L85}
 \end{align}
 \gm{I will take care of fixing this formula and below eq. \eqref{eq:snm_stationary}.}
 Substituting the diagonal covariance~\eqref{eq:wdm_noise_cov} into
@@ -617,11 +617,11 @@ The noise-weighted inner product in the WDM domain follows directly
 from~\eqref{eq:wdm_whittle}:
 %
 \begin{align}\label{eq:wdm_inner}
-  (a \,|\, b) = \sum_{n,m} \frac{a_{nm}\,b_{nm}}{S_{nm}}\,,
+  (a \,|\, b) = \sum_{n,m} \frac{a_{nm}\,b_{nm}}{S_{nm}}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/signal_processing.py\#L52-L60}
 \end{align}
 from which the matched-filter signal-to-noise ratio is
 \begin{align}
-  \rho(h) = \frac{(d \,|\, h)}{\sqrt{(h \,|\, h)}}\,,
+  \rho(h) = \frac{(d \,|\, h)}{\sqrt{(h \,|\, h)}}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/signal_processing.py\#L52-L60}
 \end{align}
 and the Fisher information matrix is
 \begin{align}\label{eq:wdm_fisher}
