@@ -769,7 +769,7 @@ expressions.
 In a similar way to a frequency domain analysis, one can define the noise-weighted inner product in the WDM domain 
 \begin{align}
     (a|b)_\rm{WDM} &= \boldsymbol{a}^T(\boldsymbol{\Sigma}^{\rm int}_w)^{-1}\boldsymbol{b} \\
-    & = \sum_{\substack{n \ \\ m\ \in\rm \ int}} \frac{a_{nm}\,b_{nm}} {S_{nm}}\,,\label{eq:wdm_inner}\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/signal_processing.py\#L52-L60}
+    & = \sum_{\substack{n \\ m\in\mathrm{int}}} \frac{a_{nm}\,b_{nm}} {S_{nm}}\,,\label{eq:wdm_inner}\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/signal_processing.py\#L52-L60}
 \end{align}
 which reduces to the frequency domain inner product via matrix algebra
 
