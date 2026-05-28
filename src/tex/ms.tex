@@ -53,50 +53,24 @@ European Space Agency (ESA), European Space Research and Technology Centre (ESTE
 Princes St, Auckland, New Zealand}
 
 \begin{abstract}
+  The WDM transform has been widely used in gravitational-wave astronomy, yet a
+  self-contained, mathematically explicit reference for practitioners remains lacking.
+  This is especially true for those wishing to adopt the transform in modern Python
+  and JAX inference workflows.
   We present \package, an open-source Python package implementing the
   Wilson--Daubechies--Meyer (WDM) wavelet-packet time-frequency transform for
   gravitational-wave data analysis.
-  The WDM basis and its applications
-  to gravitational-wave astronomy were established in foundational
-  work by Klimenko, Necula, Cornish, and collaborators; the goal of
-  this paper is to provide a self-contained, mathematically explicit
-  reference for practitioners wishing to adopt the WDM in modern
-  Python and JAX inference workflows.  We document the forward and
-  inverse transform step by step, making explicit the packed
-  $(N_t, N_f{+}1)$ coefficient layout, the DC and Nyquist edge-channel
-  conventions, the alternating phase factor $C_{nm}$, and the
-  normalization conditions required for exact round-trip reconstruction.
-  The package supplies NumPy and JAX backends, both validated to
-  floating-point precision, with the JAX backend enabling
-  GPU-accelerated transforms of million-point data streams in tens of
-  milliseconds.  As a worked example we verify that the WDM-domain
-  Whittle likelihood reproduces frequency-domain posteriors for a
-  resolved LISA galactic binary under a shared stationary noise model,
-  confirming numerical equivalence of the two representations in that
+  We document the forward and inverse transform step by step, making explicit the
+  packed $(N_t, N_f{+}1)$ coefficient layout, the DC and Nyquist edge-channel
+  conventions, the alternating phase factor $C_{nm}$, and the normalization
+  conditions required for exact round-trip reconstruction.
+  The package supplies NumPy and JAX backends, both round-trip validated to
+  floating-point precision, with the JAX backend enabling GPU-accelerated transforms
+  of million-point data streams in tens of milliseconds. As a worked example we
+  verify that the WDM-domain Whittle likelihood reproduces frequency-domain
+  posteriors for a resolved LISA galactic binary under a shared stationary noise
+  model, confirming numerical equivalence of the two representations in that
   controlled setting.
-  \ls{I usually do not include citations to people in abstracts and I like to start with a problem, I would propose (feel free to ignore if you do not agree):
-  The WDM basis and its applications
-  to gravitational-wave astronomy were established in foundational
-  work by Klimenko, Necula, Cornish, and collaborators; the goal of
-  this paper is to provide a self-contained, mathematically explicit
-  reference for practitioners wishing to adopt the WDM in modern
-  Python and JAX inference workflows.$\rightarrow$
-  The WDM transform has been widely used in gravitational-wave
-astronomy, yet a self-contained, mathematically explicit reference
-for practitioners—particularly those adopting modern Python and JAX
-inference workflows—remains lacking. We address this gap in this work.}
-\gm{Yes, I like the idea}
-Avis new suggested version (please remove above comments if you are ok): 
-The WDM transform has been widely used in gravitational-wave astronomy, yet a self-contained, mathematically explicit reference for practitioners remains lacking. 
-This is especially true for those wishing to adopt the transform in modern Python and JAX inference workflows. 
-We present \package, an open-source Python package implementing the Wilson--Daubechies--Meyer (WDM) wavelet-packet time-frequency transform for gravitational-wave data analysis. 
-We document the forward and inverse transform step by step, making explicit the packed $(N_t, N_f{+}1)$ coefficient layout, the DC and Nyquist edge-channel conventions, the alternating phase factor $C_{nm}$, and the normalization conditions required for exact round-trip reconstruction. 
-The package supplies NumPy and JAX backends, both round-trip validated to floating-point precision, with the JAX backend enabling GPU-accelerated transforms of million-point
-data streams in tens of milliseconds. As a worked example we verify
-that the WDM-domain Whittle likelihood reproduces frequency-domain
-posteriors for a resolved LISA galactic binary under a shared
-stationary noise model, confirming numerical equivalence of the two
-representations in that controlled setting.
 \end{abstract}
 
 \maketitle
