@@ -768,13 +768,13 @@ expressions.
 \subsection{The WDM Inner Product}
 In a similar way to a frequency domain analysis, one can define the noise-weighted inner product in the WDM domain 
 \begin{align}
-    (a|b)_\rm{WDM} &= \boldsymbol{a}^T(\boldsymbol{\Sigma}^{\rm int}_w)^{-1}\boldsymbol{b} \\
+    (a|b)_{\mathrm{WDM}} &= \boldsymbol{a}^T(\boldsymbol{\Sigma}^{\rm int}_w)^{-1}\boldsymbol{b} \\
     & = \sum_{\substack{n \\ m\in\mathrm{int}}} \frac{a_{nm}\,b_{nm}} {S_{nm}}\,,\label{eq:wdm_inner}\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/signal_processing.py\#L52-L60}
 \end{align}
 which reduces to the frequency domain inner product via matrix algebra
 
 \begin{align}
-    (a|b)_{\rm{WDM}} &= \boldsymbol{a}^T(\boldsymbol{\Sigma}^{\rm int}_w)^{-1}\boldsymbol{b}  \\ 
+    (a|b)_{\mathrm{WDM}} &= \boldsymbol{a}^T(\boldsymbol{\Sigma}^{\rm int}_w)^{-1}\boldsymbol{b}  \\ 
     &= \tilde{a}^{\dagger}\boldsymbol{G}^{\dagger}\boldsymbol{G}(\tilde{\Sigma}_{\rm int})^{-1}\boldsymbol{G}\boldsymbol{G}^{\dagger}\boldsymbol{b} \\
     & = \tilde{\boldsymbol{a}}^{\dagger}(\tilde{\boldsymbol{\Sigma}}_{\rm int})^{-1}\tilde{\boldsymbol{b}} \\
     & = \frac{4N}{\Delta t} \text{Re}\left(\sum_{m=1}^{N_f - 1}\frac{\tilde{a}^{\star}[m]\tilde{b}[m]}{S_{n}[m]}\right) \\
