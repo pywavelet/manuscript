@@ -38,7 +38,6 @@ B = 1 - 2A \,, \quad \text{for}\ A\in[0,1/2]\,.
 \end{equation}
 
 \end{widetext}
-\ob{I have checked, carefully, that the equations above correspond exactly to the code base and I feel this is what we should start with.}\gm{Love it}
 
 where, in the codebase, we represent the dimensionless frequency arrays via $\hat{f}[l] = f[l]/\Delta F$, for $\Delta F$ the spacing between frequencies in the WDM domain. Equation \eqref{eq:A_B_condition} gives freedom to the user to define the properties of the Daubechies-Meyer window defined in  Eq.\eqref{eq:DM_window_discrete}. 
 
@@ -88,19 +87,19 @@ parameter \texttt{a} of the \texttt{WDM} class (with $B=1-2A$ derived
 automatically), and any choice with $A\in(0,1/2)$ is admissible.%
 
 A final and essential (!) property of the WDM formalism is the principle of orthogonality. The wilson basis $\tilde{g}$ defined by Eq. \eqref{eq:gnm_full_discrete} combined with the Debauchies-Meyer window Eq.\eqref{eq:DM_window_discrete} with associated constants $\eqref{eq:c_nm_def}$ provide an orthogonal basis\footnote{Our definitions of the Wilson basis functions \eqref{eq:gnm_full_discrete} carefully include the $m=0$ and $m = N_f$ in order for orthogonality to hold.}:%
+\begin{widetext}
 \begin{align}\label{eq:orthonormality}
-\sum_{l=-N/2}^{N/2-1}\tilde{g}^*_{nm}[l]\tilde{g}_{pq}[l]&=\delta_{np}\delta_{mq}\;,\nonumber\\
+\sum_{l=-N/2}^{N/2-1}\tilde{g}^*_{nm}[l]\tilde{g}_{pq}[l]&=\delta_{m,q}\begin{cases}
+    \frac{1}{2}\left(\delta_{n,p}+\delta_{n,p\pm \frac{N_t}{2}}\right) \qquad m\in\{0,N_f\}\\
+    \delta_{n,p} \qquad 0<m<N_f
+\end{cases}\nonumber\\
 \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}^*_{nm}[l]\tilde{g}_{nm}[l']&=\delta_{ll'}\;,
 \end{align}
-The first equality is proved in ~\cite{proof_2003_orthonormality} and the second equality is proved in appendix \ref{app:normality_condition} using Eq.\eqref{eq:meyer_window} and Eq.\eqref{eq:c_nm_def}. The basis functions here are represented in the frequency domain and it is easily proved they are orthogonal in the time domain. Orthogonality is the one of the key reasons that the WDM formalism is adept for gravitational wave data analysis, which will be discussed at a later stage of this work.
+\end{widetext}
+Both equalities are proved in in appendix \ref{app:normality_condition} using Eq.\eqref{eq:meyer_window} and Eq.\eqref{eq:c_nm_def}. The basis functions here are represented in the frequency domain and it is easily proved they are orthogonal in the time domain. Orthogonality is the one of the key reasons that the WDM formalism is adept for gravitational wave data analysis, which will be discussed at a later stage of this work.
 
-These are the main ingredients behind the packed WDM grid. A single
-window shape is shifted across
-frequency to define the channel index $m$, and each shifted window is
-then modulated in time to define the atom indexed by $n$. This is why
-one WDM coefficient can be read as the strength of one localized
-time-frequency pattern, rather than as the amplitude of a globally
-supported sinusoid. 
+These are the main ingredients behind the packed WDM grid. A single window shape is shifted across
+frequency to define the channel index $m$, and each shifted window is then modulated in time to define the atom indexed by $n$. This is why one WDM coefficient can be read as the strength of one localized time-frequency pattern, rather than as the amplitude of a globally dsupported sinusoid. 
 
 More concretely, a single coefficient $w_{nm}$ answers the question:
 ``how much does the data resemble the atom centered at time bin $n$
@@ -256,14 +255,13 @@ centered at the Nyquist frequency $f_{\rm max}$. Its structure
 mirrors the DC case with appropriate frequency shifts. In practice,
 the Nyquist channel is computed using the same windowed-FFT machinery
 as the interior channels, with the frequency shift set to $mN_t/2 = N/2$.
+%
 \begin{align}\label{eq:wnNf}
   w_{nN_f} &= \sqrt{2}\,\Re\!\left[\sum_{l=N/2-N_t/2}^{N/2-1}
     \tilde{x}_l\,e^{4\pi i l n/N_t}\,\tilde{\varphi}[l-N_t/2]\right]
     \nonumber\\
   &\quad + \frac{1}{\sqrt{2}}\,\tilde{x}_{N/2}\,\tilde{\varphi}[0]\,.\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L104-L114}
 \end{align}
-
-\ob{Check the equations above! Especially this last one. }
 
 Collecting the results of each of the $w_{nm}$ coefficients above, the forward transform reads
 \begin{widetext}
