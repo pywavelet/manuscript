@@ -499,19 +499,36 @@ Following~\cite{Burke:2025bun} with DFT convention such that
     \boldsymbol{\Sigma} &=  \frac{1}{N}\boldsymbol{P}^{\dagger}\tilde{\boldsymbol{\Sigma}}\boldsymbol{P}\,, \quad \ \ \ \  \text{TD Covariance}
 \end{align}
 \end{subequations}
-for $\boldsymbol{P}$ a unitary matrix and $\tilde{\boldsymbol{\Sigma}} = \mathbb{E}[\tilde{\boldsymbol{x}}\tilde{\boldsymbol{x}}^{\dagger}]$ the FD noise covariance matrix, we can substitute the expressions directly above into \eqref{eq:time_domain_like} to find the frequency domain likelihood
+where the last equation is proved in \cite{Burke:2025bun} and where $\boldsymbol{P}$ is a unitary matrix and $\tilde{\boldsymbol{\Sigma}} = \mathbb{E}[\tilde{\boldsymbol{x}}\tilde{\boldsymbol{x}}^{\dagger}]$ is the FD noise covariance matrix.
+We can substitute the expressions directly above into \eqref{eq:time_domain_like} to find the frequency domain likelihood
 \begin{equation}\label{eq:frequency_domain_like}
     \ln\mathcal{L}(d|\boldsymbol{\theta}) = -\frac{1}{2}\tilde{\boldsymbol{x}}^{\dagger}\tilde{\boldsymbol{\Sigma}}^{-1}\tilde{\boldsymbol{x}} - \ln\det \left(\frac{1}{N}\tilde{\boldsymbol{\Sigma}}\right) - \frac{N}{2}\ln(2\pi)\,.
 \end{equation}
 By asserting that the time-domain noise covariance matrix is stationary \emph{and circulant}, the frequency domain noise covariance matrix returns a purely diagonal matrix. In this section, we will perform a similar calculation to ~\cite{Burke:2025bun} and transform the frequency domain likelihood \eqref{eq:frequency_domain_like} into the WDM likelihood used for parameter inference.  
 
 The WDM coefficients $w_{nm}$ are pixels that live on a grid of dimension $(N_t, N_f + 1)$. Here the grid is overdetermined as we are also accounting for the zeroth and Nyquist bins, hence $N_f +1$. Now let us define a bijection (isomorphism for nerds)
-\begin{equation}
-\alpha\ : \ (n,m)\mapsto \alpha = \{0, 1, \ldots, N_t(N_f + 1) - 1\}\,,
-\end{equation}
+% \begin{equation}
+% \alpha\ : \ (n,m)\mapsto \alpha = \{0, 1, \ldots, N_t(N_f + 1) - 1\}\,,
+% \end{equation}
+\begin{align}
+\alpha\ : \{n\}_{n = 0}^{N_t - 1} &\times \{m\}_{m=0}^{N_f} \longrightarrow \{0, 1, \ldots, N_t(N_f + 1) - 1\} \\
+\alpha(n,m) &\longmapsto \alpha =\{0, 1, \ldots, n(N_f + 1) +m\}\,,
+\end{align}
 where, for any choice of $\alpha = n(N_f +1) + m$ we have the real vector $\boldsymbol{w} \in \mathbb{R}^{N_t(N_f + 1)}$. In other words, take the WDM coefficients (matrix) and flatten the matrix row by row to create a real vector. 
 
-We can then define the complex \emph{rectangular} matrix $\boldsymbol{G} \in \mathbb{C}^{N_t(N_f +1) \times N}$ who's action on the frequency domain vector $\tilde{\boldsymbol{x}}\in\mathbb{C}^{N}$ gives $\boldsymbol{w} = \boldsymbol{G}\tilde{\boldsymbol{x}}$ with  transform $\tilde{\boldsymbol{x}} = \boldsymbol{G}^{\dagger}\boldsymbol{w}$. In component form, one should interpret $(\boldsymbol{G})_{\alpha,l} = \tilde{g}^{\star}_{nm}[l]$, with components of $(\boldsymbol{G})_{\alpha,l}$ here read as row $\alpha \mapsto (n,m)$ evaluated at frequency index $l$. In component form:
+We can then define the complex \emph{rectangular} matrices $\boldsymbol{G}, \boldsymbol{G}^{\dagger} \in \mathbb{C}^{N_t(N_f +1) \times N}$ 
+with linear maps
+\begin{align}
+G : \mathbb{C}^{N} &\longrightarrow \mathbb{C}^{N_t(N_f + 1)} \\
+\boldsymbol{x} &\longmapsto \boldsymbol{G}\tilde{\boldsymbol{x}} = \boldsymbol{w}\,,\\
+\\\nonumber 
+G^{\dagger} : \mathbb{C}^{N_t(N_f + 1)} &\longrightarrow \mathbb{C}^{N}  \\
+\tilde{\boldsymbol{w}} &\longmapsto \boldsymbol{G}^{\dagger}\boldsymbol{w} = \tilde{\boldsymbol{x}}\,,
+\end{align}
+% 
+
+% OK that's fine! It's basically done. The only other part I was thinking of including was an SVD computation of G and showing that, indeed, even if one were to consider the full m = 0 and m = N_f bin then they contribute nothing towards the likelihood. Yeah, we should discuss that. There might also be parts of this that could feed into the earlier section around orthogonality... wouldn't it be fun having an appendix that's longer than the actual paper. I am absolutely not surprised by that. Hahahaha. Right, have fun with the section. Let me know if you want me to explain anything in more detail. I'm now starting to understand things a lot more clearly. 
+i.e., with action on the frequency domain vector $\tilde{\boldsymbol{x}}\in\mathbb{C}^{N}$ gives $\boldsymbol{w} = \boldsymbol{G}\tilde{\boldsymbol{x}}$ with inverse transform $\tilde{\boldsymbol{x}} = \boldsymbol{G}^{\dagger}\boldsymbol{w}$. In component form, one should interpret $(\boldsymbol{G})_{\alpha,l} = \tilde{g}^{\star}_{nm}[l]$, with components of $(\boldsymbol{G})_{\alpha,l}$ here read as row $\alpha \mapsto (n,m)$ evaluated at frequency index $l$. In component form:
 \begin{align}
     \left(\mathbf{G}^\dagger \mathbf{G}\right)_{ll'} 
     &= \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f} \tilde{g}_{nm}^*[l]\, \tilde{g}_{nm}[l'] 
@@ -524,13 +541,14 @@ We can then define the complex \emph{rectangular} matrix $\boldsymbol{G} \in \ma
         \delta_{n,p}, 
     \end{cases} \label{eq:orthonormality_like_cases}
 \end{align}
+\gm{That's a duplicate of \eqref{eq:orthonormality}, in the matrix formalism, so maybe we can move this formula to appendix}
 for the first case in Eq.~\eqref{eq:orthonormality_like_cases} the zeroth $m = 0$ and $m = N_f$ Nyquist bins and second case the interior bins $m \in \{1,\ldots, N_f - 1\}$.
 From the orthogonal conditions Eqs. (\ref{eq:orthogonality_likelihood_proof}, \ref{eq:orthonormality_like_cases}), one can see that $\boldsymbol{G}^{\dagger}\boldsymbol{G} = \mathbb{I}_{N} \neq \boldsymbol{G}\boldsymbol{G}^{\dagger}$.
 
 % Requires \usepackage{mathtools} for \xmapsto
 % Replace \eqref{eq:orthogonality} with your label for Eq. (16)
 
-Although $\boldsymbol{G}$ satisfies $\boldsymbol{G}^\dagger\boldsymbol{G} = \mathbb{I}_N$ and therefore admits an exact left-inverse, the opposite product $\boldsymbol{G}\boldsymbol{G}^\dagger$ is \emph{not} the identity: by the first line of Eq.~\eqref{eq:orthogonality} it is an orthogonal projector onto the $N$-dimensional image of $\boldsymbol{G}$, with orthogonal complement spanned by the $N_t$ redundant directions of the packed layout. The forward map $\boldsymbol{w} = \boldsymbol{G}\tilde{\boldsymbol{x}}$ embeds the signal space $\mathbb{C}^N$ into the larger packed space $\mathbb{C}^{N_t(N_f+1)}$, and the left-inverse $\boldsymbol{G}^\dagger$ recovers the signal,
+Although $\boldsymbol{G}$ satisfies $\boldsymbol{G}^\dagger\boldsymbol{G} = \mathbb{I}_N$ and therefore admits an exact left-inverse, the opposite product $\boldsymbol{G}\boldsymbol{G}^\dagger$ is \emph{not} the identity: by the first case of Eq.~\eqref{eq:orthonormality_like_cases} it is an orthogonal projector onto the $N$-dimensional image of $\boldsymbol{G}$, with orthogonal complement spanned by the $N_t$ redundant directions of the packed layout. The forward map $\boldsymbol{w} = \boldsymbol{G}\tilde{\boldsymbol{x}}$ embeds the signal space $\mathbb{C}^N$ into the larger packed space $\mathbb{C}^{N_t(N_f+1)}$, and the left-inverse $\boldsymbol{G}^\dagger$ recovers the signal,
 \begin{equation}
     \tilde{\boldsymbol{x}} \xmapsto{\;\boldsymbol{G}\;} \boldsymbol{w} = \boldsymbol{G}\tilde{\boldsymbol{x}} \xmapsto{\;\boldsymbol{G}^\dagger\;} \boldsymbol{G}^\dagger\boldsymbol{G}\tilde{\boldsymbol{x}} = \tilde{\boldsymbol{x}} \,,
 \end{equation}
@@ -538,9 +556,10 @@ so the forward-then-inverse round-trip is exact for every signal. The reverse ro
 \begin{equation}
     \boldsymbol{w} \xmapsto{\;\boldsymbol{G}^\dagger\;} \boldsymbol{G}^\dagger\boldsymbol{w} \xmapsto{\;\boldsymbol{G}\;} \boldsymbol{G}\boldsymbol{G}^\dagger\boldsymbol{w} \neq \boldsymbol{w} \,,
 \end{equation}
+\gm{Maybe here I would put an underbrace to the last inequality. It's \textit{almost always} equal, but the 0 and Nf bins}
 since $\boldsymbol{G}\boldsymbol{G}^\dagger$ projects onto $\mathrm{im}(\boldsymbol{G})$ and discards any component lying in the $N_t$-dimensional cokernel. Such spurious $\boldsymbol{w}$ do not arise in practice, where packed arrays are always obtained by transforming a genuine frequency-domain signal.
 
-Separately, and on the practical side, the exactness of the \emph{forward-then-inverse} round-trip relies on $\boldsymbol{G}^\dagger\boldsymbol{G} = \mathbb{I}_N$, which in turn requires the DC and Nyquist edge channels to be included and implemented correctly. Omitting or mishandling these channels breaks the completeness relation and introduces non-trivial reconstruction errors in $\tilde{\boldsymbol{x}} \mapsto \boldsymbol{w} \mapsto \tilde{\boldsymbol{x}}$.
+Separately, and on the practical side, the exactness of the \emph{forward-then-inverse} round-trip relies on $\boldsymbol{G}^\dagger\boldsymbol{G} = \mathbb{I}_N$, which in turn requires the DC and Nyquist edge channels to be included and implemented correctly. Omitting or mishandling these channels breaks the completeness relation and introduces non-trivial reconstruction errors in $\tilde{\boldsymbol{x}} \mapsto \boldsymbol{w} \mapsto \tilde{\boldsymbol{x}}$. 
 % There are similar analogies 
 
 % \gm{I have the suspect that this is analogous to what would be happening for frequency-domain data that are not obtained from a Fourier transform of some real time-domain data...if you do a roundtrip transform frequency$\to$time$\to$frequency starting with some generic $\tilde x_l$ that does come from the fft of a real time-domain signal you might mess up. On the other hand if you do $x_t\to \tilde{x}_l\to x_t$ you are good.}
@@ -560,7 +579,7 @@ Separately, and on the practical side, the exactness of the \emph{forward-then-i
 % \end{equation}
 % So, not a stupid question, a genuine typo! In the mind the gaps paper, I was using FD expressions with $\Delta t$ attached. Here we use the convention where $\Delta t$ is not included in the transforms so fourier transforms are dimensionless. I have corrected the point above :). Let me know if you think we need to include this derivation or not. I've written in black text what such a derivation would look like. 
 % }
-Consider the two definitions 
+Consider the two  
 \begin{align}
     \tilde{\boldsymbol{\Sigma}} &= \mathbb{E}[\tilde{\boldsymbol{x}}\tilde{\boldsymbol{x}}^{\dagger}] = \boldsymbol{G}^{\dagger}\mathbb{E}[\boldsymbol{w}\boldsymbol{w}^{\dagger}]\boldsymbol{G} = \boldsymbol{G}^{\dagger}\boldsymbol{\Sigma}_{w}\boldsymbol{G} \label{def:cov_freq_matrix}\\
     \boldsymbol{\Sigma}_w &= \mathbb{E}[\boldsymbol{w}\boldsymbol{w}^{\dagger}] = \boldsymbol{G}\mathbb{E}[\tilde{\boldsymbol{x}}\tilde{\boldsymbol{x}}^{\dagger}]\boldsymbol{G}^{\dagger} = \boldsymbol{G}\tilde{\boldsymbol{\Sigma}}\boldsymbol{G}^\dagger \label{def:cov_wdm_matrix}
@@ -581,26 +600,25 @@ Consider the two definitions
 % right? This is the opposite of the equation above, and \eqref{eq:Sigma_w_def}
 % }
 %
-for $\boldsymbol{\Sigma}_{w}\in\mathbb{R}^{N_t(N_f+1)\times N_t(N_f +1)}$ the \emph{real valued} WDM noise covariance matrix. Now, for stationary and circulant noise we have that $\tilde{\Sigma}$ is trivially invertible. This does not imply that the product $\boldsymbol{G}\tilde{\boldsymbol{\Sigma}}_w\boldsymbol{G}^\dagger$ is invertible. One can show this using the following identities
+for $\boldsymbol{\Sigma}_{w}\in\mathbb{R}^{N_t(N_f+1)\times N_t(N_f +1)}$ the \emph{real valued} WDM noise covariance matrix. 
+
+Now, for stationary and circulant noise we have that $\tilde{\Sigma}$ is trivially invertible. This does not imply that the product $\boldsymbol{G}\tilde{\boldsymbol{\Sigma}}_w\boldsymbol{G}^\dagger$ is invertible. One can show this using the following identities
 \begin{subequations}
 \begin{align}
     \text{Rank}(\boldsymbol{A}^{\dagger}) &= \text{Rank}(\boldsymbol{A}) \label{eq:rank_first_identity} \\
     \text{Rank}(\boldsymbol{A}^{\dagger}\boldsymbol{A}) &= \text{Rank}(\boldsymbol{A}) \label{eq:rank_second_identity}\\
-    \text{Rank}(\boldsymbol{A}\boldsymbol{B}\boldsymbol{C}) &\leq \text{Rank}(\boldsymbol{A})\text{Rank}(\boldsymbol{B})\text{Rank}(\boldsymbol{C}) \label{eq:rank_third_identity} 
+    \text{Rank}(\boldsymbol{A}\boldsymbol{B}\boldsymbol{C}) &\leq \text{min}(\text{Rank}(\boldsymbol{A}),\text{Rank}(\boldsymbol{B}),\text{Rank}(\boldsymbol{C})) \label{eq:rank_third_identity} 
 \end{align}
 \end{subequations}
-From \eqref{eq:rank_first_identity} and \eqref{eq:rank_second_identity}, we see that $N = \text{Rank}(\boldsymbol{G}^{\dagger}\boldsymbol{G}) = \text{Rank}(\boldsymbol{G}) = \text{Rank}(\boldsymbol{G}^{\dagger})$. Similarly, we have from Eq.\eqref{eq:rank_third_identity}
-\begin{equation}
-    \text{Rank}(\boldsymbol{\Sigma}_w) \leq \text{Rank}(\boldsymbol{G})\text{Rank}(\tilde{\boldsymbol{\Sigma}})\text{Rank}(\boldsymbol{G}^\dagger) = N
-\end{equation}
-Therefore, from the rank-nullity theorem, we must have $\text{Dim}(\text{Null}(G)) = N_t$, precisely the quantity of basis components corresponding to the zeroth and Nyquist bins. Since the matrix $\boldsymbol{\Sigma}_{w}$ does not have full rank, i.e., $\text{Rank}(\Sigma_{w}) \neq (N + N_t)$, we deduce that $\Sigma_{w}$ is not invertible over the full span of pixels $n \in \{0,\ldots, N_t -1\}$ and $m\in\{0, \ldots, N_f\}$. 
+From \eqref{eq:rank_first_identity} and \eqref{eq:rank_second_identity}, we see that $N = \text{Rank}(\boldsymbol{G}^{\dagger}\boldsymbol{G}) = \text{Rank}(\boldsymbol{G}) = \text{Rank}(\boldsymbol{G}^{\dagger})$. Similarly, we have from Eq.\eqref{eq:rank_third_identity} that $\text{Rank}(\boldsymbol{\Sigma}_w)  \leq N$. Since the matrix $\boldsymbol{\Sigma}_{w}$ does not have full rank, i.e., $\text{Rank}(\Sigma_{w}) \neq (N + N_t)$, we deduce that $\Sigma_{w}$ is not invertible over the full span of pixels $n \in \{0,\ldots, N_t -1\}$ and $m\in\{0, \ldots, N_f\}$. 
 
-To make progress, we define the pseudo inverse 
+To make progress, we define the Moore-Penrose pseudo inverse $\boldsymbol{\Sigma}^+_{w}$ of the matrix $\boldsymbol{\Sigma}_w$
 \begin{equation}\label{eq:pseudo_inv_cov}
-\boldsymbol{\Sigma}_w^{+} = \boldsymbol{G}\tilde{\boldsymbol{\Sigma}}^{-1}\boldsymbol{G}^{\dagger}
+\boldsymbol{\Sigma}_w^{+} = \boldsymbol{G}\tilde{\boldsymbol{\Sigma}}^{-1}\boldsymbol{G}^{\dagger}\,.
 \end{equation}
 
-Where one can immediately check the following identities hold 
+Where one can immediately check the following identities 
+\gm{How about just stating that $\boldsymbol{\Sigma}_w^{+} \boldsymbol{\Sigma}_w =\boldsymbol{\Sigma}_w \boldsymbol{\Sigma}^{+}_w =1$ here below? Also, we may write it in-line and not with an equation, it's quite easy to see it, right?}\ob{They only equal 1 over the interior bins. Including the zeroth and Nyquist, the computation returns $\boldsymbol{G}\boldsymbol{G}^{\dagger}$. }
 \begin{subequations}
 \begin{align}
 	 \boldsymbol{\Sigma}_w^{+} \boldsymbol{\Sigma}_w \boldsymbol{\Sigma}_w^{+} &= \boldsymbol{\Sigma}_w^{+} \,, \\
@@ -619,15 +637,18 @@ since $\boldsymbol{G}^{\dagger}\boldsymbol{G} = \mathbb{I}_{N}$. To build the WD
 
 % \gm{I guess we can circumnavigate the problem, by casting together 0 and Nyquist bins...}\ob{Yeah, still thinking about this. I'm actually not sure it will make things easier or not. I feel like even with the $m = 0$ and $m = N_f$ bins included, there is still an element of redundancy in those bins. I'm really not sure on this one. }
 % \gm{If you want to investigate it, please go ahead. If it is too much, let's leave it for future work. I think that the analogy STFT=time-frequency FFT, and WDM=time-frequency rfft holds, and therefore every results there in terms of redundancy applies. Also, WDM is built to be critically sampled. Please remove these comments once you're happy with it: for me it's fine anyways.}
-With pseudo-inverse of the WDM matrix given by \eqref{eq:pseudo_inv_cov}. The singular nature of the WDM covariance matrix arises due to the overcomplete nature of the packed basis (including $m = 0$ and $m = N_t$). A proper treatment of the likelihood would require both a pseudo-inverse of the WDM matrix and a pseudo-determinant using the SVD algorithm -- both rather costly for the sake of two extra bins. However, it is far more computationally convenient to work with the interior atoms $1 \leq m \leq N_f$ which results in a matrices $\boldsymbol{G}^{\rm int}$ and $\boldsymbol{\Sigma}^{\rm int}_{w}$ with full rank. Similarly, over the interior bins we have that $\boldsymbol{G}\boldsymbol{G}^{\dagger} = \boldsymbol{G}^{\dagger}\boldsymbol{G} = \mathcal{I}_{N}$ and $(\boldsymbol{\Sigma}^{\text{int}}_{w})^{+} = (\boldsymbol{\Sigma}_{w}^{\rm int})^{-1}$. Hence dropping the DC and Nyquist bins yields allows for a simplification of the log-likelihood
+With pseudo-inverse of the WDM matrix given by \eqref{eq:pseudo_inv_cov}. The singular nature of the WDM covariance matrix arises due to the overcomplete nature of the packed basis when including $m = 0$ and $m = N_t$. In other words, the zeroth and Nyquist bins are dependent on one another, forcing linear dependence between the rows.  A proper treatment of the likelihood would require both a pseudo-inverse of the WDM matrix and a pseudo-determinant using the SVD algorithm -- both rather costly for the sake of two extra bins. However, it is far more computationally convenient to work with the interior atoms $1 \leq m \leq N_f$ which results in square matrices $\boldsymbol{G}^{\rm int} \in \mathbb{C}^{N \times N}$ and $\boldsymbol{\Sigma}^{\rm int}_{w} \in \mathbb{R}^{N \times N}$ with full rank -- i.e., now a zero dimensional co-kernel. Similarly, over the interior bins we have that $\boldsymbol{G}\boldsymbol{G}^{\dagger} = \boldsymbol{G}^{\dagger}\boldsymbol{G} = \mathcal{I}_{N}$ and $(\boldsymbol{\Sigma}^{\text{int}}_{w})^{+} = (\boldsymbol{\Sigma}_{w}^{\rm int})^{-1}$. Hence dropping the DC and Nyquist bins yields allows for a simplification of the log-likelihood
 \begin{align}
-    \ln\mathcal{L}(d|\boldsymbol{\theta}) &= -\frac{1}{2}\boldsymbol{w}^{T}(\boldsymbol{\Sigma}_{w}^{\rm int})^{-1}\boldsymbol{w}  \\ & \qquad- \frac{1}{2}\ln\det \left(\frac{1}{N_fN_t}\boldsymbol{\Sigma}_{w}^{\rm int}\right) - \frac{N_fN_t}{2}\ln(2\pi)\,.
+    \ln\mathcal{L}(d|\boldsymbol{\theta}) &= -\frac{1}{2}\boldsymbol{w}^{T}(\boldsymbol{\Sigma}_{w}^{\rm int})^{-1}\boldsymbol{w}  \\ & \qquad- \ln\det \left(\frac{1}{N_fN_t}\boldsymbol{\Sigma}_{w}^{\rm int}\right) - \frac{N_fN_t}{2}\ln(2\pi)\,.
 \end{align}
+It is interesting to note that the quadratic or log-determinant piece can be evaluated in any domain -- time domain, frequency domain or WDM domain translated via matrix-algebra. For example, if fast signal templates in the WDM domain were to hand and one were interested in noise estimation in a purely stationary context, one could compute the quadratic piece in the WDM domain and noise term in the frequency domain. 
+
 \subsection{Local stationary noise}
 At this point we place the condition on the time-domain noise covariance matrix that it is both stationary and \emph{circulant}. Such conditions give a purely diagonal noise covariance matrix with entries proportional to the covariance matrix
 \begin{equation}
-\boldsymbol{\tilde{\Sigma}}_{ll^{\prime}} =  \frac{N S_{n}[l]}{2\Delta t} \delta_{ll^\prime}
+\boldsymbol{\tilde{\Sigma}}_{ll^{\prime}} =  \frac{N S[l]}{2\Delta t} \delta_{ll^\prime}
 \end{equation}
+for $S$ the noise Power Spectral Density, a function relating the power of instrumental (and/or galactic) noise with frequency. White noise is governed via $S[l]\propto const$ and coloured noise otherwise.
 % \gm{I would avoid $ij$ for frequencies, rather $ll'$ for consistency. Also, where does the $N/2\Delta t$ factor comes from?}
 and, since 
 \begin{equation}\label{eq:Sigma_w_def}
@@ -636,13 +657,15 @@ and, since
 We therefore have in component form
 \begin{align}
 (\boldsymbol{\Sigma}_w^{\rm int})_{\alpha\beta}
-& = \frac{N}{2\Delta t} \ \sum_{l,l'}\tilde{g}^*_{nm}[l]\tilde{g}_{pq}[l]S_{n}[l] 
+& = \frac{N}{2\Delta t} \ \sum_{l,l'}\tilde{g}^*_{nm}[l]\tilde{g}_{pq}[l]S[l] 
 % \approx \frac{N}{2\Delta t}\delta_{nm}\delta_{pq}S_{n}[l] = \delta_{nm}\delta_{pq}S_{nm}[l]
 \end{align}
-At this point, we will assume local stationarity such that $S_{n}[l] \approx S_{n}[k,l]$ for time and frequency index $(k,l)$ 
+At this point, we will assume local stationarity such that $S_{n}[l] \approx S_{n}[k,l]$ for time and frequency index $(k,l)$.
 % \gm{I personally don't like this equality, this is not really a definition of a generalized TF PSD, shall we just keep $S_{n}[l]$ in the following, since we only deal with stationary PSD?}\ob{Which equality? the approximation before your comment, equation directly above it (48) or equation (49)?}. 
 
 In other words, $S_{n}$ is now an evolutionary power spectral density which could evolve slowly over time. Provided the evolutionary power spectral density evolves slowly over a wavelet bandwidth $\Delta F$, we can pull the evolutionary PSD out of the summation 
+\gm{Here is, for me, the most important point over all the stats things. What is the formal way to relate $S_n[k,l]$ and $S_n[l]$? is it $S_n[k,l]=S_n[l]$?. If yes, sorry to be pedantic, but I feel like we have to prove it. Also, we should change notation, in order not to confuse the reader}\ob{Yeah, I think we change notation -- at least get rid of the $n$ on the subscript (sorry, my bad before -- you were doing the right thing ignoring $n$. I think the evolutionary PSD comes from taylor expanding the PSD itself as a function of time $t = t_0$ and, provided $\dot{S}[n,m]|_{n = n_0}$ is small compared to the time evolution over the bin $\Delta F$, it can be dropped. Something like this? I can try and prove it?}
+\gm{Yes, something like it. I would be happy to see something that takes the last line of the equation below, and relate $S_{kl}^{WDM}$ to $S_{n}[l]$, like $S_{kl}^{WDM}=S_n[l]\times {\rm something}$. I believe there is no need to introduce $S_n[k,l]$, we can choose one between $S_n[k,l]$ and $S_{kl}^{WDM}$. This will save also another (not really useful, I believe) equation that relates $S_n[k,l]$ and $S_{kl}^{WDM}$.}
 \begin{align}
 (\boldsymbol{\Sigma}_w^{\rm int})_{\alpha\beta}
 & \approx  \frac{N}{2\Delta t} S_{n}[k,l]  \ \sum_{l,l'}\tilde{g}^*_{nm}[l]\tilde{g}_{pq}[l^\prime] \nonumber \\ 
@@ -683,6 +706,7 @@ the general Gaussian likelihood yields the WDM Whittle-based log-likelihood:
   & \qquad \qquad \qquad \qquad \quad \frac{1}{2}  
   \frac{(d_{nm} - h_{nm})^2}{S^{\text{WDM}}_{nm}}\bigg],
 \end{align}
+\gm{Is there a - sign missing in front of $\frac{1}{2}$ in this equation above? Also, why did you split $N$ to $N_t N_f$?}
 where $d_{nm}$, $h_{nm}$ are the WDM coefficients of the data and
 signal model, respectively. The likelihood \eqref{eq:wdm_whittle} is sufficient for both noise and signal parameter estimation. From this point onwards, we assume a known noise covariance matrix in the WDM domain, implying that the likelihood \eqref{eq:wdm_whittle} is proportional up to the quadratic piece (second term). 
 
@@ -715,7 +739,8 @@ expressions.
 \begin{figure*}[t]
   \centering
   \includegraphics[width=1\linewidth]{figures/wdm_orthogonality_decorrelation.pdf}
-  \caption{\textbf{Numerical checks of orthogonality and
+  \caption{\gm{Ollie was suggesting (and I would also agree) to replace this figure with the $\sum_{\ell}g_{nm}[l]g^*_{pq}[l]$ and $\sum_{nm}g_{nm}[l]g^*_{nm}[l']$ plots. I can recommend setting $N=64,N_t=8,N_f=8$ and flattening the wdm array: what do you think about it, Avi?}
+  \textbf{Numerical checks of orthogonality and
     decorrelation.} Left: Gram matrix of the interior sampled WDM
     atoms, showing the discrete inner products
     $\langle g_i, g_j\rangle$ after flattening the interior index pair
@@ -745,6 +770,7 @@ In a similar way to a frequency domain analysis, one can define the noise-weight
     (a|b)_{\mathrm{WDM}} &= \boldsymbol{a}^T(\boldsymbol{\Sigma}^{\rm int}_w)^{-1}\boldsymbol{b} \\
     & = \sum_{\substack{n \\ m\in\mathrm{int}}} \frac{a_{nm}\,b_{nm}} {S_{nm}}\,,\label{eq:wdm_inner}\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/signal_processing.py\#L52-L60}
 \end{align}
+%
 which reduces to the frequency domain inner product via matrix algebra
 
 \begin{align}
@@ -776,6 +802,7 @@ The advantage of writing \eqref{eq:wdm_whittle_inn_prod} in terms of the noise-w
     \Gamma_{ij} &= (\partial_{i}h|\partial_{j}h)_{\rm WDM}\,, \quad \text{Fisher Matrix} \label{eq:wdm_fisher} \\
     \Delta \boldsymbol{\theta}^{i} &= (\Gamma^{-1})^{ij}(\partial_{i}h|n + \delta h)_{\rm WDM}\,. \quad \text{Cutler Valisneri}
 \end{align}
+\gm{Shall we reference the paper of the last one?}
 In other words, any familiar frequency domain quantity that involves an inner product $(a|b)_{\rm freq}$ can equivalently be written down in the WDM domain via $(a|b)_{\rm WDM}$. 
 
 These expressions assume that the diagonal
@@ -1519,6 +1546,115 @@ Which can be written in a slightly more convenient form:
 \end{cases}
 \end{align}
 which is presented in the main text \eqref{eq:inverse_transform_discrete}. 
+
+\section{The Local Stationary Assumption}
+\subsection{The Evolutionary PSD}
+
+Let us define the discrete time-domain auto-covariance function for a stochastic (real) process $x$ via
+\begin{equation}\label{eq:general_autocov_time}
+R[k_1,k_2] = \mathbb{E}[n[k_1],n[k_2]]
+\end{equation}
+for time-bins $k_1,k_2\in\{0,\ldots,N-1\}$. For the general auto-covariance function \eqref{eq:general_autocov_time}, the stationary assertion means that 
+\begin{equation}
+    R[k_1,k_2] = R[0,k_1 - k_2] = \mathbb{E}[n[0]n[k_1 - k_2]] = R(k)
+\end{equation}
+for $k = k_1 - k_2$ a lag parameter. Such a condition forces the time-domain noise covariance matrix to obey a Toeplitz like structure (not necessarily circulant). In this section, however, we relax the assumption that the noise process is stationary and instead consider a general Gaussian stochastic process $x$ that may not be stationary. Define $\bar{k} = (k_1 + k_2)/2$ and $\kappa = k_1 - k_2$, then the auto-covariance function takes the form 
+\begin{equation}
+R(\bar{k} + \kappa/2, \bar{k} - \kappa /2)
+\end{equation}
+At this point, we can now define the discrete evolutionary PSD via the Fourier transform of the (non-toeplitz) time-domain auto covariance function
+\begin{equation}
+S[\bar{k}, l] = 2\Delta t\sum_{\kappa = 0}^{N - 1}R(\bar{k} + \kappa/2, \bar{k} - \kappa/2)\exp(-2\pi i l \kappa/N)
+\end{equation}
+Notice that this reduces to the usual definition of the Power Spectral Density if the parameter $\bar{\kappa}$ (asserting time-dependence) is dropped from the PSD. The factor of 2 results from using a one-sided PSD and $\Delta t$ from the sum. It is then possible to build the frequency domain noise covariance matrix via 
+\begin{align}
+\mathbb{E}[\tilde{x}[l],\tilde{x}^\star[l']] & = \sum_{k_1,k_2}\mathbb{E}[k_1 k_2]\exp(-2\pi i (k_2l' - k_1 l )/N)\\
+&= \frac{1}{2\Delta t}\sum_{\bar{k}}\left\{2\Delta t\sum_{\kappa}R[\bar{k} + \kappa/2, \bar{k} - \kappa/2]\exp\left(-2\pi i \left[\frac{l + l'}{2} \right]\kappa/N\right)\right\}\exp(2\pi i \bar{k}(l - l')/N) \\
+&= \frac{1}{2\Delta t} \sum_{\bar{k}} S\left[\bar{k}, \frac{1}{2}(l + l')\right]\exp(-2\pi i \bar{k}(l - l')/N\,,
+\end{align}
+also known as the Wigner-Ville representation \ob{cite}. Notice for arbitrary values of $\kappa$ the frequency domain noise covariance matrix now has non-trivial off diagonal elements that must be accounted for during inference. Notice that if we drop $\bar{k}$ from the evolutionary PSD and evaluating the sum over the complex exponential, we obtain the familiar stationary expression
+\begin{equation}
+\mathbb{E}[\tilde{x}[l],\tilde{x}^\star[l']] = \frac{NS[l]}{2\Delta t}\delta_{ll'}\,.
+\end{equation}
+\ob{Careful Ollie -- Toeplitz + Circulant. I think what we need to say here is that $R$ encodes \emph{all} of the statistical information about the process $x$, therefore being circulant (periodic statistics at end points).}
+
+\subsection{The WDM Covariance Matrix}
+
+Consider now the expression for the WDM covariance matrix
+\begin{align}
+(\boldsymbol{\Sigma}_w)_{(n,m),(p,q)} &= \sum_{l,l'}\tilde{g}_{nm}^{\star}[l]\tilde{g}_{pq}[l']\mathbb{E}[\tilde{x}^\star[l]\tilde{x}[l']] \\
+& = \frac{1}{2\Delta t}\sum_{l,l',\bar{k}}\tilde{g}_{nm}^{\star}[l]\tilde{g}_{pq}[l'] \sum_{\bar{k}} S\left[\bar{k}, \frac{1}{2}(l + l')\right]\exp(-2\pi i \bar{k}(l - l')/N\,, \label{eq:WDM_cov_general_app}
+\end{align}
+We will now look at two separate cases -- the leading diagonal $(n,m) = (p,q)$ and off diagonal elements $(n,m) \neq (p,q)$. The atoms from the Wilson basis $\tilde{g}$ are peaked around the value of $l \approx mN_t/2$. This is where the support of the Wilson basis lies. This means that the dominant contribution of the sum are for those $l,l'$ in the vicinity of $mN_t/2$ and $qN_t/2$. Let us now assume that the evolutionary PSD varies slowly over the regime $(l + l')/2 \approx mN_t/2$ and the temporal time index $\bar{k} \approx nN_f$
+
+Therefore, let us expand $S[\bar{k}, (l + l')/2]$ in this vicinity and applying the \emph{local stationary approximation}
+\begin{equation}\label{eq:local_stat_approx}
+S\left[\bar{k}, \frac{1}{2}(l + l')\right] \approx S[nN_f, mN_t/2] + \left(\frac{l + l'}{2} - mN_t/2\right)\partial_{f}S + (\bar{k} - nN_f)\partial_{t}S + \text{corrections}
+\end{equation}
+Now, for the leading diagonal, substituting the leading order term from \eqref{eq:local_stat_approx} into \eqref{eq:WDM_cov_general_app} and evaluating the sum, one obtains
+\begin{align}
+    (\boldsymbol{\Sigma}_w)_{(n,m),(p,q)}
+& \approx \frac{1}{2\Delta t} S[nN_f,mN_t/2]\sum_{l,l',\bar{k}}\tilde{g}_{nm}^{\star}[l]\tilde{g}_{nm}[l'] \exp(-2\pi i \bar{k}(l - l')/N)\,, \\
+& =  \frac{N}{2\Delta t} S[nN_f,mN_t/2] \sum_{l}|\tilde{g}_{nm}[l]|^2 \\
+& = \frac{N}{2\Delta t} S[n,mN_t/2]\,.
+\end{align}
+Now let's look at teach part of the first order contributions in the evolutionary PSD
+\begin{align}
+&\frac{1}{2\Delta t}\partial_{f}S[nN_f,m N_t/2]\sum_{l,l',\bar{k}}\tilde{g}_{nm}^{\star}[l]\tilde{g}_{nm}[l'] \left(\frac{l + l'}{2} - mN_t/2\right) \exp(-2\pi i \bar{k}(l - l')/N))\,, \\
+&= \frac{N}{2\Delta t}\partial_{f}S[nN_f,m N_t/2]\sum_{l}|\tilde{g}_{nm}[l]|^{2}\left[l - mN_t/2\right] \,, \\
+& = 0?
+\end{align}
+\ob{I think this is zero because of the Meyer window properties. Can you check Giorgio? }
+The support of $\tilde{g}$ is in the vicinity of $l = mN_t/2$. Loosely speaking, when $\tilde{g}$ is maximized, it is then suppressed by the factor $l - mN_t/2$. The temporal term takes the form:
+\begin{align}
+&\frac{1}{2\Delta t}\partial_{t}S[nN_f,m N_t/2]\sum_{l,l',\bar{k}}\tilde{g}_{nm}^{\star}[l]\tilde{g}_{nm}[l'] \left(\bar{k} - nN_f\right) \exp(-2\pi i \bar{k}(l - l')/N))\,, \\
+&= \frac{1}{2\Delta t}\partial_{t}S[nN_f,m N_t/2]\sum_{\bar{k}}\left[\left(\sum_{l}\tilde{g}_{nm}^{\star}\exp(2\pi i \bar{k}l/N)\sum_{l'}\tilde{g}_{nm}[l']\exp(-2\pi i l' / N)\right)\left(\bar{k} - nN_f\right)\right] \\
+& = \frac{N^2}{2\Delta t}\partial_{t}S[nN_f,m N_t/2]\sum_{\bar{k}}|g_{nm}[\bar{k}]|^2 (\bar{k} - nN_f) \,,
+\end{align}
+Where we have identified inverse Fourier transforms of the $\tilde{g}$ basis functions to dramatically simplify the expression above. 
+
+From Necula \cite{Necula_2012}, the time-domain Wilson basis follows from inverse-DFT of Eq.~(\ref{eq:gnm_full_discrete}):
+\begin{equation}
+    g_{nm}[\bar{k}] = \sqrt{2}\,\varphi[\bar{k} - nN_f]\,\cos\!\left(\frac{\pi m \bar{k}}{N_f} - \theta_{nm}\right),
+    \label{eq:wilson_time_domain}
+\end{equation}
+for the alternating phase factor $\theta_{nm}$
+\begin{equation}
+\theta_{nm} = \begin{cases} 0 & (n + m) \ \text{even} \\
+\pi/2 & (n + m) \ \text{odd} 
+\end{cases}
+\end{equation}
+where $\varphi$ is the inverse DFT of the Meyer window $\tilde\varphi$ and $\theta_{nm}$. The atom is localised in time at the centre $k = nN_f$ with width set by the inverse-DFT of $\tilde\varphi$, and modulated at the channel frequency $m\Delta F$. 
+
+\ob{Loose notes -- } Now, the $\cos^{2} \sim \frac{1}{2} + \text{oscillatory}$, so, perhaps, I feel like the quantity
+\begin{equation}
+\sum_{\bar{k}}|g_{nm}[\bar{k}]|^2 (\bar{k} - nN_f) \approx \frac{1}{\sqrt{2}}\sum_{\bar{k}}(\bar{k} - nN_f)|\varphi[\bar{k}]|^2 \approx 0
+\end{equation}
+since $\varphi$ is an even function $\varphi[-k] = \varphi[k]$, around it's centre $nNf$. This implies that the temporal piece of the evolutionary power spectral density also vanishes. The diagonal components therefore take the form 
+\begin{equation}
+(\boldsymbol{\Sigma}_w)_{(n,m),(n,m)} = \frac{N}{2\Delta t}S[nN_f, mN_t/2]\left[1 + \mathcal{O}(\text{quadratic corrections})\right]
+\end{equation}
+in other words, in the locally stationary limit. We leave the off-diagonal elements to another day. 
+
+In the very simple case of wide sense stationary noise, $\partial_{t}S = 0$, the pre-factor (involving sums) of $\partial_{f}S$ is still zero. It can then be shown that
+\begin{align}
+    (\boldsymbol{\Sigma}_w)_{(n,m),(p,q)}
+& \approx \frac{1}{2\Delta t} S[nN_f,mN_t/2]\sum_{l,l',\bar{k}}\tilde{g}_{nm}^{\star}[l]\tilde{g}_{pq}[l'] \exp(-2\pi i \bar{k}(l - l')/N)\,, \\
+& =  \frac{N}{2\Delta t} S[nN_f,mN_t/2] \sum_{l}\tilde{g}_{nm}^{\star}[l]\tilde{g}_{pq}[l']\\
+& = \frac{N}{2\Delta t} S[nN_f,mN_t/2]\delta_{np}\delta_{mq}\\
+& = \delta_{np}\delta_{mq} S^{\rm WDM}_{nm}.
+\end{align}
+with quantity
+\begin{equation}
+S^{\rm WDM}_{nm} = \frac{N}{2\Delta t}S[nN_f, mN_t/2]
+\end{equation}
+the WDM-based evolutionary power spectral density, evaluated at $t_n = (nN_f) \Delta T$ and $f_{m} = (mN_t/2)\Delta F$.  
+
+
+
+
+
+
 %
 
 
