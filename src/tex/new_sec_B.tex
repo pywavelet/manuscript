@@ -1,6 +1,6 @@
 % This a new re-ordered section -- Ollie's changes 
 
-For a given frequency series $\tilde x[l]$, the WDM transform represents the data through the WDM coefficients $w_{nm}$
+For a given DFT frequency series $\tilde x[l]$, the WDM transform represents the data through the WDM coefficients $w_{nm}$
 \begin{align}\label{wnm_def}
 w_{nm}&=\sum_{l=0}^{N-1}\tilde x[l]\tilde g^*_{nm}[l]\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L225}
 \end{align}
@@ -11,7 +11,7 @@ frequency-channel.
 % \tilde x[l]&=\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}w_{nm}\tilde g_{nm}[l]\;, \label{eq:x_tilde_inverse}
 % \end{align}
 
-The basis elements $\tilde{g}$, FD window $\tilde{\varphi}$ and constants $C$ are defined in closed form in the discrete frequency domain below. For DC ($m=0$), interior channels ($0 < m < N_f$), , and
+The basis elements $\tilde{g}$, frequency-domain window $\tilde{\varphi}$ and constants $C$ are defined in closed form in the discrete frequency domain below. For DC ($m=0$), interior channels ($0 < m < N_f$), , and
 Nyquist ($m=N_f$) we have that:
 \begin{widetext}
 \begin{align}
@@ -36,9 +36,7 @@ e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big)
 \begin{equation}\label{eq:A_B_condition}
 B = 1 - 2A \,, \quad \text{for}\ A\in[0,1/2]\,. 
 \end{equation}
-
 \end{widetext}
-
 where, in the codebase, we represent the dimensionless frequency arrays via $\hat{f}[l] = f[l]/\Delta F$, for $\Delta F$ the spacing between frequencies in the WDM domain. Equation \eqref{eq:A_B_condition} gives freedom to the user to define the properties of the Daubechies-Meyer window defined in  Eq.\eqref{eq:DM_window_discrete}. 
 
 From this point onwards, we will provide an interpretation for each of the equations \eqref{eq:gnm_full_discrete} -- \eqref{eq:A_B_condition}. We begin by discussing the DC, Interior, Nyquist split of the basis functions $\tilde{g}$, an important feature of our codebase, and the practical and theoretical consequences of the Daubechies-Meyer window $\tilde{\varphi}$. 
@@ -77,16 +75,16 @@ generalizations.\footnote{Cornish~\cite{Cornish:2020odn} uses $d=4$,
   applications considered in this paper the $d=1$ window provides
   adequate frequency separation while keeping the implementation simple
 and the time-domain filter short.} By construction, $\tilde\varphi$ has a limited frequency bandwidth
-which is controlled by the parameter $A\in[0,1/2]$ in Eq.\eqref{eq:A_B_condition}. The Daubechies-Meyer window in the frequency domain is given by Fig.\ref{fig:wdm_transform} (b). At each wavelet frequency bun $l$, one sees that the window overlaps with adjacent frequency bins.  
+which is controlled by the parameter $A\in[0,1/2]$ in Eq.\eqref{eq:A_B_condition}. The Daubechies-Meyer window in the frequency domain is given by Fig.\ref{fig:wdm_transform} (b). At each wavelet frequency bin $l$, one sees that the window overlaps with adjacent frequency bins.  
 
 For our implementation we use the default $A =1/3$ and
-hence $B = 1/3$, so the window is non-zero for the normalised frequencies
-$|\hat{f|} \leq 2/3$. This is a default, not a hard-coded
+hence $B = 1/3$, so the window is non-zero for normalised frequencies
+$\leq 2/3$. This is a default, not a hard-coded
 constraint: $A$ is exposed in \texttt{wdm\_transform} as the
 parameter \texttt{a} of the \texttt{WDM} class (with $B=1-2A$ derived
 automatically), and any choice with $A\in(0,1/2)$ is admissible.%
 
-A final and essential (!) property of the WDM formalism is the principle of orthogonality. The wilson basis $\tilde{g}$ defined by Eq. \eqref{eq:gnm_full_discrete} combined with the Debauchies-Meyer window Eq.\eqref{eq:DM_window_discrete} with associated constants $\eqref{eq:c_nm_def}$ provide an orthogonal basis\footnote{Our definitions of the Wilson basis functions \eqref{eq:gnm_full_discrete} carefully include the $m=0$ and $m = N_f$ in order for orthogonality to hold.}:%
+A final and essential property of the WDM formalism is the principle of orthogonality. The Wilson basis $\tilde{g}$ defined by Eq.~\eqref{eq:gnm_full_discrete} combined with the Debauchies-Meyer window Eq.~\eqref{eq:DM_window_discrete} with associated constants~\eqref{eq:c_nm_def} provide an orthogonal basis\footnote{Our definitions of the Wilson basis functions \eqref{eq:gnm_full_discrete} carefully include the $m=0$ and $m = N_f$ in order for orthogonality to hold.}:%
 \begin{widetext}
 \begin{align}\label{eq:orthonormality}
 \sum_{l=-N/2}^{N/2-1}\tilde{g}^*_{nm}[l]\tilde{g}_{pq}[l]&=\delta_{m,q}\begin{cases}
@@ -96,17 +94,18 @@ A final and essential (!) property of the WDM formalism is the principle of orth
 \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}^*_{nm}[l]\tilde{g}_{nm}[l']&=\delta_{ll'}\;,
 \end{align}
 \end{widetext}
-Both equalities are proved in in appendix \ref{app:normality_condition} using Eq.\eqref{eq:meyer_window} and Eq.\eqref{eq:c_nm_def}. The basis functions here are represented in the frequency domain and it is easily proved they are orthogonal in the time domain. Orthogonality is the one of the key reasons that the WDM formalism is adept for gravitational wave data analysis, which will be discussed at a later stage of this work.
+Both equalities are proved in Appendix \ref{app:normality_condition} using Eq.~\eqref{eq:DM_window_discrete} and Eq.~\eqref{eq:c_nm_def}. The basis functions here are represented in the frequency domain and it is easily proved they are orthogonal in the time domain. Orthogonality is the one of the key reasons that the WDM formalism is adept for gravitational wave data analysis, which will be discussed at a later stage of this work.
 
 These are the main ingredients behind the packed WDM grid. A single window shape is shifted across
-frequency to define the channel index $m$, and each shifted window is then modulated in time to define the atom indexed by $n$. This is why one WDM coefficient can be read as the strength of one localized time-frequency pattern, rather than as the amplitude of a globally dsupported sinusoid. 
+frequency to define the channel index $m$, and each shifted window is then modulated in time to define the atom indexed by $n$. This is why one WDM coefficient can be read as the strength of one localized time-frequency pattern, rather than as the amplitude of a globally supported sinusoid. 
 
 More concretely, a single coefficient $w_{nm}$ answers the question:
 ``how much does the data resemble the atom centered at time bin $n$
 and frequency bin $m$?'' A large magnitude means that the data
 contains a feature with roughly the same time localization, central
-frequency, and oscillatory phase structure as that atom. Reading the
-WDM plane coefficient-by-coefficient in this way is often much more
+frequency, and oscillatory phase structure as that atom. \qb{Is it true for the phase structure? Are the two first conditions not sufficient?}
+\gm{I believe that phase and amplitude informations appear together in the wdm coefficients, since they are real}
+Reading the WDM plane coefficient-by-coefficient in this way is often much more
 intuitive than interpreting a global Fourier series, because the
 index pair $(n,m)$ already carries an approximate time-frequency location.
 
@@ -187,19 +186,17 @@ index pair $(n,m)$ already carries an approximate time-frequency location.
 %   \script{wdm_orthogonality_decorrelation.py}
 % \end{figure*}
 
-In the next subsections, we will provide formulae for the $w_{nm}$ coefficients for both the interior, DC and nyquist channels separately. In our final subsection, we investigate the orthogonal nature of the Wilson-basis.  
+In the next subsections, we will provide formulae for the $w_{nm}$ coefficients for both the interior, DC and Nyquist channels separately. In our final subsection, we investigate the orthogonal nature of the Wilson-basis.  
 
-\subsubsection{Interior channels ($0 < m < N_f$)}
+\subsubsection{Interior channels \texorpdfstring{$(0 < m < N_f)$}{(0 < m < N_f)}}
 
 Starting from Eq.~\eqref{wnm_def} with the interior-channel basis
 element from Eq.~\eqref{eq:gnm_full_discrete}, the forward transform can be
 evaluated in the Fourier domain using
 \begin{align}
-  w_{nm} = \sum_{l=-N/2}^{N/2-1} \tilde{x}_l\,\tilde{g}_{nm}^*(f[l])\,,
+  w_{nm} = \sum_{l=-N/2}^{N/2-1} \tilde{x}[l]\,\tilde{g}_{nm}^*(f[l])\,,
 \end{align}
-where $\tilde{x}_l = \tilde{x}[l]$ is the DFT of the input data with zeroth bin of $\tilde{x}$ placed in the middle of the spectrum. For a
-real-valued input signal, $\tilde{x}_{-l} = \tilde{x}_l^*$, and the
-real-valued window satisfies $\tilde{\varphi}[-l] = \tilde{\varphi}[l]$.
+For a real-valued input signal, $\tilde{x}[-l] = \tilde{x}^*[l]$, and the real-valued window satisfies $\tilde{\varphi}[-l] = \tilde{\varphi}[l]$.
 Splitting the sum into positive and negative frequency halves and
 using these symmetries, the negative-frequency contribution is the
 complex conjugate of the positive-frequency contribution (see
@@ -212,43 +209,44 @@ Appendix~\ref{app:forward_derivation} for details), giving
 \begin{equation}\label{eq:wnm_interior}
 \begin{split}
   w_{nm} = {} & \sqrt{2}\,(-1)^{nm} \\
-  & \times \Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2}\tilde{x}_{l'+mN_t/2}\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\right],
+  & \times \Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2}\tilde{x}[l'+mN_t/2]\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\right],
 \end{split}
 \codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L92-L102}
 \end{equation}
-where $l' = l - mN_t/2$ and $\Delta f = 1/T$.%
-
-The frequency shift
-$l = l' + mN_t/2$ contributes a phase $e^{2\pi i (mN_t/2) n/N_t}
-= e^{i\pi mn} = (-1)^{mn}$, so the result can be written compactly as
+where $l' = l - mN_t/2$ and $\Delta f = 1/T$.
+The expression above can be written compactly as
+%
 \begin{align}\label{eq:wnm_compact}
   w_{nm} = \sqrt{2}\,(-1)^{nm}\,\Re\,C_{nm}^*\,x_m[n]\,,
 \end{align}
+%
 where
+%
 \begin{align}\label{eq:xm_def}
-  x_m[n] = \sum_{l=-N_t/2}^{N_t/2-1} e^{2\pi i l n/N_t}\,X[l +
-  mN_t/2]\,\tilde{\varphi}[l]
+  x_m[n] = \sum_{l=-N_t/2}^{N_t/2-1} e^{2\pi i l n/N_t}\,\tilde x[l +
+  mN_t/2]\,\tilde{\varphi}[l],
 \end{align}
-is the windowed, shifted inverse DFT of length $N_t$. The quantity
+%
+The quantity
 $x_m[n]$ can be computed using a length-$N_t$ FFT for each channel
 $m$, so the total cost of the interior channels is $N_f \times
 \mathcal{O}(N_t\log N_t)$.
 
-\subsubsection{DC channel ($m = 0$)}
+\subsubsection{DC channel \texorpdfstring{$(m = 0)$}{(m = 0)}}
 
 The DC edge channel has a doubled time-shift exponent and no $C_{nm}$
 factor in the basis definition~\eqref{eq:gnm_full_discrete}. Following the
 same Fourier-domain evaluation yields
 \begin{align}\label{eq:wn0}
-  w_{n0} = \sqrt{2\,}\Re\left[\sum_{l=1}^{N_t/2}\tilde{x}_l\,e^{4\pi i l
-  n/N_t}\,\tilde{\varphi}[l]\right] + \frac{1}{\sqrt{2}}\tilde{x}_0\,\tilde{\varphi}[0]\,.\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L80-L90}
+  w_{n0} = \sqrt{2\,}\Re\left[\sum_{l=1}^{N_t/2}\tilde{x}[l]\,e^{4\pi i l
+  n/N_t}\,\tilde{\varphi}[l]\right] + \frac{1}{\sqrt{2}}\tilde{x}[0]\,\tilde{\varphi}[0]\,.\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L80-L90}
 \end{align}
 Note the factor of $4\pi$ in the exponent (versus $2\pi$ for interior
 channels): the DC basis element oscillates at twice the rate in the
 time index because it sees both positive and negative frequency
 copies of the window centered at $f=0$.
 
-\subsubsection{Nyquist channel ($m = N_f$)}
+\subsubsection{Nyquist channel \texorpdfstring{$(m = N_f)$}{(m = N_f)}}
 
 The Nyquist edge channel is handled analogously to the DC channel but
 centered at the Nyquist frequency $f_{\rm max}$. Its structure
@@ -258,9 +256,9 @@ as the interior channels, with the frequency shift set to $mN_t/2 = N/2$.
 %
 \begin{align}\label{eq:wnNf}
   w_{nN_f} &= \sqrt{2}\,\Re\!\left[\sum_{l=N/2-N_t/2}^{N/2-1}
-    \tilde{x}_l\,e^{4\pi i l n/N_t}\,\tilde{\varphi}[l-N_t/2]\right]
+    \tilde{x}[l]\,e^{4\pi i l n/N_t}\,\tilde{\varphi}[l-N_t/2]\right]
     \nonumber\\
-  &\quad + \frac{1}{\sqrt{2}}\,\tilde{x}_{N/2}\,\tilde{\varphi}[0]\,.\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L104-L114}
+  &\quad + \frac{1}{\sqrt{2}}\,\tilde{x}[N/2]\,\tilde{\varphi}[0]\,.\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L104-L114}
 \end{align}
 
 Collecting the results of each of the $w_{nm}$ coefficients above, the forward transform reads

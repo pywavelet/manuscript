@@ -59,6 +59,7 @@ archivePrefix = {arXiv},
     doi = "10.1103/PhysRevD.102.124038",
     month = "8",
     year = "2020",
+    journal = "-",
     abstract = {Data from gravitational wave detectors are recorded as time series that include contributions from myriad noise sources in addition to any gravitational wave signals. When regularly sampled data are available, such as for ground based and future space based interferometers, analyses are typically performed in the frequency domain, where stationary (time invariant) noise processes can be modeled very efficiently. In reality, detector noise is not stationary due to a combination of short duration noise transients and longer duration drifts in the power spectrum. This nonstationarity produces correlations across samples at different frequencies, obviating the main advantage of a frequency domain analysis. Here an alternative time-frequency approach to gravitational wave data analysis is proposed that uses discrete, orthogonal wavelet wave packets. The time domain data is mapped onto a uniform grid of time-frequency pixels. For locally stationary noise—that is, noise with an adiabatically varying spectrum—the time-frequency pixels are uncorrelated, which greatly simplifies the calculation of quantities such as the likelihood. Moreover, the gravitational wave signals from binary systems can be compactly represented as a collection of lines in time-frequency space, resulting in a computational cost for computing waveforms and likelihoods that scales as the square root of the number of time samples, as opposed to the linear scaling for time or frequency based analyses. Key to this approach is having fast methods for computing binary signals directly in the wavelet domain. Multiple fast transform methods are developed in detail.}
 }
 
@@ -219,7 +220,8 @@ abstract = {The time-frequency transforms are important tools for identification
     archivePrefix = "arXiv",
     primaryClass = "gr-qc",
     month = "2",
-    year = "2025"
+    year = "2025",
+    journal = " - "
 }
 
 @article{Karnesis:2021tsh,
@@ -260,23 +262,20 @@ abstract = {The time-frequency transforms are important tools for identification
 }
 
 @software{lisaorbits,
-    author = {Bayle, Jean-Baptiste and Hees, Aur\'elien and Lilley, Marc and
-              {Le Poncin-Lafitte}, Christophe and Martens, Waldemar and Joffre, Eric},
-    title = "{{lisaorbits}: {LISA} spacecraft state vectors, light travel times
-              and proper pseudoranges}",
+    author = {Bayle, Jean-Baptiste and Hees, Aur\'elien and Lilley, Marc and {Le Poncin-Lafitte}, Christophe and Martens, Waldemar and Joffre, Eric},
+    title = "{{lisaorbits}: {LISA} spacecraft state vectors, light travel times and proper pseudoranges}",
     version = {3.0.3},
     year = {2025},
     url = {https://pypi.org/project/lisaorbits/},
     license = {BSD-3-Clause}
 }
 
-@software{jaxgb,
-    author = {Bayle, Jean-Baptiste and {Le Jeune}, Maude and Menu, Jonathan},
-    title = "{{jaxgb}: Fast {LISA} response for Galactic binaries using {JAX}}",
-    version = {0.2.1},
+@misc{jaxgb,
+    author = {Bayle, Jean-Baptiste and Le Jeune, Maude and Menu, Jonathan},
+    title = "{jaxgb: Fast LISA response for Galactic binaries using JAX}",
     year = {2025},
-    url = {https://pypi.org/project/jaxgb/},
-    license = {BSD-3-Clause}
+    howpublished = {\url{https://pypi.org/project/jaxgb/}},
+    note = {Version 0.2.1, BSD-3-Clause}
 }
 
 
@@ -321,7 +320,7 @@ archivePrefix = {arXiv},
 
 
 
-@software{2023ascl.soft07037D,
+@misc{2023ascl.soft07037D,
        author = {{Digman}, Matthew C. and {Cornish}, Neil J.},
         title = "{WDMWaveletTransforms: Fast forward and inverse WDM wavelet transforms}",
  howpublished = {Astrophysics Source Code Library, record ascl:2307.037},
@@ -578,7 +577,7 @@ archivePrefix = {arXiv},
 
 % -------- 4.  coherent WaveBurst (cWB) ------------------------
 
-@software{cWB_software,
+@misc{cWB_software,
   author       = {{cWB Team}},
   title        = {coherent {WaveBurst} ({cWB}), version {cWB-6.4.6.0}},
   year         = {2024},
@@ -616,3 +615,43 @@ archivePrefix = {arXiv},
     year = "2007"
 }
 
+@article{Savalle_2022,
+  title = {Assessing the impact of instrumental calibration uncertainty on LISA science},
+  author = {Savalle, Etienne and Gair, Jonathan and Speri, Lorenzo and Babak, Stanislav},
+  journal = {Phys. Rev. D},
+  volume = {106},
+  issue = {2},
+  pages = {022003},
+  numpages = {24},
+  year = {2022},
+  month = {Jul},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevD.106.022003},
+  url = {https://link.aps.org/doi/10.1103/PhysRevD.106.022003}
+}
+
+@article{Klimenko:2005xv,
+    author = "Klimenko, S. and Mohanty, S. and Rakhmanov, Malik and Mitselmakher, Guenakh",
+    title = "{Constraint likelihood analysis for a network of gravitational wave detectors}",
+    eprint = "gr-qc/0508068",
+    archivePrefix = "arXiv",
+    doi = "10.1103/PhysRevD.72.122002",
+    journal = "Phys. Rev. D",
+    volume = "72",
+    pages = "122002",
+    year = "2005"
+}
+
+@article{Klimenko:2015ypf,
+    author = "Klimenko, S. and others",
+    title = "{Method for detection and reconstruction of gravitational wave transients with networks of advanced detectors}",
+    eprint = "1511.05999",
+    archivePrefix = "arXiv",
+    primaryClass = "gr-qc",
+    doi = "10.1103/PhysRevD.93.042004",
+    journal = "Phys. Rev. D",
+    volume = "93",
+    number = "4",
+    pages = "042004",
+    year = "2016"
+}
