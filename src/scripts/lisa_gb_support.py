@@ -111,7 +111,6 @@ def plot_data(demo: DemoData, out: Path) -> Path:
     from matplotlib.ticker import FuncFormatter, NullFormatter
 
     from wdm_transform import TimeSeries
-    from wdm_transform.signal_processing import wdm_noise_variance
 
     n, dt, freqs, f0 = demo.n_total, demo.dt, demo.freqs, demo.f0
     data_A = np.fft.irfft(demo.data_rfft, n=n)
@@ -171,10 +170,12 @@ def plot_data(demo: DemoData, out: Path) -> Path:
     cax = fig.add_subplot(bottom_gs[2])
     wdm = TimeSeries(np.asarray(data_A, float), dt=dt).to_wdm(nt=NT_WDM, a=A_WDM, d=D_WDM)
     fg = np.asarray(wdm.freq_grid, float)
-    nf = fg.size - 1
     noise_on_grid = np.interp(fg, np.linspace(0.0, float(wdm.nyquist), psd_inst.size), psd_inst)
-    var = wdm_noise_variance(noise_on_grid, nt=NT_WDM, nf=nf, dt=dt)
-    whiten = np.sqrt(np.where(np.isfinite(var) & (var > 0), var, np.inf))
+    # Per-channel WDM noise std from the analytic relation E[w_nm^2] = S(f_m)/(2 dt)
+    # (independent of bin spacing); inlined to stay robust to wdm_noise_variance's
+    # signature differing between the build-pinned and local library versions.
+    var_row = noise_on_grid / (2.0 * dt)
+    whiten = np.sqrt(np.where(np.isfinite(var_row) & (var_row > 0), var_row, np.inf))
     img = (np.abs(np.asarray(wdm.coeffs[0], float)) / whiten[None, :]).T
     tg = np.asarray(wdm.time_grid, float) / 86400.0
     norm = LogNorm(vmin=0.5, vmax=max(np.nanpercentile(img, 99.8), 3.0))
