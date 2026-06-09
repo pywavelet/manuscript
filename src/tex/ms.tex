@@ -30,6 +30,16 @@
 \newcommand{\ls}[1]{\textcolor{magenta}{\textbf{[Lore: #1]}}}
 \newcommand{\qb}[1]{\textcolor{teal}{[Quentin: #1]}}
 
+% Relax RevTeX's conservative float budget so figures settle near their
+% references instead of cascading to the end of the document.
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{5}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.7}
+\renewcommand{\dbltopfraction}{0.9}
+\renewcommand{\dblfloatpagefraction}{0.7}
+
 \begin{document}
 
 \preprint{APS/123-QED}
@@ -276,7 +286,7 @@ summarizes the packed layout, including the DC and Nyquist edge channels and the
 Relaxing the evenness requirement is left to future work.
 
 
-\begin{figure*}[ht]
+\begin{figure*}[tp]
     \centering
     \includegraphics[width=1.0\linewidth]{figures/wdm_overview.pdf}%
     \caption{
@@ -479,7 +489,7 @@ Cornish~\cite{Cornish:2020odn}.
 
 
 
-\begin{figure*}[h]
+\begin{figure*}[tp]
   \centering
   \includegraphics[width=1\linewidth]{figures/wdm_orthogonality_decorrelation.pdf}
   \caption{
@@ -526,11 +536,27 @@ storage redundancy.}
 \section{\package\ Package}
 \label{sec:code_package}
 
+\begin{figure*}[tp]
+  \centering
+  \includegraphics[width=\linewidth]{figures/architecture.pdf}
+  \caption{\textbf{Architecture of the \package\ package.} The public API
+    exposes the \texttt{TimeSeries}, \texttt{FrequencySeries}, and \texttt{WDM}
+    datatypes with reversible conversions between them. The forward and inverse
+    WDM transforms, together with the shared window machinery
+    (\texttt{windows.py}), are dispatched to interchangeable NumPy, CuPy, and
+    JAX backends, so the same high-level code runs on CPU, GPU, or TPU.}
+  \label{fig:architecture}
+  \script{architecture.tex}
+\end{figure*}
 
-The \package\ package provides NumPy and JAX backends for the
-Wilson--Daubechies--Meyer (WDM) transform, both implementing the
+The \package\ package provides NumPy, CuPy, and JAX backends for the
+Wilson--Daubechies--Meyer (WDM) transform, all implementing the
 packed $(N_t, N_f+1)$ coefficient layout and forward/inverse
-conventions described above.  The primary interface exposes the full
+conventions described above. Figure~\ref{fig:architecture} gives a
+high-level map of the package: a small set of public datatypes
+(\texttt{TimeSeries}, \texttt{FrequencySeries}, \texttt{WDM}) with
+reversible conversions, a transform layer, and a backend-dispatch layer
+that selects the numerical kernel.  The primary interface exposes the full
 forward and inverse transforms; in addition, band-limited routines
 allow the transform to be evaluated over a specified subset of
 frequency channels, reducing compute cost when only a portion of the
@@ -668,11 +694,11 @@ Ref.~\cite{LISACosmologyWorkingGroup:2022kbp}, and inject a galactic binary
 generated with \texttt{jaxgb}~\cite{jaxgb} using equal-arm LISA orbits. A
 representative realization of the channel-A data is shown in
 Figure~\ref{fig:lisa_gb_data}. The injected source parameters are
-$f_0 = 1.38557\,\mathrm{mHz}$,
-$\dot f = 7.43\times10^{-15}\,\mathrm{Hz\,s^{-1}}$,
-$A = 1.29\times10^{-23}$,
-$\phi_0 = -3.04\,\mathrm{rad}$,
-with combined A+E+T optimal SNR $33.6$.
+$f_0 = 1.38599\,\mathrm{mHz}$,
+$\dot f = 9.39\times10^{-15}\,\mathrm{Hz\,s^{-1}}$,
+$A = 5.35\times10^{-24}$,
+$\phi_0 = 1.74\,\mathrm{rad}$,
+with combined A+E+T optimal SNR $20.7$.
 
 \paragraph{Bayesian model.}
 We assume a search has localized the source to a small sky patch, so we fix the
@@ -758,7 +784,7 @@ results confirm that, under a shared stationary noise model, the WDM-domain
 likelihood faithfully reproduces the frequency-domain posterior for resolved-GB
 inference.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=\linewidth]{figures/lisa_gb_demo_data.pdf}
   \caption{\textbf{Injected resolved galactic binary in both representations.}
@@ -771,7 +797,7 @@ inference.
   \script{lisa_gb_data.py}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=\linewidth]{figures/lisa_gb_demo_corner.pdf}
   \caption{\textbf{Frequency-domain versus WDM-domain posterior.}
@@ -784,7 +810,7 @@ inference.
   \script{lisa_gb_corner.py}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=\linewidth]{figures/lisa_gb_demo_pp.pdf}
   \caption{\textbf{Population PP plot.} 
