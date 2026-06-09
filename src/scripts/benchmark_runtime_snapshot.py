@@ -175,7 +175,7 @@ for label in order:
 # ax_sp.axhline(1.0, ls="--", lw=0.9, alpha=0.7)
 
 ax_sp.set_xlabel(r"input size $N$")
-ax_sp.set_ylabel(r"$t_{\rm serial}/t_{\rm batch}$")
+ax_sp.set_ylabel("speed-up")
 ax_sp.grid(True, which="major", ls=":", lw=0.5, alpha=0.45)
 ax_sp.grid(False, which="minor")
 ax_sp.set_xlim(N_ref.min(), N_ref.max())
