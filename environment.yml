@@ -7,6 +7,7 @@ dependencies:
   - python=3.12
   - scipy=1.15.2
   - matplotlib==3.10
+  - tectonic=0.16.9
   - pip:
       - jaxgb==0.2.1
       - lisaorbits==3.0.3

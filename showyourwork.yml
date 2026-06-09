@@ -73,6 +73,7 @@ run_cache_rules_on_ci: false
 # Mapping of script file extensions to instructions for executing them
 scripts:
   py: python {script}
+  tex: tectonic {script} --outdir=$(dirname {output})
 
 # Display of the `showyourwork` stamp on first page
 stamp:
