@@ -622,10 +622,7 @@ three channels simultaneously.
     $t_\mathrm{serial}/t_\mathrm{batch}$, where the serial baseline
     applies the kernel independently to each of three channels and the
     batched call processes all three simultaneously.  Reported timings
-    exclude JAX JIT compilation and host--device data transfer.
-    \ls{I think that calling the y-axis of the bottom plot just "speed-up" would make it easier for the reader}
-    \avi{sure, can do. Also i will plot nlog(nt) and FFT timing, up to $N=10^7$.}
-    }
+    exclude JAX JIT compilation and host--device data transfer.}
   \label{fig:runtime_forward}
   \script{benchmark_runtime_snapshot.py}
 \end{figure}
@@ -801,7 +798,6 @@ inference.
   \centering
   \includegraphics[width=\linewidth]{figures/lisa_gb_demo_corner.pdf}
   \caption{\textbf{Frequency-domain versus WDM-domain posterior.}
-    \avi{use seed 9.}
     Overlaid corner plot for the two analyses of the same realization, with
     frequency in blue and WDM in orange, the injected truth marked, and the
     prior shown for reference. The two posteriors overlap closely in
@@ -814,7 +810,6 @@ inference.
   \centering
   \includegraphics[width=\linewidth]{figures/lisa_gb_demo_pp.pdf}
   \caption{\textbf{Population PP plot.} 
-  \avi{Maybe we need to make the solid lines fainter.}
   Empirical distribution of the injected
     truth's posterior quantile across the 100 seeds, for each parameter, in the
     WDM domain (solid) and frequency domain (dashed). The two domains track each
