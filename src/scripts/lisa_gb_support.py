@@ -26,6 +26,24 @@ A_WDM = 1.0 / 3.0
 D_WDM = 1.0
 NT_WDM = 64
 
+# These figures are placed single-column (``width=\linewidth``) in a twocolumn
+# PRD, so LaTeX downscales them to the ~3.4 in column width. Building the canvas
+# near that width with point sizes below keeps text legible (~7-8 pt rendered)
+# instead of shrinking a large canvas to illegibility.
+COLUMN_WIDTH_IN = 3.4
+
+
+def _font_rc(base: float, ticks: float, legend: float) -> dict:
+    """rcParams overriding all font sizes for a self-contained figure."""
+    return {
+        "font.size": base,
+        "axes.titlesize": base,
+        "axes.labelsize": base,
+        "xtick.labelsize": ticks,
+        "ytick.labelsize": ticks,
+        "legend.fontsize": legend,
+    }
+
 FREQ_COL, WDM_COL, TRUTH_COL = "tab:blue", "tab:orange", "black"
 DATA_COL, SRC_COL, PSD_COL = "#B8B8B8", "#ff7f0e", "#172919"
 PRIOR_COL = "0.45"
@@ -126,9 +144,14 @@ def plot_data(demo: DemoData, out: Path) -> Path:
     zoom_lo = max(lo, source_lo - source_pad)
     zoom_hi = min(hi, source_hi + source_pad)
 
-    fig = plt.figure(figsize=(11, 8), layout="constrained")
-    gs = fig.add_gridspec(2, 1, height_ratios=[1.15, 1], hspace=0.12)
-    bottom_gs = gs[1].subgridspec(1, 3, width_ratios=[1, 1, 0.055], wspace=0.22)
+    rc = _font_rc(base=16, ticks=14, legend=13)
+    plt.rcParams.update(rc)
+
+    # Built ~2x the column width (downscaled to ~0.5x in LaTeX) so the point
+    # sizes above render at ~7-8 pt; aspect kept close to the original 11:8.
+    fig = plt.figure(figsize=(6.8, 6.1), layout="constrained")
+    gs = fig.add_gridspec(2, 1, height_ratios=[1.15, 1], hspace=0.18)
+    bottom_gs = gs[1].subgridspec(1, 2, width_ratios=[0.8, 1.2], wspace=0.32)
 
     # (a) frequency domain: data periodogram, instrument PSD, source; band shaded.
     ax = fig.add_subplot(gs[0])
@@ -144,12 +167,12 @@ def plot_data(demo: DemoData, out: Path) -> Path:
     ax.set_xticks([1e-4, 2e-4, 5e-4, 1e-3, 2e-3, 3e-3])
     ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v * 1e3:g}"))
     ax.xaxis.set_minor_formatter(NullFormatter())
-    ax.set_xlabel("Frequency (mHz)")
+    ax.set_xlabel("Frequency [mHz]")
     ax.set_ylabel(r"$S_h(f)$ [strain$^2$/Hz]")
     ax.grid(True, which="both", alpha=0.18, ls=":")
     handles, labels = ax.get_legend_handles_labels()
     ax.legend([handles[i] for i in (1, 2, 0)], [labels[i] for i in (1, 2, 0)],
-              loc="upper right", frameon=False)
+              loc="lower left", frameon=False)
     ax.text(0.01, 0.97, "(a)", transform=ax.transAxes, va="top", fontweight="bold")
 
     # (b) frequency-domain source-band zoom.
@@ -160,25 +183,35 @@ def plot_data(demo: DemoData, out: Path) -> Path:
     ax2.semilogy(freqs[m] * 1e3, psd_data[m], color=DATA_COL, lw=1.0, zorder=2)
     ax2.semilogy(freqs[m] * 1e3, psd_inst[m], color=PSD_COL, lw=1.4, zorder=3)
     ax2.set_xlim(zoom_lo * 1e3, zoom_hi * 1e3)
-    ax2.set_xlabel("Frequency (mHz)")
+    # Two ticks near the panel edges (~20%/80%): the default pair sits near the
+    # centre and the wide mHz labels collide.
+    btk = np.round(np.linspace(zoom_lo * 1e3, zoom_hi * 1e3, 6)[[1, 4]], 3)
+    ax2.set_xticks(btk)
+    ax2.set_xticklabels([f"{t:g}" for t in btk])
+    ax2.set_xlabel("Frequency [mHz]")
     ax2.set_ylabel(r"$S_h(f)$ [strain$^2$/Hz]")
     ax2.grid(True, which="both", alpha=0.18, ls=":")
+    ax2.tick_params(labelsize=12)  # narrow panel: avoid wide mHz labels colliding
     ax2.text(0.02, 0.96, "(b)", transform=ax2.transAxes, va="top", fontweight="bold")
 
     # (c) WDM time-frequency source-band zoom, whitened to ~unit noise.
-    ax3 = fig.add_subplot(bottom_gs[1])
-    cax = fig.add_subplot(bottom_gs[2])
+    # (c) and its colorbar share the right half with a tight gap, so the bar
+    # sits snug against the heatmap instead of across a wide column gutter.
+    right_gs = bottom_gs[1].subgridspec(1, 2, width_ratios=[1, 0.05], wspace=0.06)
+    ax3 = fig.add_subplot(right_gs[0])
+    cax = fig.add_subplot(right_gs[1])
     wdm = TimeSeries(np.asarray(data_A, float), dt=dt).to_wdm(nt=NT_WDM, a=A_WDM, d=D_WDM)
     fg = np.asarray(wdm.freq_grid, float)
     noise_on_grid = np.interp(fg, np.linspace(0.0, float(wdm.nyquist), psd_inst.size), psd_inst)
-    # Per-channel WDM noise std from the analytic relation E[w_nm^2] = S(f_m)/(2 dt)
-    # (independent of bin spacing); inlined to stay robust to wdm_noise_variance's
-    # signature differing between the build-pinned and local library versions.
-    var_row = noise_on_grid / (2.0 * dt)
+    # Per-pixel WDM noise variance S_nm = N S[m N_t/2] / (2 dt) (ms.tex eq. for
+    # Sigma_w); the N factor is what makes |w_nm|/sqrt(S_nm) ~ unit noise.
+    var_row = n * noise_on_grid / (2.0 * dt)
     whiten = np.sqrt(np.where(np.isfinite(var_row) & (var_row > 0), var_row, np.inf))
-    img = (np.abs(np.asarray(wdm.coeffs[0], float)) / whiten[None, :]).T
+    img = ((np.asarray(wdm.coeffs[0], float) / whiten[None, :]) ** 2).T  # w_nm^2 / S_nm
     tg = np.asarray(wdm.time_grid, float) / 86400.0
-    norm = LogNorm(vmin=0.5, vmax=max(np.nanpercentile(img, 99.8), 3.0))
+    # Likelihood term w^2/S_nm (~chi^2_1, mean 1); fixed window so noise sits near
+    # 10^0 and the source saturates toward 10^2, with clean decade ticks.
+    norm = LogNorm(vmin=0.01, vmax=100.0)
     im = ax3.imshow(np.nan_to_num(img), aspect="auto",
                     extent=[tg[0], tg[-1], fg[0] * 1e3, fg[-1] * 1e3],
                     origin="lower", cmap="magma", norm=norm,
@@ -186,18 +219,25 @@ def plot_data(demo: DemoData, out: Path) -> Path:
     df = max(10.0 * (fg[1] - fg[0]), 1.5e-5)
     ax3.set_ylim(max(1e-4, f0 - df) * 1e3, min(3e-3, f0 + df) * 1e3)
     ax3.set_xlim(tg[0], tg[-1])
-    ax3.set_xlabel("Time (days)")
-    ax3.set_ylabel("Frequency (mHz)")
+    ax3.set_xlabel("Time [days]")
+    ax3.set_ylabel("Frequency [mHz]")
+    ax3.tick_params(labelsize=12)
+    # Black label (matching (a)/(b)); thin white outline keeps it legible over
+    # the dark end of the magma map.
+    import matplotlib.patheffects as pe
     ax3.text(0.02, 0.96, "(c)", transform=ax3.transAxes, va="top",
-             color="white", fontweight="bold")
-    cbar = fig.colorbar(im, cax=cax, label="|WDM coeff| / noise std")
+             color="black", fontweight="bold",
+             path_effects=[pe.withStroke(linewidth=2, foreground="white")])
+    cbar = fig.colorbar(im, cax=cax, label=r"$w_{nm}^2 / S_{nm}$")
     cbar.ax.yaxis.set_ticks_position("left")
     cbar.ax.yaxis.set_label_position("left")
-    # Plain compact ticks (0.6, 1, 2, 3) instead of 6x10^-1, 1x10^0, ...
+    # Decade ticks with 10^x labels (log colorbar).
     cbar.minorticks_off()
-    cticks = [t for t in (0.6, 1.0, 2.0, 3.0) if norm.vmin <= t <= norm.vmax]
+    decades = [0.01, 1.0, 100.0]
+    cticks = [t for t in decades if norm.vmin <= t <= norm.vmax]
     cbar.set_ticks(cticks)
-    cbar.ax.set_yticklabels([f"{t:g}" for t in cticks])
+    cbar.ax.set_yticklabels([rf"$10^{{{int(round(np.log10(t)))}}}$" for t in cticks])
+    cbar.ax.tick_params(labelsize=11)  # short bar: keep ticks from colliding
 
     fig.canvas.draw()
     ax_pos = ax.get_position()
@@ -265,6 +305,8 @@ def plot_corner(demo: DemoData, out: Path) -> Path:
     import matplotlib.pyplot as plt
     from matplotlib.patches import Patch
 
+    plt.rcParams.update(_font_rc(base=14, ticks=10, legend=12))
+
     fs, ws, truth, latex, prior = _corner_display(demo)
 
     rng = []
@@ -274,12 +316,18 @@ def plot_corner(demo: DemoData, out: Path) -> Path:
         pad = 0.08 * (hi - lo + 1e-30)
         rng.append((lo - pad, hi + pad))
 
+    # max_n_ticks=3 thins the long axis values so they stop colliding with the
+    # axis titles at single-column width.
     ckw = dict(labels=latex, range=rng, plot_datapoints=False, smooth=1.0, bins=30,
-               levels=(0.5, 0.9))
+               levels=(0.5, 0.9), label_kwargs={"fontsize": 14}, max_n_ticks=3)
     fig = corner.corner(fs, truths=truth, truth_color=TRUTH_COL, color=FREQ_COL,
                         hist_kwargs={"density": True, "lw": 1.4, "color": FREQ_COL}, **ckw)
     corner.corner(ws, fig=fig, color=WDM_COL,
                   hist_kwargs={"density": True, "lw": 1.4, "color": WDM_COL}, **ckw)
+    # corner sizes the canvas at ~9.7 in for K=4; shrink (axes are placed in
+    # figure fractions, so this scales uniformly) so the point sizes above are
+    # only mildly downscaled to the column width.
+    fig.set_size_inches(6.6, 6.6)
     axes = np.asarray(fig.axes).reshape(len(latex), len(latex))
 
     # Prior overlay on each 1-D panel: posteriors are far narrower than the prior.
@@ -295,7 +343,7 @@ def plot_corner(demo: DemoData, out: Path) -> Path:
                  Patch(color=WDM_COL, label="WDM"),
                  plt.Line2D([0], [0], color=PRIOR_COL, ls=":", label="Prior"),
                  plt.Line2D([0], [0], color=TRUTH_COL, ls="-", label="Truth")],
-        loc="upper right", frameon=False, fontsize=11)
+        loc="upper right", frameon=False, fontsize=13)
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
     return out
