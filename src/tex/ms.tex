@@ -455,19 +455,10 @@ which reduces to the frequency domain inner product via matrix algebra
 \end{align}
 Where each vector and Wilson basis matrix $\boldsymbol{G}$ only contains full time information $n\in \{0,\ldots,N_t-1\}$ but, as a first working approximation, we exclude the zeroth/Nyquist bin $m\in\{1,\ldots,N_f -1\}$\,. Since the inner product in the frequency domain can be represented in the WDM domain, this means that any statistic involving the usual inner product can therefore he computed in the WDM domain.
 
-
-% Similarly, the SNR, Fisher Matrix and bias \cite{Cutler:2007mi} estimates read
-% \begin{align}
-%     \rho^{\text{opt}} &= (h|h)_{\rm WDM}\,, \qquad \text{SNR} \\
-%     \rho(h) &= \frac{(d \,|\, h)_{\rm WDM}}{\sqrt{(h \,|\, h)_{\rm WDM}}}\,, \quad \text{Effective SNR}\\
-%     % \codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/signal_processing.py\#L52-L60}
-%     \Gamma_{ij} &= (\partial_{i}h|\partial_{j}h)_{\rm WDM}\,, \quad \text{Fisher Matrix} \label{eq:wdm_fisher} \\
-%     \Delta \boldsymbol{\theta}^{i} &= (\Gamma^{-1})^{ij}(\partial_{i}h|n + \delta h)_{\rm WDM}\,. \quad \text{Cutler Valisneri}
-% \end{align}
-% %
-% \qb{I would remove these last four equations. I think writing the inner product is sufficient.}\gm{Ok for me. Ollie, what do you think?}
 These expressions assume that the diagonal approximation~\eqref{eq:Sigma_W_diagonal} holds. When it does not ---for example, when the noise PSD varies rapidly compared to $\Delta T$, the off-diagonal covariance terms must be retained and the simple pixel-wise sums above become inadequate.
-Figure~\ref{fig:wdm_orthogonality_decorrelation} provides a practical diagnostic: if the off-diagonal entries of the empirical covariance remain small after whitening, the diagonal likelihood~\eqref{eq:likelihood_G_Sigma_w} is a safe approximation. A natural question comes to light -- when does the diagonal approximation hold? 
+In practice, if the off-diagonal entries of the empirical covariance remain small after whitening, the diagonal likelihood~\eqref{eq:likelihood_G_Sigma_w} is a safe approximation. 
+The exact Gram-matrix structure shown in Figure~\ref{fig:wdm_orthogonality_decorrelation} underlies this distinction. 
+A natural question comes to light -- when does the diagonal approximation hold? 
 
 The WDM tiling obeys $\Delta T\,\Delta F = 1/2$ (see
 Eq.~\eqref{DTDF}), so each atom occupies the minimum allowed
@@ -494,11 +485,11 @@ Cornish~\cite{Cornish:2020odn}.
   \caption{
   \textbf{Orthogonality structure and empirical decorrelation of the
 sampled WDM transform.} 
-All panels use the small tiling $N_t = N_f = 8$,
+Both panels use the small tiling $N_t = N_f = 8$,
 $N = N_t N_f = 64$, with packed atoms flattened by $\alpha = n(N_f + 1) + m$.
-Panels (a), (c), and (d) live in the $N_t(N_f+1) = 72$-dimensional packed
-coefficient space, while panel (b) lives in the $N$-dimensional signal
-space. The asymmetry $GG^\dagger \in \mathbb{C}^{72\times 72}$ versus
+Panel (a) lives in the $N_t(N_f+1) = 72$-dimensional packed coefficient
+space, while panel (b) lives in the $N$-dimensional signal space. The
+asymmetry $GG^\dagger \in \mathbb{C}^{72\times 72}$ versus
 $G^\dagger G \in \mathbb{C}^{64\times 64}$ is intrinsic to the rectangular
 embedding $G : \mathbb{C}^N \to \mathbb{C}^{N_t(N_f+1)}$ and is the
 matrix-level expression of the fact that $G^\dagger G = \mathbb{I}_N \neq
@@ -518,12 +509,6 @@ $(G^\dagger G)_{\ell\ell'} = \sum_{n,m} g_{nm}[\ell]\,g^*_{nm}[\ell']$,
 indexed by sample indices $(\ell,\ell')$ rather than the packed pair, equals
 $\mathbb{I}_N$ to machine precision ($\max|G^\dagger G - \mathbb{I}| \sim
 10^{-15}$), demonstrating that the forward-then-inverse round trip is exact.
-\textbf{(c, d)} Empirical correlation matrices of the packed WDM coefficients
-estimated from $4000$ realisations of white \textbf{(c)} and coloured
-\textbf{(d)} stationary Gaussian noise. The coloured PSD is
-$S(f) \propto [1 + (f/f_c)^4]^{-1}$ with $f_c = 0.06$ (unit sampling rate).
-The interior bulk is nearly decorrelated for white noise and develops
-visible band structure for coloured noise. 
 The exact $\pm 1$ entries at the
 same $\pm N_t/2$ offsets seen in panel (a) are the empirical signature of
 the edge-channel redundancy: $w_{n,0}$ and $w_{n + N_t/2,\,0}$ (and likewise
@@ -535,6 +520,7 @@ storage redundancy.}
   \label{fig:wdm_orthogonality_decorrelation}
   \script{wdm_orthogonality_decorrelation.py}
 \end{figure*}
+
 
 
 \section{\package\ Package}
@@ -660,13 +646,12 @@ This combination of flexibility, accuracy, and performance makes
 \package\ a useful tool for WDM time-frequency analysis of
 long-duration gravitational-wave signals.
 
-\subsection{Resolved galactic-binary inference: frequency-domain versus WDM-domain likelihoods}
+\subsection{Resolved galactic-binary inference with LISA: frequency-domain versus WDM-domain likelihoods}
 \label{sec:lisa_gb}
 
 As an end-to-end validation of the WDM-domain likelihood, we compare Bayesian
 parameter estimation for 100 independent simulations of individual resolved
-galactic binaries (GBs), with each source analysed in both the frequency domain
-and the WDM domain. The two analyses use the same simulated data, source model,
+galactic binaries (GBs), with each source analysed in both the frequency domain and the WDM domain with LISA. The two analyses use the same simulated data, source model,
 priors, and stationary instrumental-noise PSD. The only intended difference is
 the representation in which the likelihood is evaluated, so the comparison
 isolates the effect of the frequency-domain to WDM-domain basis change. 
