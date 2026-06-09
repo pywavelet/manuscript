@@ -1,4 +1,3 @@
-% Does anybody know how was the header before? I just jumped in and I saw the \documentclass being broken. Whoever accidentally broke it, could please fix it to bring it to how it was before? I am fixing it just to make it work, for the time being. Thank you 
 \documentclass[twocolumn,preprintnumbers,
   superscriptaddress,
   nofootinbib,
@@ -281,8 +280,9 @@ One immediately sees that
 \end{align}
 This final expression shows how the Nyquist theorem still holds. Once
 you fix $N_t$ (or equivalently $N_f$, $\Delta T$ or $\Delta F$) the
-grid is uniquely identified. Figure~\ref{fig:wdm_transform}
-summarizes the packed layout, including the DC and Nyquist edge channels and the alternating phase factor used for the interior coefficients. Note that $N_t$ and $N_f$ are required to be even — they need not be powers of two.
+grid is uniquely identified. 
+Figure~\ref{fig:wdm_transform} summarizes the packed layout, the DC and Nyquist edge channels, the alternating phase factor used for the interior coefficients, and the time- and frequency-domain structure of two representative WDM cells.
+Note that $N_t$ and $N_f$ are required to be even — they need not be powers of two.
 Relaxing the evenness requirement is left to future work.
 
 
@@ -291,16 +291,19 @@ Relaxing the evenness requirement is left to future work.
     \includegraphics[width=1.0\linewidth]{figures/wdm_overview.pdf}%
     \caption{
         Schematic illustration of the WDM forward transform.
-        (a)~The input DFT spectrum $\tilde{x}[\ell]$ with channel $m$
-        spanning $N_t$ bins centred at $mN_t/2$.
-        (b)~The Meyer window $\tilde{\varphi}_m[\ell]$ shifted across
-        $N_f$ channels.
-        (c)~The time-domain atom $x_m[n]$ obtained by applying the
-        inverse DFT to the windowed channel.
-        (d)~The packed coefficient array $W_{nm}$, with each cell
-        $w_{nm} = \mathrm{Re}[C^*_{nm}\,x_m[n]]$; the phase factor
-        $C_{nm}$ alternates between $1$ and $i$ on a checkerboard
-        pattern (see legend).
+        (a)~Time-domain atoms $g_{nm}(t)$ for two representative WDM cells,
+        labeled A and B. The higher-frequency cell B has a more rapidly
+        oscillating atom.
+        (b)~Frequency-domain magnitudes $|\tilde{G}_{nm}(f)|$ for the same
+        two cells, showing their localization around different frequency
+        channels.
+        (c)~The packed coefficient array $W_{nm}$, with time bins $n$ along
+        the horizontal axis and frequency channels $m$ along the vertical axis.
+        The highlighted cells correspond to the atoms shown in panels (a) and
+        (b). Each interior cell stores
+        $w_{nm} = \mathrm{Re}[C^*_{nm}\,x_m[n]]$; the phase factor $C_{nm}$
+        alternates between $1$ and $i$ on a checkerboard pattern, while the DC
+        and Nyquist edge channels are stored separately.
     }
     \label{fig:wdm_transform}
     \script{wdm_overview_panels.py}
@@ -889,8 +892,17 @@ construction of a WDM tiling, application of the forward transform, and
 round-trip reconstruction with the inverse transform.
 
 \begin{acknowledgments}
-GM acknowledges support from the ANR grant AAPG2024 PRC - GalaxyFIT. O.~Burke acknowledges financial support from the Grant UKRI972 awarded via the UK Space Agency. O.~Burke appreciates insightful discussions with Christopher Moore and Sylvain Marsat during the preparation of this work.  
-L. Speri acknowledges support through the European Space Agency (ESA) Research Fellowship in Space Science.
+    \avi{TODO}
+    The authors thank Mathew Diggman, Neil Cornish, Will Farr, and Aaron Johnson for discussions. 
+    We also express our gratitude to Astrid Lamberts for organizing the ``Towards LISA catalogs'' workshop (Nice, 2023), and to Tyson B. Littenberg for organizing the 3rd LISA Sprint meeting (Huntsville, 2025), where this project was further developed.
+    O.~Burke sincerely appreciates insightful discussions with Christopher Moore and Sylvain Marsat during the preparation of this work.
+    AV gratefully acknowledge support from the Marsden Fund Council grants MFP-UOA2131 and MFP-UOA2531,
+	funded by the New Zealand Government and managed by the Royal Society Te Apārangi.
+    GM acknowledges support from the ANR grant AAPG2024 PRC - GalaxyFIT. 
+    O.~Burke acknowledges financial support from the Grant UKRI972 awarded via the UK Space Agency.  
+    L. Speri acknowledges support through the European Space Agency (ESA) Research Fellowship in Space Science.
+    Part of this work was performed on the OzSTAR national facility at Swinburne
+	University of Technology. The OzSTAR program receives funding in part from the Astronomy National Collaborative Research Infrastructure Strategy (NCRIS) allocation provided by the Australian Government, and from the Victorian Higher Education State Investment Fund (VHESIF) provided by the Victorian Government.
 \end{acknowledgments}
 
 \appendix

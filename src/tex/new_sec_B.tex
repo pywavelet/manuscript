@@ -56,7 +56,8 @@ $\pm mN_t/2$ atoms (the Wilson-basis construction), while the DC
 and Nyquist channels each contribute $N_t$ unpaired real coefficients.
 The total $N_t(N_f{+}1)$ stored entries therefore represent the same
 $N=N_tN_f$ time-domain degrees of freedom, with the edge channels
-overcomplete by exactly $N_t$ real numbers~\cite{Necula_2012,Cornish:2020odn}. We refer the reader to Fig.\ref{fig:wdm_transform} (a) and (d), for a schematic of the WDM transform.  % 
+overcomplete by exactly $N_t$ real numbers~\cite{Necula_2012,Cornish:2020odn}. 
+We refer the reader to Fig.~\ref{fig:wdm_transform} for a schematic of the WDM transform and the packed coefficient layout.  % 
 
 The window $\tilde\varphi$ is the ``\emph{Daubechies--Meyer}''
 ingredient of the WDM construction: a smooth, compactly supported
@@ -75,7 +76,9 @@ generalizations.\footnote{Cornish~\cite{Cornish:2020odn} uses $d=4$,
   applications considered in this paper the $d=1$ window provides
   adequate frequency separation while keeping the implementation simple
 and the time-domain filter short.} By construction, $\tilde\varphi$ has a limited frequency bandwidth
-which is controlled by the parameter $A\in[0,1/2]$ in Eq.\eqref{eq:A_B_condition}. The Daubechies-Meyer window in the frequency domain is given by Fig.\ref{fig:wdm_transform} (b). At each wavelet frequency bin $l$, one sees that the window overlaps with adjacent frequency bins.  
+which is controlled by the parameter $A\in[0,1/2]$ in Eq.\eqref{eq:A_B_condition}. 
+The frequency localization of the WDM atoms is illustrated in Fig.~\ref{fig:wdm_transform}(b), where the same two highlighted cells are shown in frequency space.
+At each wavelet frequency bin $l$, one sees that the window overlaps with adjacent frequency bins.  
 
 For our implementation we use the default $A =1/3$ and
 hence $B = 1/3$, so the window is non-zero for normalised frequencies
