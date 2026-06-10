@@ -37,7 +37,7 @@ e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big)
 B = 1 - 2A \,, \quad \text{for}\ A\in(0,1/2)\,. 
 \end{equation}
 \end{widetext}
-Equation \eqref{eq:A_B_condition} gives freedom to the user to define the properties of the Daubechies--Meyer window defined in Eq.~\eqref{eq:DM_window_discrete}.
+Equation~\eqref{eq:A_B_condition} gives freedom to the user to define the properties of the Daubechies--Meyer window defined in Eq.~\eqref{eq:DM_window_discrete}.
 
 From this point onwards, we will provide an interpretation for each of the equations \eqref{eq:gnm_full_discrete} -- \eqref{eq:A_B_condition}. We begin by discussing the DC, Interior, Nyquist split of the basis functions $\tilde{g}$, an important feature of our codebase, and the practical and theoretical consequences of the Daubechies--Meyer window $\tilde{\varphi}$.
 
@@ -226,8 +226,8 @@ Appendix~\ref{app:forward_derivation} for details), giving
 \begin{split}
   w_{nm} = {} & \sqrt{2}\,(-1)^{nm} \\
   & \times \Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2-1}\tilde{x}[l'+mN_t/2]\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\right],
-\end{split}
 \codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L92-L102}
+\end{split}
 \end{equation}
 where $l' = l - mN_t/2$ and $\Delta f = 1/T$.
 The expression above can be written compactly as
