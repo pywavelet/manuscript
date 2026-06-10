@@ -23,8 +23,8 @@ COL = {
 }
 
 EXAMPLES = [
-    {"n": 2, "m": 2, "color": COL["accent"],  "label": "i"},
-    {"n": 5, "m": 4, "color": COL["accent2"], "label": "ii"},
+    {"n": 2, "m": 2, "color": COL["accent"],  "label": r"\alpha"},
+    {"n": 5, "m": 4, "color": COL["accent2"], "label": r"\beta"},
 ]
 
 # ── font sizes (single source of truth) ──────────────────────────────────────
@@ -423,7 +423,7 @@ def draw_projection_grid(
                                     facecolor=color,
                                     edgecolor=COL["line"], lw=0.9,
                                     alpha=0.92, zorder=5))
-        ax_grid.text((n + 0.5) * dt, (m + 0.5) * df, ex["label"],
+        ax_grid.text((n + 0.5) * dt, (m + 0.5) * df, rf"${ex['label']}$",
                      ha="center", va="center", fontsize=FS["axis"],
                      color="white", fontweight="bold", zorder=6)
 
@@ -584,7 +584,7 @@ def draw_wnm(ax, *, nt: int = 8, nf: int = 6) -> None:
         ax.add_patch(Rectangle((n0, m0), 1, 1,
                                facecolor=color, edgecolor=COL["line"],
                                lw=1.0, alpha=0.82, zorder=5))
-        ax.text(n0 + 0.5, m0 + 0.5, ex["label"], ha="center", va="center",
+        ax.text(n0 + 0.5, m0 + 0.5, rf"${ex['label']}$", ha="center", va="center",
                 fontsize=FS["axis"], color="white", fontweight="bold",
                 zorder=6)
 
