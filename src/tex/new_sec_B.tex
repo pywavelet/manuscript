@@ -99,7 +99,7 @@ constraint: $A$ is exposed in \texttt{wdm\_transform} as the
 parameter \texttt{a} of the \texttt{WDM} class (with $B=1-2A$ derived
 automatically), and any choice with $A\in(0,1/2)$ is admissible.%
 
-A final and essential property of the WDM formalism is the principle of orthogonality. The Wilson basis $\tilde{g}$ defined by Eq.~\eqref{eq:gnm_full_discrete} combined with the Daubechies--Meyer window Eq.~\eqref{eq:DM_window_discrete} with associated constants~\eqref{eq:c_nm_def} provide an orthogonal basis\footnote{Our definitions of the Wilson basis functions \eqref{eq:gnm_full_discrete} carefully include the $m=0$ and $m = N_f$ in order for orthogonality to hold.}:%
+A final and essential property of the WDM formalism is the principle of orthogonality. The Wilson basis $\tilde{g}$ defined by Eq.~\eqref{eq:gnm_full_discrete} combined with the Daubechies--Meyer window Eq.~\eqref{eq:DM_window_discrete} with associated constants~\eqref{eq:c_nm_def} provide an orthogonal basis\footnote{Our definitions of the Wilson basis functions \eqref{eq:gnm_full_discrete} carefully include the $m=0$ and $m = N_f$ in order for orthogonality to hold.}, with both of the following equalities proved in Appendix~\ref{app:normality_condition} using Eq.~\eqref{eq:DM_window_discrete} and Eq.~\eqref{eq:c_nm_def}:%
 \begin{widetext}
 \begin{align}\label{eq:orthonormality}
 \sum_{l=-N/2}^{N/2-1}\tilde{g}^*_{nm}[l]\tilde{g}_{pq}[l]&=\delta_{m,q}\begin{cases}
@@ -109,7 +109,8 @@ A final and essential property of the WDM formalism is the principle of orthogon
 \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}^*_{nm}[l]\tilde{g}_{nm}[l']&=\delta_{ll'}\;,
 \end{align}
 \end{widetext}
-Both equalities are proved in Appendix~\ref{app:normality_condition} using Eq.~\eqref{eq:DM_window_discrete} and Eq.~\eqref{eq:c_nm_def}. The basis functions here are represented in the frequency domain and it is easily proved they are orthogonal in the time domain. 
+
+The basis functions here are represented in the frequency domain and it is easily proved they are orthogonal in the time domain.
 Orthogonality is one of the key reasons that the WDM formalism is adept for gravitational-wave data analysis, which will be discussed at a later stage of this work.
 
 
