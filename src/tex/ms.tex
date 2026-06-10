@@ -15,7 +15,7 @@
 \usepackage{wdmmanuscript}
 \usepackage{hyperref}
 \usepackage{fontawesome5}
-\usepackage{ulem}
+\usepackage[normalem]{ulem}
 \usepackage{mathtools}
 \usepackage{xcolor}
 
@@ -43,7 +43,7 @@
 
 \preprint{APS/123-QED}
 
-\title{JAX-based codes for WDM-transform for use within gravitational wave astronomy}
+\title{An explicit and differentiable Wilson--Daubechies--Meyer transform for gravitational-wave data analysis}
 
 \author{Quentin Baghi}
 \affiliation{Universit\'e Paris Cit\'e, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France}
@@ -53,6 +53,7 @@ University Avenue, Glasgow, G12 8QQ, UK}
 \affiliation{Laboratoire des 2 Infinis - Toulouse (L2IT-IN2P3),
 Université de Toulouse, CNRS, UPS, F-31062 Toulouse Cedex 9, France}
 \author{Giorgio Mentasti}
+\thanks{GM and AV contributed equally to this work.}
 \affiliation{Universit\'e Paris Cit\'e, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France}
 \author{Lorenzo Speri}
 \affiliation{%
@@ -60,6 +61,7 @@ European Space Agency (ESA), European Space Research and Technology Centre (ESTE
 }
 \affiliation{Leiden Observatory, Leiden University, P.O. Box 9513, 2300 RA Leiden, the Netherlands}
 \author{Avi Vajpeyi}
+\thanks{GM and AV contributed equally to this work.}
 \affiliation{Department of Statistics, University of Auckland, 38
 Princes St, Auckland, New Zealand}
 
@@ -97,7 +99,7 @@ transients~\cite{robinet2020}, and the joint analysis of
 astrophysical signals and terrestrial
 disturbances~\cite{Cornish_2015}. Time-frequency
 representations also provide compact waveform descriptions and
-facilitate the modelling of non-stationary detector noise, such as Q-transforms \cite{Chatterji:2004qg} and chirplets \cite{ChassandeMottin:2005bm}. Among the
+facilitate the modelling of non-stationary detector noise, such as Q-transforms \cite{Chatterji:2004qg} and chirplets \cite{ChassandeMottin:2005bm}. Such techniques have proven particularly successful in detection strategies for long-lived signals where frequency domain analyses struggle. Examples being the search and characterisation of extreme mass-ratio inspirals~\cite{Gair_2005, Gair:2008ec, Speri_2026} and stellar origin black hole binaries~\cite{bandopadhyay2026globaltimefrequencysearchstellarmass} -- mHz sources for space-based GW detectors~\cite{2024arXiv240207571C, Luo:2015uga} . Among the
 available techniques, discrete wavelet-packet transforms are
 particularly well suited to gravitational-wave data analysis: they
 furnish localized, orthonormal basis functions capable of representing
@@ -137,9 +139,13 @@ covariance in the WDM domain.  This approximate diagonalization,
 analyzed in detail in
 Ref.~\cite{cornish_nonstationary_wdm}, provides the WDM-domain
 analogue of the familiar diagonal Fourier-domain covariance for
-stationary noise and underlies WDM Whittle-type likelihoods. A clear one-to-one correspondence between equations and their implementation is often missing in existing literature and codebases \cite{Cornish_WDM_Transform,Digman_WDMWaveletTransforms,Moore_WDM_GW_wavelets,cWB_software,Farr:2025wdm}:
-We address this gap here.
-\gm{In this way it may sound a bit to harsh? How about \textit{While the WDM transform has been carefully developed and implemented across several works \cite{Cornish_WDM_Transform,Digman_WDMWaveletTransforms,Moore_WDM_GW_wavelets,cWB_software,Farr:2025wdm}, here we place particular emphasis on making the correspondence between the equations and their implementation fully explicit and self-consistent.} Please note that I also quoted Farr}
+stationary noise and underlies WDM Whittle-type likelihoods.
+While the WDM transform has been carefully developed and implemented
+across several
+works~\cite{Cornish_WDM_Transform,Digman_WDMWaveletTransforms,Moore_WDM_GW_wavelets,cWB_software,Farr:2025wdm},
+here we place particular emphasis on making the correspondence between
+the equations and their implementation fully explicit and
+self-consistent.
 
 The present manuscript does not claim to introduce the WDM transform,
 to replace these foundational analyses, or to outperform existing
@@ -148,7 +154,7 @@ make the sampled WDM construction easy to adopt and reproduce in
 modern Python-based gravitational-wave workflows.  We give a
 self-contained derivation of the forward and inverse transforms,
 state the packed $(N_t,N_f+1)$ coefficient layout explicitly, spell
-out the DC and Nyquist channel treatment, and fix the normalization,
+out the DC and Nyquist channel treatment, and set the normalization,
 phase, and indexing conventions used by the implementation.  These
 choices are then validated through exact round-trip reconstruction
 tests and empirical checks of coefficient decorrelation.  The
@@ -165,33 +171,35 @@ band is active, whereas in the Fourier domain one can identify
 \emph{which} frequencies are present but not when they appear. Many
 gravitational-wave signals and detector artefacts are neither purely
 stationary nor purely impulsive, so neither representation alone is
-fully satisfactory. 
-A short-time Fourier often makes use of compactly-supported sliding windows such as square or Tukey windows. In contrast, WDM employs frequency-localized atoms whose corresponding time-domain representation exhibits algebraically decaying tails proportional to $1/t^3$.
+fully satisfactory. A short-time Fourier transform often makes use of compactly-supported sliding windows such as square or Tukey windows. In contrast, WDM employs atoms whose corresponding time-domain representation exhibits algebraically decaying tails, falling as $1/t^3$ for the cosine-tapered window adopted in this work.
+The essential difference between the two lies elsewhere. The STFT is not \textit{critically sampled}: it represents $N$ data points with $2N$ coefficients, retaining both $m>0$ and $m<0$ indices, in direct analogy with the full FFT relative to the real FFT. The WDM instead uses the minimal number of degrees of freedom, producing $N$ coefficients (only $m>0$) for $N$ samples. Both bases are orthonormal and admit an exact inverse transform, so faithful round-trip reconstruction is possible in either case; only the WDM, however, achieves this without redundancy.
+In a similar way to real FFTs, the property of WDM being \textit{critically sampled} and allows a faster computation (by a factor of 2, as discussed above) of the time-frequency inner products, likelihoods and a cheaper memory demand.
 
-The result is a
-uniform time-frequency representation well suited to describing
-transients, chirps, gaps, and other localized structure, while still
-admitting an exact inverse transform back to the original sampled data.
+The result is a uniform time-frequency representation well suited to describing transients, chirps, gaps, and other localized and non-localized structures, while still admitting an exact inverse transform back to the original sampled data.
 
 The remainder of this paper is organized as follows.
-Section~\ref{sec:conventions} introduces notation and conventions.
-Section~\ref{sec:wdm} develops the WDM transform, including the Meyer
-window, the full three-case basis definition covering DC, interior,
-and Nyquist channels, the forward and inverse transforms, and the
-statistical properties of the coefficients under stationary and
-non-stationary noise. Section~\ref{sec:code_package} describes the
+We first fix notation and conventions in
+Sec.~\ref{sec:conventions}.
+Section~\ref{sec:wdm} develops the WDM transform, including the Meyer window, the full three-case basis definition covering DC, interior,
+and Nyquist channels, and the forward and inverse transforms.
+Section~\ref{sec:stats} derives the statistical properties of the
+coefficients, the WDM likelihood and inner product, and the conditions
+under which the coefficients may be treated as approximately
+independent. Section~\ref{sec:code_package} describes the
 \package\ package, presents runtime and accuracy benchmarks, and
 demonstrates the transform on astrophysical signals. We conclude in
-Section~\ref{sec:conclusions}.
+Section~\ref{sec:conclusions}. 
+
+We have prioritised readability of the paper over major mathematical details. We refer the interested reader to appendix \ref{app:normality_condition} for an explicit proof on the orthonormality condition of the WDM basis components. The appendix \ref{app:forward_derivation} detail the mathematical calculations related to the forward/inverse transforms. Finally, appendix \ref{app:stats} discusses the diagonal approximation of the WDM covariance matrix for a wide-sense stationary process -- one of the key features why the WDM domain is suited for inference within gravitational wave astronomy. 
 
 \subsection{Conventions}\label{sec:conventions}
 Consider a data stream consisting of $N$ uniformly sampled values of a
-\textbf{real} quantity $x$ at times $\{t_n\}_{n=0,\dots,N-1}$ over a
-total observation time $T$:
+\textbf{real} quantity $x$ at times $\{t_n\}_{n=0}^{N-1}$ for $t_n = t_0 + n\Delta t$ over a
+total observation time $T = N\Delta t$:
 \begin{align}\label{st_definition}
   x[n]=x(t_n)\qquad,\qquad n=0,\dots,N-1\;,
 \end{align}
-with sampling interval $\Delta t = t_{k+1} - t_{k}$ and $T = N\Delta t$.
+with sampling interval $\Delta t = t_{n+1} - t_{n}$.
 All available information about the signal $x[n]$ is encoded in these $N$ samples. We define the sampling rate, the Nyquist frequency and the frequency spacing as
 \begin{align} F_s&\equiv\frac{1}{\Delta t}\equiv\frac{N}{T}\;,\nonumber\\
 f_{\rm max}&=\frac{1}{2} F_s\;,\nonumber\\
@@ -206,9 +214,9 @@ discrete-Fourier-transformed (DFT) to a set of other $N$ complex numbers as
 \end{equation}
 for Fourier frequencies $f_{l} = \{-N\Delta f/2, \ldots, -\Delta f,
 0, \Delta f, \ldots, (N/2 - 1)\Delta f\}$, i.e.\ the zero-frequency
-bin is centred in the array.
+bin is centred in the array. All transforms presented in this work are dimensionless and use the standard \texttt{python} \texttt{numpy}'s convention. This is in contrast to~\cite{Cornish:2020odn}.
 
-We assume that the output of a gravitational wave detector, $x(t)$,
+We assume that the output of a gravitational-wave detector, $x(t)$,
 is expressed as a linear combination of a signal, $h(t; \boldsymbol{\theta})$,
 determined by a finite set of (unknown) parameters, $\boldsymbol{\theta}$, and
 instrumental noise, $n(t)$. If we ignore the presence of calibration
@@ -221,7 +229,7 @@ time and frequency domain as:
 \end{align}
 where the tilde indicates the Fourier transform.
 
-In the following, bold faced quantities $\boldsymbol{A}$ stand for vector/matrix quantities with components $A_{ij}$. Dagger based operations $\boldsymbol{A}^{\dagger}$ stand for the conjugate transpose of the matrix $\boldsymbol{A}$.
+In the following, bold faced quantities $\boldsymbol{A}$ stand for vector/matrix quantities with components $A_{ij}$. Dagger based operations $\boldsymbol{A}^{\dagger}$ stand for the conjugate transpose of the matrix $\boldsymbol{A}$. 
 
 \section{The Wilson--Daubechies--Meyer (WDM) Transform}\label{sec:wdm}
 
@@ -243,14 +251,14 @@ standard dyadic wavelet transform, the WDM transform used here has a
 uniform rectangular tiling, so that all pixels have the same time
 width $\Delta T$ and frequency width $\Delta F$, with
 $\Delta T\,\Delta F = 1/2$ under the one-sided frequency convention
-used below~\cite{Daubechies:1991wv}.%
+used below.%
 
 The naming of the transform reflects two distinct ingredients: the
 \emph{Wilson}-basis pairing of positive- and negative-frequency atoms,
 introduced together with the phase factor, and the smooth
 \emph{Daubechies--Meyer} frequency window used to
 construct those atoms, all of which introduced together with its closed form in
-Sec.~\ref{sec:wdm} below. 
+Sec.~\ref{sec:wdm} below ~\cite{Daubechies:1991wv}. 
 
 The WDM transform maps the original $N$ samples to a packed coefficient grid with $N_t$ time bins and $N_f+1$ stored frequency channels. The transform size is still set by
 \begin{align}\label{NtNf_def}
@@ -291,16 +299,19 @@ Relaxing the evenness requirement is left to future work.
         (a)~Time-domain atoms $g_{nm}(t)$ for two representative WDM cells,
         labeled A and B. The higher-frequency cell B has a more rapidly
         oscillating atom.
-        (b)~Frequency-domain magnitudes $|\tilde{G}_{nm}(f)|$ for the same
+        (b)~Frequency-domain magnitudes $|\tilde{g}_{nm}(f)|$ for the same
         two cells, showing their localization around different frequency
         channels.
         (c)~The packed coefficient array $W_{nm}$, with time bins $n$ along
         the horizontal axis and frequency channels $m$ along the vertical axis.
         The highlighted cells correspond to the atoms shown in panels (a) and
         (b). Each interior cell stores
-        $w_{nm} = \mathrm{Re}[C^*_{nm}\,x_m[n]]$; the phase factor $C_{nm}$
+        $w_{nm} = \sqrt{2}\,(-1)^{nm}\,\mathrm{Re}[C^*_{nm}\,x_m[n]]$
+        (Eq.~\eqref{eq:wnm_compact}); the phase factor $C_{nm}$
         alternates between $1$ and $i$ on a checkerboard pattern, while the DC
         and Nyquist edge channels are stored separately.
+        \gm{Sorry to bother you, Avi, could you please make $\tilde{G}\to\tilde{g}$ in the t axis of the left figure? That's the notation we used in the text.}
+        \avi{also Ollie suggested to chnage from A and B to something else eg i and ii (to differentiate from the window parameters A and B.}
     }
     \label{fig:wdm_transform}
     \script{wdm_overview_panels.py}
@@ -314,7 +325,7 @@ Relaxing the evenness requirement is left to future work.
 From the orthogonality condition of the Wilson basis, the inverse WDM transform is for the Fourier domain $\tilde{x}$ is immediate 
 
 \begin{align}\label{eq:inverse_fourier}
-  \tilde{x}[l] = \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}_{nm}[l]\,w_{nm}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L366}
+  \tilde{x}[l] = \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}_{nm}[l]\,w_{nm}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L366}
 \end{align}
 found via direct computation
 %
@@ -334,7 +345,7 @@ Appendix~\ref{app:normalization_Meyer}).
 Together these two
 identities ensure exact round-trip reconstruction: forward followed
 by inverse returns the original data to machine precision, as
-verified numerically in Section~\ref{sec:code_package}. We derive explicit formulae for the backward transformations given below \ref{app:inverse_transform}
+verified numerically in Section~\ref{sec:code_package}. We derive explicit formulae for the backward transformations in Appendix~\ref{app:inverse_transform}:
 
 \begin{widetext}
 \begin{align}
@@ -348,7 +359,7 @@ verified numerically in Section~\ref{sec:code_package}. We derive explicit formu
 \tilde{\varphi}[l - N/2]\, \displaystyle\sum_{n=0}^{N_t - 1} w_{nN_f}\, e^{-4\pi i n l / N_t},
 & m = N_f,\ \ N/2 - N_t/2 \le l \le N/2,
 \end{cases}
-\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/transforms/xp_backend.py\#L119-L176}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L119-L176}
 \end{align}
 \end{widetext}
 where the original Fourier domain expression $\tilde{x}[l]$ on the output data is given via
@@ -356,20 +367,20 @@ where the original Fourier domain expression $\tilde{x}[l]$ on the output data i
 \tilde{x}[l] = \sum_{m=0}^{N_f} \tilde{x}_{m}[l]
 \end{equation}
 %
-Equation \eqref{eq:inverse_transform_discrete} is the first time that the inverse WDM transform has been given in the literature to date. 
+Equation~\eqref{eq:inverse_transform_discrete} provides an explicit, closed-form expression for the inverse WDM transform in the sampled, packed convention used throughout this work.
+\subsection{Orthogonality \& Forward/Backward Transforms - matrix formalism}
 
-\section{Statistics within the WDM formalism}\label{sec:stats}
+The WDM coefficients $w_{nm}$ are pixels that live on a grid of dimension $(N_t, N_f + 1)$. Now let us define $\alpha(n,m) = n(N_f + 1) + m$ as a function that maps rows and columns of the matrix $w_{nm}$ into a flattened real vector $\boldsymbol{w} \in \mathbb{R}^{N_t(N_f + 1)}$. 
 
-\subsection{The WDM likelihood}
+% Let $(n,m)$ stand for  $n$ and column $m$ 
+% Now let us define a bijection
+% \begin{align}
+% \alpha\ : \{n\}_{n = 0}^{N_t - 1} &\times \{m\}_{m=0}^{N_f} \longrightarrow \{0, 1, \ldots, N_t(N_f + 1) - 1\} \\
+% \alpha(n,m) &\longmapsto \alpha =\{0, 1, \ldots, n(N_f + 1) +m\}\,,
+% \end{align}
+% where, for any choice of $\alpha = n(N_f +1) + m$ we have the real vector $\boldsymbol{w} \in \mathbb{R}^{N_t(N_f + 1)}$. In other words, take the WDM coefficients (matrix) and flatten the matrix row by row to create a real vector. 
 
-For a Gaussian frequency-domain noise process characterized by a covariance matrix $\boldsymbol{\tilde \Sigma} = \mathbb{E}[\boldsymbol{\tilde x}\boldsymbol{\tilde x}^\dagger]$,
-the log-likelihood of the data $\mathbf{\tilde d}$ given a signal model $\mathbf{\tilde h}$, characterised via residuals $\boldsymbol{\tilde x} = \boldsymbol{\tilde d} - \boldsymbol{\tilde h}$ is \cite{Burke:2025bun}
-\begin{equation}\label{eq:frequency_domain_like}
-    \log \mathcal{L}(d|\boldsymbol{\theta}) = -\frac{1}{2}\tilde{\boldsymbol{x}}^{\dagger}\tilde{\boldsymbol{\Sigma}}^{-1}\tilde{\boldsymbol{x}} - \ln\det \left(\frac{1}{N}\tilde{\boldsymbol{\Sigma}}\right) - \frac{N}{2}\ln(2\pi)\,.
-\end{equation}
-If the time-domain noise process is assumed to have a circulant structure (therefore stationary with periodic boundary conditions), the frequency domain noise covariance matrix returns a purely diagonal matrix. In this section, we will perform a similar calculation to ~\cite{Burke:2025bun} and transform the frequency domain likelihood \eqref{eq:frequency_domain_like} into the WDM likelihood used for parameter inference.  
-
-We first define the complex rectangular matrices $\boldsymbol{G}\in \mathbb{C}^{N_t(N_f +1) \times N}$ with adjoint $\boldsymbol{G}^{\dagger} \in \mathbb{C}^{N \times N_t(N_f + 1)}$
+We can then define the complex rectangular matrices $\boldsymbol{G}\in \mathbb{C}^{N_t(N_f +1) \times N}$ with adjoint $\boldsymbol{G}^{\dagger} \in \mathbb{C}^{N \times N_t(N_f + 1)}$
 via the linear maps with action on the frequency domain vector $\tilde{\boldsymbol{x}}\in\mathbb{C}^{N}$ so that $\boldsymbol{w} = \boldsymbol{G}\tilde{\boldsymbol{x}}$ with inverse transform $\tilde{\boldsymbol{x}} = \boldsymbol{G}^{\dagger}\boldsymbol{w}$. In component form, one should interpret $(\boldsymbol{G})_{\alpha,l} = \tilde{g}^{*}_{nm}[l]$, with components of $(\boldsymbol{G})_{\alpha,l}$ here read as row $\alpha \mapsto (n,m)$ evaluated at frequency index $l$. In component form, we can recall the results of \eqref{eq:orthonormality}:
 \begin{align}
     \left(\mathbf{G}^\dagger \mathbf{G}\right)_{ll'} 
@@ -383,7 +394,7 @@ via the linear maps with action on the frequency domain vector $\tilde{\boldsymb
 \end{align}
 %
 for the first case in Eq.~\eqref{eq:orthonormality_like_cases} the zeroth $m = 0$ and Nyquist $m = N_f$ bins and second case the interior bins $m \in \{1,\ldots, N_f - 1\}$.
-From the orthogonal conditions Eqs. (\ref{eq:orthogonality_likelihood_proof}, \ref{eq:orthonormality_like_cases}), one can see that $\boldsymbol{G}^{\dagger}\boldsymbol{G} = \mathbb{I}_{N} \neq \boldsymbol{G}\boldsymbol{G}^{\dagger}$.
+From the orthogonal conditions Eqs. (\ref{eq:orthogonality_likelihood_proof}, \ref{eq:orthonormality_like_cases}), one can see that $\boldsymbol{G}^{\dagger}\boldsymbol{G} = \mathbb{I}_{N} \neq \boldsymbol{G}\boldsymbol{G}^{\dagger}$. In figure \ref{fig:wdm_orthogonality_decorrelation} we plot the two basis contractions $\boldsymbol{G}^{\dagger}\boldsymbol{G}$ and $\boldsymbol{G}\boldsymbol{G}^{\dagger}$ over the full time and frequency grids. Equation \eqref{eq:orthogonality_likelihood_proof} returns the identity, whereas equation \eqref{eq:orthonormality_like_cases} exhibits non-trivial off-diagonal entries due to the inclusion of the zeroth and Nyquist bins.  
 
 As a consequence the forward map $\boldsymbol{w} = \boldsymbol{G}\tilde{\boldsymbol{x}}$ embeds the signal space $\mathbb{C}^N$ into the larger packed space $\mathbb{C}^{N_t(N_f+1)}$, and the left-inverse $\boldsymbol{G}^\dagger$ recovers the signal,
 \begin{equation}
@@ -393,7 +404,25 @@ so the forward-then-inverse round-trip is exact for every signal. The reverse ro
 \begin{equation}
     \boldsymbol{w} \xmapsto{\;\boldsymbol{G}^\dagger\;} \boldsymbol{G}^\dagger\boldsymbol{w} \xmapsto{\;\boldsymbol{G}\;} \boldsymbol{G}\boldsymbol{G}^\dagger\boldsymbol{w} \neq \boldsymbol{w} \,,
 \end{equation}
-%
+
+In other words, starting from an arbitrary time-frequency representation $\boldsymbol{w}$, it is only possible to reconstruct $\boldsymbol{w}$ through inverse-then-forward transforms only if $\boldsymbol{w}$ comes from a valid WDM transformation $\tilde{\boldsymbol{x}}\mapsto\boldsymbol{w}\mapsto\tilde{\boldsymbol{x}}$. Spurious choices of $\boldsymbol{w}$ would never arise in practice, since WDM-based waveform models would be constructed via time-domain/frequency-domain implementations in the first place. 
+
+On the practical side, the exactness of the \emph{forward-then-inverse} round-trip relies on $\boldsymbol{G}^\dagger\boldsymbol{G} = \mathbb{I}_N$, which in turn requires the DC and Nyquist edge channels to be included and implemented correctly. Omitting or mishandling these channels breaks the completeness relation and introduces non-trivial reconstruction errors in $\tilde{\boldsymbol{x}} \mapsto \boldsymbol{w} \mapsto \tilde{\boldsymbol{x}}$. 
+
+The matrix formalism outlined in this section will prove useful when deriving the WDM-based likelihood from first principles. This is the purpose of the next section. 
+
+\section{Statistics within the WDM formalism}\label{sec:stats}
+
+\subsection{The WDM likelihood}
+
+For a Gaussian frequency-domain noise process characterized by a covariance matrix $\boldsymbol{\tilde \Sigma} = \mathbb{E}[\boldsymbol{\tilde x}\boldsymbol{\tilde x}^\dagger]$,
+the log-likelihood of the data $\mathbf{\tilde d}$ given a signal model $\mathbf{\tilde h}$, characterised via residuals $\boldsymbol{\tilde x} = \boldsymbol{\tilde d} - \boldsymbol{\tilde h}$ is \cite{Burke:2025bun}
+\begin{equation}\label{eq:frequency_domain_like}
+    \log \mathcal{L}(d|\boldsymbol{\theta}) = -\frac{1}{2}\tilde{\boldsymbol{x}}^{\dagger}\tilde{\boldsymbol{\Sigma}}^{-1}\tilde{\boldsymbol{x}} - \frac{1}{2}\ln\det \left(\frac{1}{N}\tilde{\boldsymbol{\Sigma}}\right) - \frac{N}{2}\ln(2\pi)\,.
+\end{equation}
+If the time-domain noise process is assumed to have a circulant structure (therefore stationary with periodic boundary conditions), the frequency domain noise covariance matrix returns a purely diagonal matrix. In this section, we will perform a similar calculation to ~\cite{Burke:2025bun} and transform the frequency domain likelihood \eqref{eq:frequency_domain_like} into the WDM likelihood used for parameter inference.  
+
+
 The WDM covariance matrix $\boldsymbol{\Sigma}_{w}=\mathbb{E}[\boldsymbol{w}\boldsymbol{w}^{\dagger}]\in\mathbb{R}^{N_t(N_f+1)\times N_t(N_f +1)}$ therefore relates to the one in frequency domain via
 %
 \begin{align}
@@ -403,7 +432,7 @@ The WDM covariance matrix $\boldsymbol{\Sigma}_{w}=\mathbb{E}[\boldsymbol{w}\bol
 %
 for $\boldsymbol{\Sigma}_{w}\in\mathbb{R}^{N_t(N_f+1)\times N_t(N_f +1)}$ the \emph{real valued} WDM noise covariance matrix. 
 
-Now, for stationary and circulant noise the frequency domain covariance matrix $\tilde{\Sigma}$ is trivially invertible. However, we have that $N = \text{Rank}(\boldsymbol{G}^{\dagger}\boldsymbol{G}) = \text{Rank}(\boldsymbol{G}) = \text{Rank}(\boldsymbol{G}^{\dagger})$, and that $\text{Rank}(\boldsymbol{\Sigma}_w)  \leq N$. Since the matrix $\boldsymbol{\Sigma}_{w}$ does not have full rank, i.e., $\text{Rank}(\Sigma_{w}) \neq (N + N_t)$, we deduce that $\Sigma_{w}$ is not invertible over the full span of pixels $n \in \{0,\ldots, N_t -1\}$ and $m\in\{0, \ldots, N_f\}$. 
+Now, for stationary and circulant noise the frequency domain covariance matrix $\tilde{\Sigma}$ is trivially invertible. However, we have that $N = \text{Rank}(\boldsymbol{G}^{\dagger}\boldsymbol{G}) = \text{Rank}(\boldsymbol{G}) = \text{Rank}(\boldsymbol{G}^{\dagger})$, and that $\text{Rank}(\boldsymbol{\Sigma}_w)  \leq N < N_t(N_f+1)$. The matrix $\boldsymbol{\Sigma}_{w}$ is therefore rank-deficient, and we deduce that $\boldsymbol{\Sigma}_{w}$ is not invertible over the full span of pixels $n \in \{0,\ldots, N_t -1\}$ and $m\in\{0, \ldots, N_f\}$.
 
 To make progress, we define the Moore-Penrose pseudo inverse $\boldsymbol{\Sigma}^+_{w}$ of the matrix $\boldsymbol{\Sigma}_w$
 %
@@ -418,28 +447,30 @@ and we can build the WDM likelihood from \eqref{eq:frequency_domain_like}
     & \quad - \ln\det \left(\frac{1}{N_fN_t}\boldsymbol{G}^{\dagger}\boldsymbol{\Sigma}_{w}\boldsymbol{G}\right) - \frac{N_fN_t}{2}\ln(2\pi)\,.
 \end{align}
 %
-The explicit expressions for the covariance matrix $\Sigma_w$ and its pesudo-inverse are tricky to calculate in practice when including the zeroth and Nyquist bins. Instead, if one neglects these contributions and restricts to the internal frequency bins $m \in \{1, \ldots, N_f-1\}$ then  $\boldsymbol{G}\boldsymbol{G}^{\dagger} = \boldsymbol{G}^{\dagger}\boldsymbol{G} = \mathbb{I}$ . This then implies that the WDM covariance matrix and corresponding pseudo-inverse have a simpler, more computationally practical form that can be used for data analysis. 
+The explicit expressions for the covariance matrix $\Sigma_w$ and its pseudo-inverse are tricky to calculate in practice when including the zeroth and Nyquist bins. Instead, if one neglects these contributions and restricts to the internal frequency bins $m \in \{1, \ldots, N_f-1\}$ then  $\boldsymbol{G}\boldsymbol{G}^{\dagger} = \boldsymbol{G}^{\dagger}\boldsymbol{G} = \mathbb{I}_{N}$ . This then implies that the WDM covariance matrix and corresponding pseudo-inverse have a simpler, more computationally practical form that can be used for data analysis. 
 
-Assuming that the noise process is wide-sense stationary, i.e. where the covariance matrix in frequency domain is diagonal
+Assuming that the noise process is wide-sense stationary, 
+%i.e., where the covariance matrix in the frequency domain is diagonal
 %
-\begin{equation}
-(\tilde{\boldsymbol{\Sigma}})_{l,l'} = \frac{NS[l]}{2\Delta t}\delta_{ll'}\,.
-\end{equation}
+%\begin{equation}
+%(\tilde{\boldsymbol{\Sigma}})_{l,l'} = \frac{NS[l]}{2\Delta t}\delta_{ll'}\,.
+%\end{equation}
 %
-and in appendix \ref{app:stats}, we show that, as a first order approximation the covariance matrix, reads
+\qb{I removed the FD diagonal assumption here}\ob{fine by me}
+we show in appendix \ref{app:stats} that, as a first-order approximation, the covariance matrix reads
 %
 \begin{align}\label{eq:Sigma_W_diagonal}
 (\boldsymbol{\Sigma}_w)_{(n,m),(p,q)} &= \frac{N}{2\Delta t} S[mN_t/2]\delta_{np}\delta_{mq}\,, \\
-& = \delta_{np}\delta_{mq}S_{nm}\codelink{https://github.com/pywavelet/wdm_transform/blob/63ae45d27b081179f57b6149a455caedd56ed308/src/wdm_transform/signal_processing.py\#L97} 
+& = \delta_{np}\delta_{mq}S_{nm}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/signal_processing.py\#L97-L152} 
 \end{align}
 %
-where $S_{nm} = S[mN_t/2]=S[n,mN_t/2]$ in agreement with \cite{cornish_nonstationary_wdm}.
+for $0 < m < N_f$, where we define the per-pixel spectral level $S_{nm}~\equiv~\frac{N}{2\Delta t} S[mN_t/2]$. For stationary noise, $S_{nm}$ carries no dependence on the time index $n$; for locally stationary noise it generalizes to the evolutionary spectrum evaluated at the pixel centre, $S_{nm} \propto S[n, mN_t/2]$, in agreement with \cite{cornish_nonstationary_wdm}.
 
 The log-likelihood therefore takes the simple form over the interior bins $m \in \{1, \ldots, N_f - 1\}$
 
 \begin{equation}
   \log \mathcal{L}(\boldsymbol{\theta})
-  = -\frac{1}{2}\sum_{n,m}
+  = -\frac{1}{2}\sum_{\substack{n \\ m\in\mathrm{int}}}
   \left[
     \ln(S_{nm})
     + \frac{\bigl(d_{nm}-w_{nm}\bigr)^2}{S_{nm}}
@@ -450,16 +481,16 @@ similarly agreeing with \cite{cornish_nonstationary_wdm}.
 \subsection{The WDM Inner Product}
 In a similar way to a frequency domain analysis, under the assumptions in Appendix \ref{app:stats} we obtain the approximated expression for the noise-weighted inner product in the WDM domain:
 \begin{align}
-    (a|b)_{\mathrm{WDM}} &= \boldsymbol{w_a}^T(\boldsymbol{\Sigma}^{\rm int}_w)^{-1}\boldsymbol{w_b} \\
-    & = \sum_{\substack{n \\ m\in\mathrm{int}}} \frac{w_{a,nm}\,w_{b,nm}} {S_{nm}}\,,\label{eq:wdm_inner}\codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/signal_processing.py\#L52-L60}
+    (a|b)_{\mathrm{WDM}} &= \boldsymbol{w_a}^T(\boldsymbol{\Sigma}_w^{\rm int})^{-1}\boldsymbol{w_b} \\
+    & = \sum_{\substack{n \\ m\in\mathrm{int}}} \frac{w_{a,nm}\,w_{b,nm}} {S_{nm}}\,,\label{eq:wdm_inner}\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/signal_processing.py\#L79-L94}
 \end{align}
 %
 which reduces to the frequency domain inner product via matrix algebra
 %
 \begin{align}
     (a|b)_{\mathrm{WDM}} &= \boldsymbol{w_a}^T(\boldsymbol{\Sigma}^{\rm int}_w)^{-1}\boldsymbol{w_b}  \\ 
-    &= \tilde{x_a}^{\dagger}\boldsymbol{G}^{\dagger}\boldsymbol{G}(\tilde{\Sigma})^{-1}\boldsymbol{G}\boldsymbol{G}^{\dagger}\boldsymbol{\tilde x_b} \\
-    & = \tilde{\boldsymbol{x_a}}^{\dagger}(\tilde{\boldsymbol{\Sigma}})^{-1}\tilde{\boldsymbol{x_b}} \\
+    &= \boldsymbol{\tilde{x}_a}^{\dagger}\boldsymbol{G}^{\dagger}\boldsymbol{G}(\tilde{\boldsymbol{\Sigma}})^{-1}\boldsymbol{G}\boldsymbol{G}^{\dagger}\boldsymbol{\tilde x_b} \\
+    & = \boldsymbol{\tilde x_a}^{\dagger}(\tilde{\boldsymbol{\Sigma}})^{-1}\tilde{\boldsymbol{x_b}} \\
     & = \frac{4N}{\Delta t} \text{Re}\left(\sum_{l=1}^{N/2 - 1}\frac{\tilde{x_a}^{*}[l]\tilde{x_b}[l]}{S[l]}\right) \\
     & =(a|b)_{\text{freq}}\,.
 \end{align}
@@ -499,34 +530,33 @@ Both panels use the small tiling $N_t = N_f = 8$,
 $N = N_t N_f = 64$, with packed atoms flattened by $\alpha = n(N_f + 1) + m$.
 Panel (a) lives in the $N_t(N_f+1) = 72$-dimensional packed coefficient
 space, while panel (b) lives in the $N$-dimensional signal space. The
-asymmetry $GG^\dagger \in \mathbb{C}^{72\times 72}$ versus
-$G^\dagger G \in \mathbb{C}^{64\times 64}$ is intrinsic to the rectangular
+asymmetry $\boldsymbol{G}\boldsymbol{G}^\dagger \in \mathbb{C}^{72\times 72}$ versus
+$\boldsymbol{G}^\dagger \boldsymbol{G} \in \mathbb{C}^{64\times 64}$ is intrinsic to the rectangular
 embedding $G : \mathbb{C}^N \to \mathbb{C}^{N_t(N_f+1)}$ and is the
-matrix-level expression of the fact that $G^\dagger G = \mathbb{I}_N \neq
-GG^\dagger$.
+matrix-level expression of the fact that $\boldsymbol{G}^\dagger \boldsymbol{G} = \mathbb{I}_N \neq
+\boldsymbol{G}\boldsymbol{G}^\dagger$.
 Faint grid lines in the panels mark the block boundaries $\alpha = n(N_f+1)$
 for $n = 0, 1, \ldots, N_t$, separating successive time slices and making
 the $\pm N_t/2$ offset structure easy to read off by eye.
 \textbf{(a)} The packed-space Gram matrix
-$(GG^\dagger)_{(n,m),(p,q)} = \sum_\ell g_{nm}[\ell]\,g^*_{pq}[\ell]$. Interior
+$(\boldsymbol{G}\boldsymbol{G}^\dagger)_{(n,m),(p,q)} = \sum_\ell \tilde g_{nm}[\ell]\,\tilde g^*_{pq}[\ell]$. Interior
 channels ($m = 1,\ldots,N_f-1$) form an identity block, while the DC and
 Nyquist edge channels ($m \in \{0, N_f\}$) carry the off-diagonal entries at
 $p = n \pm N_t/2$ predicted by the first case of
 Eq.~\eqref{eq:orthonormality_like_cases}. These off-diagonals span the
 $N_t$-dimensional redundant subspace by which $GG^\dagger$ fails to be the
 identity. \textbf{(b)} The signal-space product
-$(G^\dagger G)_{\ell\ell'} = \sum_{n,m} g_{nm}[\ell]\,g^*_{nm}[\ell']$,
+$(\boldsymbol{G}^\dagger \boldsymbol{G})_{\ell\ell'} = \sum_{n,m} \tilde g_{nm}[\ell]\,\tilde g^*_{nm}[\ell']$,
 indexed by sample indices $(\ell,\ell')$ rather than the packed pair, equals
-$\mathbb{I}_N$ to machine precision ($\max|G^\dagger G - \mathbb{I}| \sim
+$\mathbb{I}_N$ to machine precision ($\max|\boldsymbol{G}^\dagger \boldsymbol{G} - \mathbb{I}| \sim
 10^{-15}$), demonstrating that the forward-then-inverse round trip is exact.
 The exact $\pm 1$ entries at the
 same $\pm N_t/2$ offsets seen in panel (a) are the empirical signature of
 the edge-channel redundancy: $w_{n,0}$ and $w_{n + N_t/2,\,0}$ (and likewise
 for $m = N_f$) are linearly dependent copies of the same underlying real
 degree of freedom, so their Pearson correlation is identically $\pm 1$ for
-any input. The reported $\text{mean}\,|\rho_{\rm off}|$ is computed over
-interior pairs only, so it summarises genuine decorrelation rather than
-storage redundancy.}
+any input.\gm{Sorry, Avi, could you please do $g\to \tilde g$ in the titles of the two figures?}\ob{This plot is so good!}
+}
   \label{fig:wdm_orthogonality_decorrelation}
   \script{wdm_orthogonality_decorrelation.py}
 \end{figure*}
@@ -581,12 +611,12 @@ implementation are also linear in $N$, so the overall memory footprint
 is $\mathcal{O}(N)$.
 
 We validate the implementation using round-trip reconstruction tests.
-For an input time series $x$, we compute its packed WDM coefficients,
+For an input time series $\boldsymbol{x}$, we compute its packed WDM coefficients,
 apply the inverse transform, and compare the reconstructed series
-$\hat{x}$ with the original. Across the benchmarked problem sizes and
+$\hat{\boldsymbol{x}}$ with the original. Across the benchmarked problem sizes and
 backends, the relative reconstruction error
 \begin{align}
-  \epsilon_{\rm rt} = \frac{\|\hat{x}-x\|_2}{\|x\|_2}
+  \epsilon_{\rm rt} = \frac{\|\hat{\boldsymbol{x}}-\boldsymbol{x}\|_2}{\|\boldsymbol{x}\|_2}
 \end{align}
 remains at the level of double-precision floating-point roundoff,
 $\epsilon_{\rm rt} \lesssim 10^{-16}$, providing a direct numerical
@@ -760,7 +790,7 @@ parameters, which supplies a stable metric for the narrow, strongly correlated
 $(f_0,\dot f)$ posterior ridge. Chains are initialized near the reference with a
 small Fisher-scaled jitter. We use target acceptance probability $0.9$, maximum
 tree depth $10$, $1000$ warmup steps, and $1500$ retained samples per chain
-across two chains. For all reported results we require $\hat R < 1.1$ in every
+across two chains. For all reported results we require \qb{the Gelman-Rubin statistic to be} $\hat R < 1.1$ in every
 sampled coordinate and zero divergences.
 
 \paragraph{Results.}
@@ -789,7 +819,7 @@ inference.
     injected source, with the analysis band shaded. Bottom: zooms of the source
     band in the frequency domain (left) and in the whitened WDM time-frequency
     plane (right), where amplitude is shown in units of the per-pixel noise
-    standard deviation.}
+    standard deviation. \gm{Sorry again Avi, could you please make $S_h\to S^c$ or $S^A$ in the y axis? To be consistent with the notation in the text. And similarly $S_{nm}^c$ or $S_{nm}^A$. Thank you!}}
   \label{fig:lisa_gb_data}
   \script{lisa_gb_data.py}
 \end{figure}
@@ -841,28 +871,11 @@ backend provides substantially lower runtimes for large transforms,
 making it practical to incorporate WDM-domain operations into
 inference pipelines that require millions of likelihood evaluations.
 
-Several limitations of the current work should be noted. First, the
-package implements only the $d=1$ Meyer window; higher-order windows
-($d > 1$) offer better spectral leakage suppression and may be
-preferable for data with sharp spectral features.
-Second, the paper
-does not address the generation of gravitational-wave signals directly
-in the WDM domain — where much of the computational advantage of the
-WDM representation lies~\cite{Cornish:2020odn} — and we defer fast
-WDM-domain waveform generation to future work. Third, the
-treatment of data gaps and edge effects, while conceptually
-straightforward, requires careful handling of the boundary basis elements
-and is left to downstream analyses built on top of the package.%
+Several limitations of the current work should be noted. First, the package implements only the $d=1$ Meyer window; higher-order windows ($d > 1$) offer better spectral leakage suppression and may be preferable for data with sharp spectral features.
+Second, the paper does not address the generation of gravitational-wave signals directly in the WDM domain — where much of the computational advantage of the WDM representation lies~\cite{Cornish:2020odn} — and we defer fast WDM-domain waveform generation to future work. Third, the treatment of data gaps and edge effects, while conceptually straightforward, requires careful handling of the boundary basis elements and is left to downstream analyses built on top of the package.%
 
-Fourth, the LISA galactic-binary
-inference example of Section~\ref{sec:lisa_gb} uses a
-time-averaged effective PSD in both the frequency-domain and
-WDM-domain likelihoods; this controlled comparison isolates the WDM
-basis change but does not exercise the principal advantage of the WDM
-representation, namely the ability to assign a time-varying $S_{nm}$
-to each pixel and thereby accommodate genuinely non-stationary noise
-without off-diagonal covariance terms. Demonstrating this advantage on
-realistic LISA non-stationary backgrounds is an important direction for
+Fourth, the LISA galactic-binary inference example of Section~\ref{sec:lisa_gb} uses a time-averaged effective PSD in both the frequency-domain and WDM-domain likelihoods; this controlled comparison isolates the WDM basis change but does not exercise the principal advantage of the WDM representation, namely the ability to assign a time-varying WDM domain PSD $S_{nm}$ to each time pixel and thereby accommodate genuinely non-stationary noise without off-diagonal covariance terms.
+Demonstrating this advantage on realistic LISA non-stationary backgrounds is an important direction for
 future work.
 
 Looking ahead, the most immediate extensions are the incorporation of
@@ -887,13 +900,16 @@ worked examples are available in the repository documentation at
 The online documentation includes minimal examples demonstrating the
 construction of a WDM tiling, application of the forward transform, and
 round-trip reconstruction with the inverse transform.
+The in-text code links (\scalebox{0.65}{\faGithub}) are pinned to the
+tagged release \texttt{v0.4.2} of the package, so that the referenced
+line numbers remain valid as the codebase evolves.
 
 \begin{acknowledgments}
     \avi{TODO}
-    The authors thank Mathew Digman, Neil Cornish, Will Farr, and Aaron Johnson for discussions. 
+    The authors thank Matthew Digman, Neil Cornish, Will Farr, and Aaron Johnson for discussions.
     We also express our gratitude to Astrid Lamberts for organizing the ``Towards LISA catalogs'' workshop (Nice, 2023), and to Tyson B. Littenberg for organizing the 3rd LISA Sprint meeting (Huntsville, 2025), where this project was further developed.
-    O.~Burke sincerely appreciates insightful discussions with Christopher Moore and Sylvain Marsat during the preparation of this work.
-    AV gratefully acknowledge support from the Marsden Fund Council grants MFP-UOA2131 and MFP-UOA2531,
+    O.~Burke sincerely appreciates insightful discussions with Christopher Moore, Christian Chapman-Bird, and Sylvain Marsat during the preparation of this work.
+    AV gratefully acknowledges support from the Marsden Fund Council grants MFP-UOA2131 and MFP-UOA2531,
 	funded by the New Zealand Government and managed by the Royal Society Te Apārangi.
     GM acknowledges support from the ANR grant AAPG2024 PRC - GalaxyFIT. 
     O.~Burke acknowledges financial support from the Grant UKRI972 awarded via the UK Space Agency.  
@@ -922,8 +938,8 @@ e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big)
 The closed-form expressions below are written
 for $d=1$ to keep the algebra explicit. We do remark, however, that the orthonormality and
 normalisation results extend to arbitrary $d$ using the incomplete-beta
-identity $\nu_d(1-y)+\nu_d(y)=1$. We restrict to
-$d=1$ here purely for pedagogical clarity:
+identity $\nu_d(1-y)+\nu_d(y)=1$ (see Eq.~\eqref{eq:nu_d_def}). We restrict to
+$d=1$ here purely for pedagogical clarity\footnote{Analogous proofs of the follwing identities and formulas can be still obtained in the $d>1$ case by exploiting the symmetry properties of the incomplete beta function}:
 %
 \begin{align}\label{eq:phi_discrete}
 \tilde\varphi[l]&=\sqrt{\frac{2}{N_t}}\begin{cases}
@@ -989,7 +1005,7 @@ We want to evaluate
 \sum_{l}&\tilde{g}_{nm}[l]\tilde{g}_{pq}^*[l]
 \end{align}
 %
-we immediatly note that, since the window support in frequency is $N_t/2$ we are forced to have $q=m$. Now we have to consider three cases.
+we immediately note that, since the window support in frequency is $N_t/2$ we are forced to have $q=m$. Now we have to consider three cases.
 
 \textbf{Case $m=0$}, for which we have
 %
@@ -1004,7 +1020,7 @@ but now we note that $e^{-4\pi i (l+N_t/2) (n-p)/N_t}=e^{-4\pi i l(n-p)/N_t}$ an
 \sum_{l}\tilde{g}_{n0}[l]\tilde{g}_{p0}^*[l]&=\frac{1}{N_t}\sum_{l=-N_t/2}^{-1}e^{-4\pi i l (n-p)/N_t}
 \end{align}
 %
-this is a geometric series in $l$, which vanishes for every choice of $n-m$, but the only two cases $n-m=0$ and $n-m=\pm N_t/2$, for which the exponential evaluates to $1$, therefore obtaining, for the first case
+this is a geometric series in $l$, which vanishes for every choice of $n-p$, but the only two cases $n-p=0$ and $n-p=\pm N_t/2$, for which the exponential evaluates to $1$, therefore obtaining,
 %
 \begin{align}
 \sum_{l}\tilde{g}_{n0}[l]\tilde{g}_{p0}^*[l]&=\frac{1}{2}\left(\delta_{n,p}+\delta_{n,p\pm \frac{N_t}{2}}\right)
@@ -1075,6 +1091,7 @@ Eq.~\eqref{eq:phi_discrete} is correctly normalized. We compute
 \end{align}
 %
 where on the first line the term $-\frac{2}{N_t}$ avoids double counting $l=0$, where the last summation equals $+\frac{2}{N_t}$ after performing the geometrical series and where we remember that $2A+B=1$ is a property of the window function.
+Please note that a similar proof can be obtained for Meyer windows with $d>1$ by exploiting the symmetry property of the incomplete beta functions. Also in this case, we omit the general proof for the sake of pedagogical clarity.
 
 \section{Detailed derivation for the forward and inverse transforms}\label{app:forward_derivation}
 
@@ -1135,27 +1152,27 @@ splitting yields
   +\frac{1}{\sqrt{2}}\sum_{l=-N/2}^{-1} \tilde{x}[l]\, e^{4\pi
   iln/N_t}\,\tilde{\varphi}[l]
   \nonumber\\
-  &=\,\sqrt{2}\Re\left[\sum_{l=1}^{N_t/2} \tilde{x}[l]\, e^{4\pi
+  &=\,\sqrt{2}\Re\left[\sum_{l=1}^{N_t/2-1} \tilde{x}[l]\, e^{4\pi
   iln/N_t}\,\tilde{\varphi}[l]\right]+\frac{1}{\sqrt{2}}\tilde{x}[0]\,\tilde{\varphi}[0]\,,
 \end{align}
 which is Eq.~\eqref{eq:wn0} of the main text.
 \subsection{Nyquist channel \texorpdfstring{$(m = N_f)$}{(m=N_f)}}
 
 \begin{align}
-w_{nm}&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}[l]\, e^{2\pi iln/N_t}\left[\tilde{\varphi}\!\left[l-\tfrac{N}{2}\right]+\tilde{\varphi}\!\left[l+\tfrac{N}{2}\right]\right]+
-\frac{1}{\sqrt{2}}\sum_{l=-N/2}^{-1} \tilde{x}[l]\, e^{2\pi iln/N_t}\left[\tilde{\varphi}\!\left[l\!-\!\tfrac{N}{2}\right]+\tilde{\varphi}\!\left[l\!+\!\tfrac{N}{2}\right]\right]\nonumber\\
-&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}[l]\, e^{2\pi iln/N_t}\left[\tilde{\varphi}\!\left[l-\tfrac{N}{2}\right]+\tilde{\varphi}\!\left[l+\tfrac{N}{2}\right]\right]+
-\frac{1}{\sqrt{2}}\sum_{l=1}^{N/2} \tilde{x}[-l]\, e^{-2\pi iln/N_t}\left[\tilde{\varphi}\!\left[-l\!-\!\tfrac{N}{2}\right]+\tilde{\varphi}\!\left[-l\!+\!\tfrac{N}{2}\right]\right].
+w_{nm}&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}[l]\, e^{4\pi iln/N_t}\left[\tilde{\varphi}\!\left[l-\tfrac{N}{2}\right]+\tilde{\varphi}\!\left[l+\tfrac{N}{2}\right]\right]+
+\frac{1}{\sqrt{2}}\sum_{l=-N/2}^{-1} \tilde{x}[l]\, e^{4\pi iln/N_t}\left[\tilde{\varphi}\!\left[l\!-\!\tfrac{N}{2}\right]+\tilde{\varphi}\!\left[l\!+\!\tfrac{N}{2}\right]\right]\nonumber\\
+&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}[l]\, e^{4\pi iln/N_t}\left[\tilde{\varphi}\!\left[l-\tfrac{N}{2}\right]+\tilde{\varphi}\!\left[l+\tfrac{N}{2}\right]\right]+
+\frac{1}{\sqrt{2}}\sum_{l=1}^{N/2} \tilde{x}[-l]\, e^{-4\pi iln/N_t}\left[\tilde{\varphi}\!\left[-l\!-\!\tfrac{N}{2}\right]+\tilde{\varphi}\!\left[-l\!+\!\tfrac{N}{2}\right]\right].
 \end{align}
 %
 the $l=0$ term in the first summation vanishes, and the $l=N/2$ term is treated separately:
 %
 \begin{align}
-  w_{nm}&=\sqrt{2}\,\Re\sum_{l=1}^{N/2-1} \tilde{x}[l]\, e^{2\pi
-  iln/N_t}\,\,\tilde{\varphi}\!\left[l-\tfrac{N}{2}\right]+\frac{1}{\sqrt{2}}\tilde{x}[N/2]\, e^{-\pi
+  w_{nm}&=\sqrt{2}\,\Re\sum_{l=1}^{N/2-1} \tilde{x}[l]\, e^{4\pi
+  iln/N_t}\,\,\tilde{\varphi}\!\left[l-\tfrac{N}{2}\right]+\frac{1}{\sqrt{2}}\tilde{x}[N/2]\, e^{-2\pi
   inN_f}\tilde{\varphi}[0]\nonumber\\
   &=\sqrt{2}\,\,\Re\sum_{l'=-N_t/2}^{-1}
-  \tilde{x}[l'+N/2]\, e^{2\pi
+  \tilde{x}[l'+N/2]\, e^{4\pi
   il'n/N_t}\,\tilde{\varphi}[l']+\frac{1}{\sqrt{2}}\tilde{x}[N/2]\, \tilde{\varphi}[0]\,,
 \end{align}
 %
@@ -1302,20 +1319,20 @@ Using Eqs. \eqref{eq:autocovariance} and \eqref{eq:wiener-khinchin} into \eqref{
 or in the discrete domain
 %
 \begin{align}
-(\boldsymbol{\Sigma}_w)_{(n,m),(p,q)}=\frac{N^2\Delta f}{2}\sum_{l=-N/2}^{N/2 - 1} S[l]\tilde{g}_{nm}[l] \tilde{g}_{pq}^{*}[l]=\frac{N}{2\Delta t}\sum_{l=-N/2}^{N/2 - 1} S[l]\tilde{g}_{nm}[l] \tilde{g}_{pq}^{*}[l]
+(\boldsymbol{\Sigma}_w)_{(n,m),(p,q)} \approx \frac{N^2\Delta f}{2}\sum_{l=-N/2}^{N/2 - 1} S[l]\tilde{g}_{nm}[l] \tilde{g}_{pq}^{*}[l]=\frac{N}{2\Delta t}\sum_{l=-N/2}^{N/2 - 1} S[l]\tilde{g}_{nm}[l] \tilde{g}_{pq}^{*}[l]
 \end{align}
 %
 since $\Delta f=\frac{1}{T}=\frac{1}{N\Delta t}$.
-The atoms from the Wilson basis $\tilde{g}_{nm}$ are peaked around the frequency $f_m = m N_t \Delta f/2$. This is where the support of the Wilson basis lies. This means that the dominant contribution of the integral are for those frequencies in the vicinity of $f_m$ and $f_q$. Let us now assume that the PSD varies slowly enough so that we can assimilate it to a constant equal to its value at $(f_m + f_q) / 2$. In that case, the 0th order approximation of the equation above is done by approximating $S\left[l\right]\simeq S\left[|m-q| N_t/ 4\right]$, which now does not depend on $l$ and can be taken out of the summation
+The atoms from the Wilson basis $\tilde{g}_{nm}$ are peaked around the frequency $f_m = m N_t \Delta f/2$. This is where the support of the Wilson basis lies. This means that the dominant contribution of the integral are for those frequencies in the vicinity of $f_m$ and $f_q$. Let us now assume that the PSD varies slowly enough so that we can assimilate it to a constant equal to its value at $(f_m + f_q) / 2$. In that case, the 0th order approximation of the equation above is done by approximating $S\left[l\right]\simeq S\left[(m+q) N_t/ 4\right]$, which now does not depend on $l$ and can be taken out of the summation
 %
 \begin{align}
 \label{eq:wdm-covariance-stationary}
-(\boldsymbol{\Sigma}_w)_{(n,m),(p,q)} & \approx \frac{N}{2\Delta t} S\left[|m-q| N_t/ 4\right]\sum_{l=-N/2}^{N/2 - 1}\tilde{g}_{nm}[l] \tilde{g}_{pq}^{*}[l]=\frac{N}{2\Delta t} S\left[m N_t/ 2\right].
+(\boldsymbol{\Sigma}_w)_{(n,m),(p,q)} & \approx \frac{N}{2\Delta t} S\left[(m+q) N_t/ 4\right]\sum_{l=-N/2}^{N/2 - 1}\tilde{g}_{nm}[l] \tilde{g}_{pq}^{*}[l]=\frac{N}{2\Delta t} S\left[m N_t/ 2\right].
 \end{align}
 %
 where the last equality follows from Eq.~\eqref{eq:orthonormality}.
 
-\bibliographystyle{plain}
+\bibliographystyle{apsrev4-2}
 \bibliography{bib}
 
 \end{document}
