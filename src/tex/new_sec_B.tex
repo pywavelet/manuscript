@@ -21,8 +21,8 @@ Nyquist ($m=N_f$) we have that:
 e^{-4\pi i n l/N_t}\, \tilde{\varphi}[l], & m=0, \\[6pt]
 e^{-2\pi i n l/N_t}\Big(C_{nm}\,\tilde{\varphi}[l - mN_t/2] + C_{nm}^*\,\tilde{\varphi}[l + mN_t/2]\Big), & 0 < m < N_f, \\[6pt]
 e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big), & m = N_f, 
-\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/windows.py\#L129}
-\end{cases} \\
+\end{cases}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/windows.py\#L129}\\
 \text{\textbf{Daubechies--Meyer:}} \quad  \tilde\varphi[l]&=\sqrt{\frac{2}{N_t}}\begin{cases}
 1 & |l_r|<A \\
 \cos \left[\frac{\pi}{2}\,\left(
@@ -291,8 +291,8 @@ w_{nm} = \sqrt{2}(-1)^{mn}\Re\,
 \displaystyle\sum_{l = N/2 - N_t/2}^{N/2 - 1} \tilde{x}[l]\, \tilde{\varphi}[l - N/2]\, e^{4\pi i n l/N_t}
 + \dfrac{1}{2}\, \tilde{x}[N/2]\, \tilde{\varphi}[0],
 & m = N_f,
-\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L65-L116}
 \end{cases}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L65-L116}
 \end{align}
 \end{widetext}
 holding true for $N_f \in 2\mathbb{N}$. 
