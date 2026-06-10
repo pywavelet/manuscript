@@ -56,7 +56,7 @@ $\pm mN_t/2$ atoms (the Wilson-basis construction), while the DC
 and Nyquist channels each contribute $N_t$ unpaired real coefficients.
 The total $N_t(N_f{+}1)$ stored entries therefore represent the same
 $N=N_tN_f$ time-domain degrees of freedom, with the edge channels
-overcomplete by exactly $N_t$ real numbers~\cite{Necula_2012,Cornish:2020odn}. 
+being exactly $N_t$ real numbers~\cite{Necula_2012,Cornish:2020odn}. 
 We refer the reader to Fig.~\ref{fig:wdm_transform} for a schematic of the WDM transform and the packed coefficient layout.  % 
 
 The window $\tilde\varphi$ is the ``\emph{Daubechies--Meyer}''
@@ -88,7 +88,7 @@ generalizations.\footnote{Cornish~\cite{Cornish:2020odn} uses $d=4$,
   applications considered in this paper the $d=1$ window provides
   adequate frequency separation while keeping the implementation simple
 and the time-domain filter short.} By construction, $\tilde\varphi$ has a limited frequency bandwidth
-which is controlled by the parameter $A\in[0,1/2]$ in Eq.\eqref{eq:A_B_condition}. 
+which is controlled by the parameter $A\in(0,1/2)$ in Eq.\eqref{eq:A_B_condition}. 
 The frequency localization of the WDM atoms is illustrated in Fig.~\ref{fig:wdm_transform}(b), where the same two highlighted cells are shown in frequency space.
 At each wavelet frequency bin $l$, one sees that the window overlaps with adjacent frequency bins.  
 
@@ -225,7 +225,7 @@ Appendix~\ref{app:forward_derivation} for details), giving
 \begin{equation}\label{eq:wnm_interior}
 \begin{split}
   w_{nm} = {} & \sqrt{2}\,(-1)^{nm} \\
-  & \times \Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2}\tilde{x}[l'+mN_t/2]\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\right],
+  & \times \Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2-1}\tilde{x}[l'+mN_t/2]\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\right],
 \end{split}
 \codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L92-L102}
 \end{equation}
@@ -239,12 +239,12 @@ The expression above can be written compactly as
 where
 %
 \begin{align}\label{eq:xm_def}
-  x_m[n] = \sum_{l=-N_t/2}^{N_t/2-1} e^{2\pi i l n/N_t}\,\tilde x[l +
+  \tilde x_m[n] = \sum_{l=-N_t/2}^{N_t/2-1} e^{2\pi i l n/N_t}\,\tilde x[l +
   mN_t/2]\,\tilde{\varphi}[l],
 \end{align}
 %
 The quantity
-$x_m[n]$ can be computed using a length-$N_t$ FFT for each channel
+$\tilde x_m[n]$ can be computed using a length-$N_t$ FFT for each channel
 $m$, so the total cost of the interior channels is $N_f \times
 \mathcal{O}(N_t\log N_t)$.
 
