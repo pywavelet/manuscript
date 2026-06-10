@@ -623,6 +623,22 @@ $\epsilon_{\rm rt} \lesssim 10^{-16}$, providing a direct numerical
 check that the packed layout, including the DC and Nyquist edge
 channels, is implemented consistently across both backends.
 
+\begin{figure}[!tb]
+  \centering
+  \includegraphics[width=1\linewidth]{figures/runtimes.pdf}
+  \caption{\textbf{Forward WDM runtime versus input length.}
+    \emph{Top}: median wall-clock runtime over 7 runs after one warmup
+    call; shaded bands span the 16th--84th percentile interval.  The
+    black dashed line shows the $N\log_2 N$ reference scaling.
+    \emph{Bottom}: batched-execution speedup
+    $t_\mathrm{serial}/t_\mathrm{batch}$, where the serial baseline
+    applies the kernel independently to each of three channels and the
+    batched call processes all three simultaneously.  Reported timings
+    exclude JAX JIT compilation and host--device data transfer.}
+  \label{fig:runtime_forward}
+  \script{benchmark_runtime_snapshot.py}
+\end{figure}
+
 All timings are drawn from the benchmark suite
 included in the package documentation. Each data point reports the
 median wall-clock time over 7 repeated runs in 64-bit floating-point
@@ -640,22 +656,6 @@ $t_\mathrm{serial}/t_\mathrm{batch}$. Here, $t_\mathrm{serial}$ is
 the wall-clock time for three independent single-channel calls and
 $t_\mathrm{batch}$ is the time for a single call that processes all
 three channels simultaneously.
-
-\begin{figure}[tbp]
-  \centering
-  \includegraphics[width=1\linewidth]{figures/runtimes.pdf}
-  \caption{\textbf{Forward WDM runtime versus input length.}
-    \emph{Top}: median wall-clock runtime over 7 runs after one warmup
-    call; shaded bands span the 16th--84th percentile interval.  The
-    black dashed line shows the $N\log_2 N$ reference scaling.
-    \emph{Bottom}: batched-execution speedup
-    $t_\mathrm{serial}/t_\mathrm{batch}$, where the serial baseline
-    applies the kernel independently to each of three channels and the
-    batched call processes all three simultaneously.  Reported timings
-    exclude JAX JIT compilation and host--device data transfer.}
-  \label{fig:runtime_forward}
-  \script{benchmark_runtime_snapshot.py}
-\end{figure}
 
 At large $N$ all three backends approach $\mathcal{O}(N\log N)$
 scaling, consistent with the dominant length-$N$ FFT in the forward
