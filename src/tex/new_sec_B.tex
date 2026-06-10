@@ -11,7 +11,7 @@ frequency-channel.
 % \tilde x[l]&=\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}w_{nm}\tilde g_{nm}[l]\;, \label{eq:x_tilde_inverse}
 % \end{align}
 
-The basis elements $\tilde{g}$, frequency-domain window $\tilde{\varphi}$ and constants $C$ are defined in closed form in the discrete frequency domain below. For DC ($m=0$), interior channels ($0 < m < N_f$), , and
+The basis elements $\tilde{g}$, frequency-domain window $\tilde{\varphi}$ and constants $C$ are defined in closed form in the discrete frequency domain below. For DC ($m=0$), interior channels ($0 < m < N_f$), and
 Nyquist ($m=N_f$) we have that:
 \begin{widetext}
 \begin{align}
@@ -23,7 +23,7 @@ e^{-2\pi i n l/N_t}\Big(C_{nm}\,\tilde{\varphi}[l - mN_t/2] + C_{nm}^*\,\tilde{\
 e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big), & m = N_f, 
 \end{cases}
 \codelink{https://github.com/pywavelet/wdm_transform/blob/main/src/wdm_transform/windows.py\#L129} \\
-\text{\textbf{Daubechies-Meyer:}} \quad  \tilde\varphi[l]&=\sqrt{\frac{2}{N_t}}\begin{cases}
+\text{\textbf{Daubechies--Meyer:}} \quad  \tilde\varphi[l]&=\sqrt{\frac{2}{N_t}}\begin{cases}
 1 & |l_r|<A \\
 \cos \left[\frac{\pi}{2}\,\left(
 \frac{|l_r|-A}{B}\right)\right] & A \leq|l_r| < A+B\,, \\
@@ -37,9 +37,9 @@ e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big)
 B = 1 - 2A \,, \quad \text{for}\ A\in[0,1/2]\,. 
 \end{equation}
 \end{widetext}
-where, in the codebase, we represent the dimensionless frequency arrays via $\hat{f}[l] = f[l]/\Delta F$, for $\Delta F$ the spacing between frequencies in the WDM domain. Equation \eqref{eq:A_B_condition} gives freedom to the user to define the properties of the Daubechies-Meyer window defined in  Eq.\eqref{eq:DM_window_discrete}. 
+where, in the codebase, we represent the dimensionless frequency arrays via $\hat{f}[l] = f[l]/\Delta F$, for $\Delta F$ the spacing between frequencies in the WDM domain. Equation \eqref{eq:A_B_condition} gives freedom to the user to define the properties of the Daubechies--Meyer window defined in Eq.~\eqref{eq:DM_window_discrete}.
 
-From this point onwards, we will provide an interpretation for each of the equations \eqref{eq:gnm_full_discrete} -- \eqref{eq:A_B_condition}. We begin by discussing the DC, Interior, Nyquist split of the basis functions $\tilde{g}$, an important feature of our codebase, and the practical and theoretical consequences of the Daubechies-Meyer window $\tilde{\varphi}$. 
+From this point onwards, we will provide an interpretation for each of the equations \eqref{eq:gnm_full_discrete} -- \eqref{eq:A_B_condition}. We begin by discussing the DC, Interior, Nyquist split of the basis functions $\tilde{g}$, an important feature of our codebase, and the practical and theoretical consequences of the Daubechies--Meyer window $\tilde{\varphi}$.
 
 % This orthogonality is the key reason that the WDM formalism is adept for treating stationary noise processes for reasons that will be discussed later.
 
@@ -63,8 +63,20 @@ The window $\tilde\varphi$ is the ``\emph{Daubechies--Meyer}''
 ingredient of the WDM construction: a smooth, compactly supported
 frequency window of the Meyer family, whose taper region overlaps
 between adjacent channels in a way that yields exact partition-of-unity
-reconstruction. In the present implementation, and in this work, we use the
-$d=1$ cosine-tapered member of this family. We do stress that the parameter $d$ is retained in the Application Programming Interface (API) only for
+reconstruction. The Meyer family is parametrized by an integer order
+$d \geq 1$ that controls the smoothness of the taper: the cosine
+argument $(|l_r|-A)/B$ in Eq.~\eqref{eq:DM_window_discrete} is replaced
+by the normalized incomplete beta function
+\begin{equation}\label{eq:nu_d_def}
+  \nu_d(y) = \frac{\int_0^y t^{d-1}(1-t)^{d-1}\,\mathrm{d}t}
+                  {\int_0^1 t^{d-1}(1-t)^{d-1}\,\mathrm{d}t}\,,
+  \qquad y = \frac{|l_r|-A}{B}\,,
+\end{equation}
+which satisfies $\nu_d(y) + \nu_d(1-y) = 1$ and steepens the roll-off
+as $d$ increases. Setting $d=1$ gives $\nu_1(y)=y$ and recovers the
+cosine taper of Eq.~\eqref{eq:DM_window_discrete}. In the present
+implementation, and in this work, we use this
+$d=1$ cosine-tapered member of the family. We do stress that the parameter $d$ is retained in the Application Programming Interface (API) only for
 possible future
 generalizations.\footnote{Cornish~\cite{Cornish:2020odn} uses $d=4$,
   which yields a flatter passband and steeper roll-off at the expense
@@ -87,7 +99,7 @@ constraint: $A$ is exposed in \texttt{wdm\_transform} as the
 parameter \texttt{a} of the \texttt{WDM} class (with $B=1-2A$ derived
 automatically), and any choice with $A\in(0,1/2)$ is admissible.%
 
-A final and essential property of the WDM formalism is the principle of orthogonality. The Wilson basis $\tilde{g}$ defined by Eq.~\eqref{eq:gnm_full_discrete} combined with the Debauchies-Meyer window Eq.~\eqref{eq:DM_window_discrete} with associated constants~\eqref{eq:c_nm_def} provide an orthogonal basis\footnote{Our definitions of the Wilson basis functions \eqref{eq:gnm_full_discrete} carefully include the $m=0$ and $m = N_f$ in order for orthogonality to hold.}:%
+A final and essential property of the WDM formalism is the principle of orthogonality. The Wilson basis $\tilde{g}$ defined by Eq.~\eqref{eq:gnm_full_discrete} combined with the Daubechies--Meyer window Eq.~\eqref{eq:DM_window_discrete} with associated constants~\eqref{eq:c_nm_def} provide an orthogonal basis\footnote{Our definitions of the Wilson basis functions \eqref{eq:gnm_full_discrete} carefully include the $m=0$ and $m = N_f$ in order for orthogonality to hold.}:%
 \begin{widetext}
 \begin{align}\label{eq:orthonormality}
 \sum_{l=-N/2}^{N/2-1}\tilde{g}^*_{nm}[l]\tilde{g}_{pq}[l]&=\delta_{m,q}\begin{cases}
@@ -97,7 +109,7 @@ A final and essential property of the WDM formalism is the principle of orthogon
 \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}^*_{nm}[l]\tilde{g}_{nm}[l']&=\delta_{ll'}\;,
 \end{align}
 \end{widetext}
-Both equalities are proved in Appendix \ref{app:normality_condition} using Eq.~\eqref{eq:DM_window_discrete} and Eq.~\eqref{eq:c_nm_def}. The basis functions here are represented in the frequency domain and it is easily proved they are orthogonal in the time domain. Orthogonality is the one of the key reasons that the WDM formalism is adept for gravitational wave data analysis, which will be discussed at a later stage of this work.
+Both equalities are proved in Appendix \ref{app:normality_condition} using Eq.~\eqref{eq:DM_window_discrete} and Eq.~\eqref{eq:c_nm_def}. The basis functions here are represented in the frequency domain and it is easily proved they are orthogonal in the time domain. Orthogonality is one of the key reasons that the WDM formalism is adept for gravitational-wave data analysis, which will be discussed at a later stage of this work.
 
 These are the main ingredients behind the packed WDM grid. A single window shape is shifted across
 frequency to define the channel index $m$, and each shifted window is then modulated in time to define the atom indexed by $n$. This is why one WDM coefficient can be read as the strength of one localized time-frequency pattern, rather than as the amplitude of a globally supported sinusoid. 
