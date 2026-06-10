@@ -106,7 +106,7 @@ def main() -> None:
         aspect="auto",
     )
     ax.set_title(
-        r"$(GG^{\dagger})_{(n,m),(p,q)} = \sum_{\ell} g_{nm}[\ell]\, g^{*}_{pq}[\ell]$"
+        r"$(GG^{\dagger})_{(n,m),(p,q)} = \sum_{\ell} \tilde{g}_{nm}[\ell]\, \tilde{g}^{*}_{pq}[\ell]$"
     )
     ax.set_xlabel(r"flattened index $\alpha = n(N_f+1)+m$")
     ax.set_ylabel(r"flattened index $\alpha = n(N_f+1)+m$")
@@ -128,7 +128,7 @@ def main() -> None:
         aspect="auto",
     )
     ax.set_title(
-        r"$(G^{\dagger}G)_{\ell \ell'} = \sum_{n,m} g_{nm}[\ell]\, g^{*}_{nm}[\ell']$"
+        r"$(G^{\dagger}G)_{\ell \ell'} = \sum_{n,m} \tilde{g}_{nm}[\ell]\, \tilde{g}^{*}_{nm}[\ell']$"
     )
     ax.set_xlabel(r"sample index $\ell'$")
     ax.set_ylabel(r"sample index $\ell$")

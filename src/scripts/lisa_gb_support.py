@@ -167,8 +167,8 @@ def plot_data(demo: DemoData, out: Path) -> Path:
     ax.set_xticks([1e-4, 2e-4, 5e-4, 1e-3, 2e-3, 3e-3])
     ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v * 1e3:g}"))
     ax.xaxis.set_minor_formatter(NullFormatter())
-    ax.set_xlabel("Frequency [mHz]")
-    ax.set_ylabel(r"$S_h(f)$ [strain$^2$/Hz]")
+    ax.set_xlabel("frequency [mHz]")
+    ax.set_ylabel(r"$S^A(f)$ [strain$^2$/Hz]")
     ax.grid(True, which="both", alpha=0.18, ls=":")
     handles, labels = ax.get_legend_handles_labels()
     ax.legend([handles[i] for i in (1, 2, 0)], [labels[i] for i in (1, 2, 0)],
@@ -188,8 +188,8 @@ def plot_data(demo: DemoData, out: Path) -> Path:
     btk = np.round(np.linspace(zoom_lo * 1e3, zoom_hi * 1e3, 6)[[1, 4]], 3)
     ax2.set_xticks(btk)
     ax2.set_xticklabels([f"{t:g}" for t in btk])
-    ax2.set_xlabel("Frequency [mHz]")
-    ax2.set_ylabel(r"$S_h(f)$ [strain$^2$/Hz]")
+    ax2.set_xlabel("frequency [mHz]")
+    ax2.set_ylabel(r"$S^A(f)$ [strain$^2$/Hz]")
     ax2.grid(True, which="both", alpha=0.18, ls=":")
     ax2.tick_params(labelsize=12)  # narrow panel: avoid wide mHz labels colliding
     ax2.text(0.02, 0.96, "(b)", transform=ax2.transAxes, va="top", fontweight="bold")
@@ -219,8 +219,8 @@ def plot_data(demo: DemoData, out: Path) -> Path:
     df = max(10.0 * (fg[1] - fg[0]), 1.5e-5)
     ax3.set_ylim(max(1e-4, f0 - df) * 1e3, min(3e-3, f0 + df) * 1e3)
     ax3.set_xlim(tg[0], tg[-1])
-    ax3.set_xlabel("Time [days]")
-    ax3.set_ylabel("Frequency [mHz]")
+    ax3.set_xlabel("time [days]")
+    ax3.set_ylabel("frequency [mHz]")
     ax3.tick_params(labelsize=12)
     # Black label (matching (a)/(b)); thin white outline keeps it legible over
     # the dark end of the magma map.
@@ -228,7 +228,7 @@ def plot_data(demo: DemoData, out: Path) -> Path:
     ax3.text(0.02, 0.96, "(c)", transform=ax3.transAxes, va="top",
              color="black", fontweight="bold",
              path_effects=[pe.withStroke(linewidth=2, foreground="white")])
-    cbar = fig.colorbar(im, cax=cax, label=r"$w_{nm}^2 / S_{nm}$")
+    cbar = fig.colorbar(im, cax=cax, label=r"$(w_{nm}^A)^2 / S_{nm}^A$")
     cbar.ax.yaxis.set_ticks_position("left")
     cbar.ax.yaxis.set_label_position("left")
     # Decade ticks with 10^x labels (log colorbar).
@@ -317,9 +317,11 @@ def plot_corner(demo: DemoData, out: Path) -> Path:
         rng.append((lo - pad, hi + pad))
 
     # max_n_ticks=3 thins the long axis values so they stop colliding with the
-    # axis titles at single-column width.
+    # axis titles at single-column width; labelpad pushes the axis titles clear
+    # of the wide log10(A) tick values.
     ckw = dict(labels=latex, range=rng, plot_datapoints=False, smooth=1.0, bins=30,
-               levels=(0.5, 0.9), label_kwargs={"fontsize": 14}, max_n_ticks=3)
+               levels=(0.5, 0.9), label_kwargs={"fontsize": 14}, max_n_ticks=3,
+               labelpad=0.12)
     fig = corner.corner(fs, truths=truth, truth_color=TRUTH_COL, color=FREQ_COL,
                         hist_kwargs={"density": True, "lw": 1.4, "color": FREQ_COL}, **ckw)
     corner.corner(ws, fig=fig, color=WDM_COL,
@@ -355,7 +357,7 @@ def plot_corner(demo: DemoData, out: Path) -> Path:
 def plot_pp(pp: PPData, out: Path) -> Path:
     import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(4.5, 4.5))
     x = np.linspace(0, 1, 200)
     colors = {lab: f"C{i}" for i, lab in enumerate(pp.labels)}
     n = pp.n_seeds

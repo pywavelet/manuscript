@@ -23,8 +23,8 @@ COL = {
 }
 
 EXAMPLES = [
-    {"n": 2, "m": 2, "color": COL["accent"],  "label": "A"},
-    {"n": 5, "m": 4, "color": COL["accent2"], "label": "B"},
+    {"n": 2, "m": 2, "color": COL["accent"],  "label": "i"},
+    {"n": 5, "m": 4, "color": COL["accent2"], "label": "ii"},
 ]
 
 # ── font sizes (single source of truth) ──────────────────────────────────────
@@ -457,7 +457,7 @@ def draw_projection_grid(
     ax_freq.set_xlim(0, 1.10)
     ax_freq.set_xticks([])
     ax_freq.tick_params(axis="y", left=False, labelleft=False)
-    ax_freq.set_title(r"$|\tilde{G}_{nm}(f)|$", fontsize=FS["xlabel"], pad=2)
+    ax_freq.set_title(r"$|\tilde{g}_{nm}(f)|$", fontsize=FS["xlabel"], pad=2)
     ax_freq.axvline(0, color=COL["line"], lw=0.65)
 
     for ex in EXAMPLES:
@@ -542,7 +542,7 @@ def draw_gtilde_axis(ax, *, nf: int = 6, f_max: float = 1.0) -> None:
     ax.set_yticks([0, 1])
     ax.set_yticklabels([r"$0$", r"$1$"])
     ax.set_xlabel(r"frequency $f$", fontsize=FS["xlabel"], labelpad=1)
-    ax.set_ylabel(r"$|\tilde{G}_{nm}(f)|$", fontsize=FS["xlabel"])
+    ax.set_ylabel(r"$|\tilde{g}_{nm}(f)|$", fontsize=FS["xlabel"])
     ax.tick_params(labelsize=FS["sub"], length=3)
     ax.text(0.02, 0.94, r"$(b)$", transform=ax.transAxes,
             ha="left", va="top", fontsize=FS["panel"],
@@ -579,12 +579,12 @@ def draw_wnm(ax, *, nt: int = 8, nf: int = 6) -> None:
                             edgecolor=COL["line"], lw=1.0))
 
     # Highlighted example cells.
-    for letter, ex in zip(["A", "B"], EXAMPLES, strict=False):
+    for ex in EXAMPLES:
         n0, m0, color = ex["n"], ex["m"], ex["color"]
         ax.add_patch(Rectangle((n0, m0), 1, 1,
                                facecolor=color, edgecolor=COL["line"],
                                lw=1.0, alpha=0.82, zorder=5))
-        ax.text(n0 + 0.5, m0 + 0.5, letter, ha="center", va="center",
+        ax.text(n0 + 0.5, m0 + 0.5, ex["label"], ha="center", va="center",
                 fontsize=FS["axis"], color="white", fontweight="bold",
                 zorder=6)
 
