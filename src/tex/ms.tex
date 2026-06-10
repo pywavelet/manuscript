@@ -174,7 +174,7 @@ gravitational-wave signals and detector artefacts are neither purely
 stationary nor purely impulsive, so neither representation alone is
 fully satisfactory. A short-time Fourier transform often makes use of compactly-supported sliding windows such as square or Tukey windows. In contrast, WDM employs atoms whose corresponding time-domain representation exhibits algebraically decaying tails, falling as $1/t^3$ for the cosine-tapered window adopted in this work.
 The essential difference between the two lies elsewhere. The STFT is not \textit{critically sampled}: it represents $N$ data points with $2N$ coefficients, retaining both $m>0$ and $m<0$ indices, in direct analogy with the full FFT relative to the real FFT. The WDM instead uses the minimal number of degrees of freedom, producing $N$ coefficients (only $m>0$) for $N$ samples. Both bases are orthonormal and admit an exact inverse transform, so faithful round-trip reconstruction is possible in either case; only the WDM, however, achieves this without redundancy.
-In a similar way to real FFTs, the property of WDM being \textit{critically sampled} and allows a faster computation (by a factor of 2, as discussed above) of the time-frequency inner products, likelihoods and a cheaper memory demand.
+In a similar way to real FFTs, the property of WDM being \textit{critically sampled} allows a faster computation (by a factor of 2, as discussed above) of the time-frequency inner products and likelihoods, and a cheaper memory demand.
 
 The result is a uniform time-frequency representation well suited to describing transients, chirps, gaps, and other localized and non-localized structures, while still admitting an exact inverse transform back to the original sampled data.
 
@@ -191,7 +191,7 @@ independent. Section~\ref{sec:code_package} describes the
 demonstrates the transform on astrophysical signals. We conclude in
 Section~\ref{sec:conclusions}. 
 
-We have prioritised readability of the paper over major mathematical details. We refer the interested reader to appendix \ref{app:normality_condition} for an explicit proof on the orthonormality condition of the WDM basis components. The appendix \ref{app:forward_derivation} detail the mathematical calculations related to the forward/inverse transforms. Finally, appendix \ref{app:stats} discusses the diagonal approximation of the WDM covariance matrix for a wide-sense stationary process -- one of the key features why the WDM domain is suited for inference within gravitational wave astronomy. 
+We have prioritised readability of the paper over major mathematical details. We refer the interested reader to Appendix~\ref{app:normality_condition} for an explicit proof on the orthonormality condition of the WDM basis components. Appendix~\ref{app:forward_derivation} details the mathematical calculations related to the forward/inverse transforms. Finally, Appendix~\ref{app:stats} discusses the diagonal approximation of the WDM covariance matrix for a wide-sense stationary process -- one of the key features why the WDM domain is suited for inference within gravitational wave astronomy. 
 
 \subsection{Conventions}\label{sec:conventions}
 Consider a data stream consisting of $N$ uniformly sampled values of a
@@ -213,9 +213,11 @@ discrete-Fourier-transformed (DFT) to a set of other $N$ complex numbers as
   \label{eq:dft-definition}
   \tilde x[l] = \sum_{k = 0}^{N-1} x[k]e^{-2\pi i l k/N},
 \end{equation}
-for Fourier frequencies $f_{l} = \{-N\Delta f/2, \ldots, -\Delta f,
-0, \Delta f, \ldots, (N/2 - 1)\Delta f\}$, i.e.\ the zero-frequency
-bin is centred in the array. All transforms presented in this work are dimensionless and use the standard \texttt{python} \texttt{numpy}'s convention. This is in contrast to~\cite{Cornish:2020odn}.
+for Fourier frequencies
+\begin{equation*}
+  f_{l} = \{-N\Delta f/2, \ldots, -\Delta f, 0, \Delta f, \ldots, (N/2 - 1)\Delta f\},
+\end{equation*}
+i.e.\ the zero-frequency bin is centred in the array. All transforms presented in this work are dimensionless and use the standard \texttt{python} \texttt{numpy}'s convention. This is in contrast to~\cite{Cornish:2020odn}.
 
 We assume that the output of a gravitational-wave detector, $x(t)$,
 is expressed as a linear combination of a signal, $h(t; \boldsymbol{\theta})$,
@@ -258,8 +260,8 @@ The naming of the transform reflects two distinct ingredients: the
 \emph{Wilson}-basis pairing of positive- and negative-frequency atoms,
 introduced together with the phase factor, and the smooth
 \emph{Daubechies--Meyer} frequency window used to
-construct those atoms, all of which introduced together with its closed form in
-Sec.~\ref{sec:wdm} below ~\cite{Daubechies:1991wv}. 
+construct those atoms, all of which are introduced together with their closed forms in
+Sec.~\ref{sec:wdm} below~\cite{Daubechies:1991wv}.
 
 The WDM transform maps the original $N$ samples to a packed coefficient grid with $N_t$ time bins and $N_f+1$ stored frequency channels. The transform size is still set by
 \begin{align}\label{NtNf_def}
@@ -307,7 +309,7 @@ Relaxing the evenness requirement is left to future work.
         the horizontal axis and frequency channels $m$ along the vertical axis.
         The highlighted cells correspond to the atoms shown in panels (a) and
         (b). Each interior cell stores
-        $w_{nm} = \sqrt{2}\,(-1)^{nm}\,\mathrm{Re}[C^*_{nm}\,x_m[n]]$
+        $w_{nm} = \sqrt{2}\,(-1)^{nm}\,\mathrm{Re}[C^*_{nm}\,\tilde x_m[n]]$
         (Eq.~\protect\eqref{eq:wnm_compact}); the phase factor $C_{nm}$
         alternates between $1$ and $i$ on a checkerboard pattern, while the DC
         and Nyquist edge channels are stored separately.
@@ -321,7 +323,7 @@ Relaxing the evenness requirement is left to future work.
 
 \subsection{Backward Transform}
 
-From the orthogonality condition of the Wilson basis, the inverse WDM transform is for the Fourier domain $\tilde{x}$ is immediate 
+From the orthogonality condition of the Wilson basis, the inverse WDM transform for the Fourier domain $\tilde{x}$ is immediate
 
 \begin{align}\label{eq:inverse_fourier}
   \tilde{x}[l] = \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}_{nm}[l]\,w_{nm}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L366}
@@ -493,9 +495,9 @@ which reduces to the frequency domain inner product via matrix algebra
     & = \frac{4N}{\Delta t} \text{Re}\left(\sum_{l=1}^{N/2 - 1}\frac{\tilde{x_a}^{*}[l]\tilde{x_b}[l]}{S[l]}\right) \\
     & =(a|b)_{\text{freq}}\,.
 \end{align}
-Where each vector and Wilson basis matrix $\boldsymbol{G}$ only contains full time information $n\in \{0,\ldots,N_t-1\}$ but, as a first working approximation, we exclude the zeroth/Nyquist bin $m\in\{1,\ldots,N_f -1\}$\,. Since the inner product in the frequency domain can be represented in the WDM domain, this means that any statistic involving the usual inner product can therefore he computed in the WDM domain.
+Where each vector and Wilson basis matrix $\boldsymbol{G}$ only contains full time information $n\in \{0,\ldots,N_t-1\}$ but, as a first working approximation, we exclude the zeroth/Nyquist bin $m\in\{1,\ldots,N_f -1\}$\,. Since the inner product in the frequency domain can be represented in the WDM domain, this means that any statistic involving the usual inner product can therefore be computed in the WDM domain.
 
-These expressions assume that the diagonal approximation~\eqref{eq:Sigma_W_diagonal} holds. When it does not ---for example, when the noise PSD varies rapidly compared to $\Delta T$, the off-diagonal covariance terms must be retained and the simple pixel-wise sums above become inadequate.
+These expressions assume that the diagonal approximation~\eqref{eq:Sigma_W_diagonal} holds. When it does not --- for example, when the noise PSD varies rapidly compared to $\Delta T$ --- the off-diagonal covariance terms must be retained and the simple pixel-wise sums above become inadequate.
 In practice, if the off-diagonal entries of the empirical covariance remain small after whitening, the diagonal likelihood~\eqref{eq:likelihood_G_Sigma_w} is a safe approximation. 
 The exact Gram-matrix structure shown in Figure~\ref{fig:wdm_orthogonality_decorrelation} underlies this distinction. 
 A natural question comes to light -- when does the diagonal approximation hold? 
@@ -599,8 +601,7 @@ gives a cost of
   T_{\rm forward} = \mathcal{O}(N \log N) + \mathcal{O}(N \log N_t),
 \end{align}
 which is asymptotically $\mathcal{O}(N \log N)$ because $N=N_tN_f$
-and $N_t \leq N$ 
-%\ob{Actually, hang on a minute. The FT only scales as $\mathcal{O}(N\log N)$ if and only if The FFT computations are acting on powers of two or $N$ interestingly, has a simple prime factorisation primes $N = 2^{n_1}\cdot 3^{n_2} \cdots$. I.e., if you set $N = 2 \times \text{large prime}$, then you'll still get $\mathcal{O}(N \log N)$ but a noticeable slow down due to the massive constant at the front. In reality, this probably doesn't matter. It would be hilarious of $N = 2 \times \text{huge prime}$, but we should argue ``asymptotically" in a tighter sense. I can do this if you wish?} \gm{I take care of it, after Avi adds to figure 3}. 
+and $N_t \leq N$.
 The inverse transform has the same scaling up to
 constant factors: it reconstructs the full spectrum from the packed
 channels and then applies one inverse FFT back to the time domain. In
@@ -909,7 +910,6 @@ tagged release \texttt{v0.4.2} of the package, so that the referenced
 line numbers remain valid as the codebase evolves.
 
 \begin{acknowledgments}
-    \avi{TODO}
     The authors thank Matthew Digman, Neil Cornish, Will Farr, and Aaron Johnson for discussions.
     We also express our gratitude to Astrid Lamberts for organizing the ``Towards LISA catalogs'' workshop (Nice, 2023), and to Tyson B. Littenberg for organizing the 3rd LISA Sprint meeting (Huntsville, 2025), where this project was further developed.
     O.~Burke sincerely appreciates insightful discussions with Christopher Moore, Christian Chapman-Bird, and Sylvain Marsat during the preparation of this work.
@@ -927,7 +927,7 @@ line numbers remain valid as the codebase evolves.
 
 \section{Orthonormality condition of the \texorpdfstring{$g_{nm}$}{g_{nm}} basis}\label{app:normality_condition}
 %
-To remind the reader, We introduce the basis $\tilde g_{nm}(f)$, given by eq.\eqref{eq:gnm_full_discrete}, 
+To remind the reader, we introduce the basis $\tilde g_{nm}(f)$, given by Eq.~\eqref{eq:gnm_full_discrete},
 %
 \begin{align}
 \label{eq:gnm_discr}
@@ -943,7 +943,7 @@ The closed-form expressions below are written
 for $d=1$ to keep the algebra explicit. We do remark, however, that the orthonormality and
 normalisation results extend to arbitrary $d$ using the incomplete-beta
 identity $\nu_d(1-y)+\nu_d(y)=1$ (see Eq.~\eqref{eq:nu_d_def}). We restrict to
-$d=1$ here purely for pedagogical clarity\footnote{Analogous proofs of the follwing identities and formulas can be still obtained in the $d>1$ case by exploiting the symmetry properties of the incomplete beta function}:
+$d=1$ here purely for pedagogical clarity\footnote{Analogous proofs of the following identities and formulas can be still obtained in the $d>1$ case by exploiting the symmetry properties of the incomplete beta function}:
 %
 \begin{align}\label{eq:phi_discrete}
 \tilde\varphi[l]&=\sqrt{\frac{2}{N_t}}\begin{cases}
@@ -976,7 +976,7 @@ one notices that the summation over $n$ can be directly performed, and it vanish
 \sum_{nm}&\tilde{g}_{nm}[l]\tilde{g}_{nm}^*[l']=\delta_{ll'}\frac{N_t}{2}\left(\tilde\varphi^2[l]+\sum_{0<m<N_f}\tilde\varphi^2[l-mN_t/2]+\sum_{0<m<N_f}\tilde\varphi^2[l+mN_t/2]+\tilde\varphi^2[l-N/2]+\tilde\varphi^2[l+N/2]\right)
 \end{align}
 %
-Now the thing to notice is that each value of $l$ lays in two and only two of these windows. Let be $\bar m$ and $\bar m+1$ the indices of these two windows, such that $\frac{\bar m N_t}{2}<|l|<\frac{(\bar m+1)N_t}{2}$ ($\bar m$ could be 0, or $\bar m+1$ can be $N_f$). Then the sum becomes
+Now the thing to notice is that each value of $l$ lies in two and only two of these windows. Let $\bar m$ and $\bar m+1$ be the indices of these two windows, such that $\frac{\bar m N_t}{2}<|l|<\frac{(\bar m+1)N_t}{2}$ ($\bar m$ could be 0, or $\bar m+1$ can be $N_f$). Then the sum becomes
 %
 \begin{align}
 \sum_{nm}&\tilde{g}_{nm}[l]\tilde{g}_{nm}^*[l']=\delta_{ll'}\frac{N_t}{2}\left(\tilde\varphi^2[l-\bar m N_t/2]+\tilde\varphi^2[l-(\bar m+1)N_t/2]\right)
@@ -1099,15 +1099,7 @@ Please note that a similar proof can be obtained for Meyer windows with $d>1$ by
 
 \section{Detailed derivation for the forward and inverse transforms}\label{app:forward_derivation}
 
-% \ob{Again, focusing on $d = 1$. Can we not do this for $d > 1$ ? I feel like it should be possible. Reading up on the incomplete beta function, we have the following identity : $\nu_{d}(1 - y) + \nu_{d}(y) = 1$. This means that we can simplify expressions like:
-% \begin{align}
-%     \cos^2\left(\frac{\pi}{2}\nu_d(y)\right) + \cos^2\left(\frac{\pi}{2}\nu_d(1 - y)\right) 
-%     =  \cos^{2}\left(\frac{\pi}{2}\nu_d(y)\right) + \cos^2\left(\frac{\pi}{2}\left[1 - \nu_d(y)\right]\right) = \cos^{2}\left(\frac{\pi}{2}\nu_d(y)\right) + \sin^2\left(\frac{\pi}{2} \nu_d(y)\right) = 1
-% \end{align}
-% Here we have used $\cos(\pi/2 - y) = \sin(y)$ and $\nu_d(1 - y) = 1 - \nu_d(y)$. I feel like this identity will help with some of the computations above?
-% }
-% \ob{OK! let me take a look. }
-% \gm{If you remember I derived the window normality for generic $d$ some time ago, using basically your idea. But I did not want to introduce complications that may distract from the main message of these calculations.}
+
  This appendix provides the full algebraic steps leading to the
 compact expressions for the forward WDM coefficients presented in
 Section~\ref{sec:wdm}. We work in the Fourier domain throughout,
@@ -1169,7 +1161,7 @@ w_{nm}&=\frac{1}{\sqrt{2}}\sum_{l=0}^{N/2-1} \tilde{x}[l]\, e^{4\pi iln/N_t}\lef
 \frac{1}{\sqrt{2}}\sum_{l=1}^{N/2} \tilde{x}[-l]\, e^{-4\pi iln/N_t}\left[\tilde{\varphi}\!\left[-l\!-\!\tfrac{N}{2}\right]+\tilde{\varphi}\!\left[-l\!+\!\tfrac{N}{2}\right]\right].
 \end{align}
 %
-the $l=0$ term in the first summation vanishes, and the $l=N/2$ term is treated separately:
+The $l=0$ term in the first summation vanishes, and the $l=N/2$ term is treated separately:
 %
 \begin{align}
   w_{nm}&=\sqrt{2}\,\Re\sum_{l=1}^{N/2-1} \tilde{x}[l]\, e^{4\pi
@@ -1219,78 +1211,7 @@ Which can be written in a slightly more convenient form:
 which is presented in the main text \eqref{eq:inverse_transform_discrete}. 
 
 \section{The WDM Covariance Matrix in the stationary case}\label{app:stats}
-% \subsection{The frequency domain covariance matrix}
 
-% The Frequency domain is an excellent domain of choice if the underlying noise process is stationary with the extra feature of being circulant. Such conditions allows the time-domain auto-covariance matrix to be diagonalised in a Fourier basis facilitating a rapid to evaluate likelihood function, essential for parameter inference. If the noise were non-stationary, the frequency domain noise components exhibit correlations making (1) the noise covariance matrix expensive to invert and, potentially, non-singular if apodization methods are applied.
-
-% Small time-dependent drifts to the PSD are problematic for frequency domain analyses. One frequency domain approach is segmenting the data on time-scales similar to the non-stationary effects and performing inference on each chunk then assuming independence, treating the log-likelihood as a sum of smaller segment log-likelihoods. In time-frequency, we can show that even with slight non-stationary features that assuming a ``diagonal" based WDM noise covariance matrix should still be sufficient for unbiased parameter inference. 
-
-% Let us define the discrete time-domain auto-covariance function for a stochastic (real) process $x$ via
-% \begin{equation}\label{eq:general_autocov_time}
-% R[k,k'] = \mathbb{E}[n[k],n[k']]
-% \end{equation}
-
-% for time-bins $k,k'\in\{0,\ldots,N-1\}$. For the general auto-covariance function \eqref{eq:general_autocov_time}, the stationary assertion means that 
-% \begin{equation}
-%     R[k,k'] = R[0,k - k'] = \mathbb{E}[n[0]n[k - k']] = R[\kappa]
-% \end{equation}
-% for $\kappa = k - k'$ a lag parameter. Such a condition forces the time-domain noise covariance matrix to obey a Toeplitz like structure (not necessarily circulant). The Wiener-Khinchin theorem states that the Fourier transform of the time-domain auto-covariance function is related to the processes power spectral density as
-% \begin{equation}
-% S[l] \equiv 2\Delta t\sum_{\kappa = 0}^{N - 1}R[\kappa]e^{-2\pi i l \kappa/N}\,.
-% \end{equation}
-% \qb{I am used to see an infinite sum in this equation. Here we kind of assume that there is no correlation for $\kappa > N$.}
-% \gm{I agree, as in the same comment in the main text. Let's let Ollie decide/edit}
-% The factor of 2 results from using a one-sided PSD and $\Delta t$ from the sum. It is then possible to build the frequency domain noise covariance matrix via 
-% \begin{align}
-% (\tilde{\boldsymbol{\Sigma}})_{l,l'}&=\mathbb{E}[\tilde{x}[l],\tilde{x}^*[l']]  = \sum_{k,k'}\mathbb{E}[x[k] x[k']]e^{-2\pi i (kl - k'l')/N}\\
-% &= \frac{1}{2\Delta t}\sum_{\bar{k}}2\Delta t\sum_{\kappa}R[\bar{k} + \kappa/2, \bar{k} - \kappa/2]e^{-2\pi i \left[\frac{l + l'}{2} \right]\kappa/N}e^{-2\pi i \bar{k}(l - l')/N} \\
-% &= \frac{1}{2\Delta t} \sum_{\bar{k}} S\left[\bar{k}, \frac{1}{2}(l + l')\right]e^{-2\pi i \bar{k}(l - l')/N}\,,
-% \end{align}
-% %
-% where $\bar k=\frac{k+k'}{2}$.
-% This last formula is also known as Wigner-Ville representation \cite{PhysRev.40.749}. Notice for arbitrary values of $\kappa$ the frequency domain noise covariance matrix now has non-trivial off diagonal elements that must be accounted for during inference. Notice that if we drop $\bar{k}$ from the evolutionary PSD and evaluating the sum over the complex exponential, we obtain the familiar stationary expression
-% \begin{equation}\label{app:eq_stat_covariance_normalisation}
-% (\tilde{\boldsymbol{\Sigma}})_{l,l'} = \frac{NS[l]}{2\Delta t}\delta_{ll'}\,.
-% \end{equation}
-% %
-% \ob{Careful Ollie -- Toeplitz + Circulant. I think what we need to say here is that $R$ encodes \emph{all} of the statistical information about the process $x$, therefore being circulant (periodic statistics at end points).}
-% \gm{I don't really understand this comment but I am happy with all the equations and comments above}
-% \qb{Ollie, I am not sure we need the circulant approximation to hold for the calculation in section \ref{app:WDM_cov_calcs}. Here you avoid the effect of finite windowing on the covariance structure, contrary to what you had done in your paper \cite{Burke:2025bun}. We could get away with the stationary assumption only. Maybe this recap on the frequency-domain covariance matrix is not needed.}
-
-% \subsection{The WDM Covariance Matrix}\label{app:WDM_cov_calcs}
-
-% Consider now the expression for the WDM covariance matrix
-% \begin{align}
-% (\boldsymbol{\Sigma}_w)_{(n,m),(p,q)} &= \sum_{l,l'}\tilde{g}_{nm}^{*}[l]\tilde{g}_{pq}[l']\mathbb{E}[\tilde{x}^*[l]\tilde{x}[l']] \\
-% & = \frac{1}{2\Delta t}\sum_{l,l'}\tilde{g}_{nm}^{*}[l]\tilde{g}_{pq}[l'] \sum_{\bar{k}} S\left[\bar{k}, \frac{1}{2}(l + l')\right]e^{-2\pi i \bar{k}(l - l')/N}\,, \label{eq:WDM_cov_general_app}
-% \end{align}
-% %
-% We will now look at two separate cases -- the leading diagonal $(n,m) = (p,q)$ and off diagonal elements $(n,m) \neq (p,q)$. The atoms from the Wilson basis $\tilde{g}$ are peaked around the value of $l \approx mN_t/2$. This is where the support of the Wilson basis lies. This means that the dominant contribution of the sum are for those $l,l'$ in the vicinity of $mN_t/2$ and $qN_t/2$. Let us now assume that the evolutionary PSD varies slowly over the regime $(l + l')/2 \approx mN_t/2$ and the temporal time index $\bar{k} \approx nN_f$
-
-% Therefore, let us perform a discrete expansion for both the time and frequency indices in $S[\bar{k}, (l + l')/2]$ in this vicinity and applying the \emph{local stationary approximation}
-% %
-% \begin{equation}\label{eq:local_stat_approx}
-% S\left[\bar{k}, \frac{1}{2}(l + l')\right] \approx S[nN_f, mN_t/2] + \left(\frac{l + l'}{2} - mN_t/2\right)\partial_{f}S + (\bar{k} - nN_f)\partial_{t}S + \text{corrections}
-% \end{equation}
-% The expansion in \eqref{eq:local_stat_approx} is valid under the conditions
-% \begin{equation}
-% \Delta T \big |\partial_{k}\log S[k,l]\big |_{(k,l) = (nN_f,mN_t/2)} \ll 1 \,, \quad \text{and} \quad \Delta F \big |\partial_{l}\log S[k,l]\big |_{(k,l) = (nN_f,mN_t/2)} \ll 1\,. 
-% \end{equation}
-% %
-% The first condition is the true local stationary approximation, where we assume that the logarithmic sensitivity of the PSD $\partial_{k}\log S[k,l]$ varies slowly over a wavelet bandwidth $\Delta T$. Such a condition is violated if the process exhibits major $t$ dependent drifts in the noise statistics. The second condition implies that the noise process over a wavelet frequency band $\Delta F$ smoothly evolves as a function of logarithmic frequency $\partial_{l}\log S[k,l]$. Minima in the evolutionary PSD as a function of frequency enforced via Fourier transforms of delays (turning points) as a result of Time Delay Interferometric computations could violate such an assumption. The local stationary approximation is an approximation that should therefore not be taken lightly and the analyst should be careful when envoking it. 
-
-% Now, for what concerns the leading diagonal, substituting the leading order term from \eqref{eq:local_stat_approx} into \eqref{eq:WDM_cov_general_app} and evaluating the sum, one obtains
-% \begin{align}
-%     (\boldsymbol{\Sigma}_w)_{(n,m),(p,q)}
-% & \approx \frac{\delta_{np}\delta_{mq}}{2\Delta t} S[nN_f,mN_t/2]\sum_{l,l',\bar{k}}\tilde{g}_{nm}^{*}[l]\tilde{g}_{nm}[l'] e^{-2\pi i \bar{k}(l - l')/N}\,, \\
-% & = \delta_{np}\delta_{mq} \frac{N}{2\Delta t} S[nN_f,mN_t/2] \sum_{l}|\tilde{g}_{nm}[l]|^2 \\
-% & = \delta_{np}\delta_{mq}\frac{N}{2\Delta t} S[n,mN_t/2]\,.
-% \end{align}
-% %
-% which is eq. \eqref{eq:Sigma_W_diagonal} in the main text.
-
-% \input{new_sec_C}
-% \subsection{The WDM Covariance Matrix in the stationary case (without circulant approximation)}
 
 We start from the WDM transform in Eq. \eqref{wnm_def}. It can be re-written in the time domain by injecting the expression of the DFT of $x$ and $g$, which yields
 \begin{equation}

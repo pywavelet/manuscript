@@ -225,16 +225,15 @@ Appendix~\ref{app:forward_derivation} for details), giving
 % \end{align}
 \begin{equation}\label{eq:wnm_interior}
 \begin{split}
-  w_{nm} &{} = {}  \sqrt{2}\,(-1)^{nm} \\
-  & \times \Re\left[C_{nm}^*\sum_{l'=-N_t/2}^{N_t/2-1}\tilde{x}[l'+mN_t/2]\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\right],
-\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L92-L102}
+  w_{nm} = \sqrt{2}&\,(-1)^{nm}\,\Re\Bigl[C_{nm}^*\\
+  &\times\sum_{l'=-N_t/2}^{N_t/2-1}\tilde{x}[l'{+}mN_t/2]\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\Bigr],\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L92-L102}
 \end{split}
 \end{equation}
 where $l' = l - mN_t/2$ and $\Delta f = 1/T$.
 The expression above can be written compactly as
 %
 \begin{align}\label{eq:wnm_compact}
-  w_{nm} = \sqrt{2}\,(-1)^{nm}\,\Re\,C_{nm}^*\,x_m[n]\,,
+  w_{nm} = \sqrt{2}\,(-1)^{nm}\,\Re\,C_{nm}^*\,\tilde x_m[n]\,,
 \end{align}
 %
 where
