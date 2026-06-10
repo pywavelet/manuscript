@@ -90,10 +90,6 @@ Princes St, Auckland, New Zealand}
 
 \section{Introduction}
 
-
-
-
-
 Time-frequency analysis is widely used in gravitational-wave
 astronomy. It enables template-free characterisation of source
 signals~\cite{krolak_1996,Virtuoso2024}, instrumental
@@ -101,20 +97,20 @@ transients~\cite{robinet2020}, and the joint analysis of
 astrophysical signals and terrestrial
 disturbances~\cite{Cornish_2015}. Time-frequency
 representations also provide compact waveform descriptions and
-facilitate the modelling of non-stationary detector noise. Among the
+facilitate the modelling of non-stationary detector noise, such as Q-transforms \cite{Chatterji:2004qg} and chirplets \cite{ChassandeMottin:2005bm}. Among the
 available techniques, discrete wavelet-packet transforms are
 particularly well suited to gravitational-wave data analysis: they
 furnish localized, orthonormal basis functions capable of representing
 transient and chirping signals, and for locally stationary noise they
 yield an approximately diagonal noise covariance, greatly simplifying
-likelihood evaluation and spectral estimation.
+likelihood evaluation and spectral estimation \cite{Cornish:2020kdz}.
 
 The Wilson--Daubechies--Meyer (WDM) wavelet-packet basis already
 has a substantial history in gravitational-wave astronomy.  The fast
 Wilson--Daubechies transform was developed for transient
 gravitational-wave analysis by Necula, Klimenko, and
 Mitselmakher~\cite{Necula_2012}, and WDM representations have been
-used in coherent WaveBurst and related burst-search contexts~\cite{2023PhRvD.107f2002S, 2021SoftX..1400678D}.
+used in coherent WaveBurst and related burst-search contexts~\cite{2023PhRvD.107f2002S, 2021SoftX..1400678D,Anderson:2000yy,Klimenko:2004qh}.
 These earlier papers and implementations established the theoretical
 and algorithmic basis of the transform for excess-power and
 time-frequency analyses, including its orthonormal structure,
@@ -141,8 +137,9 @@ covariance in the WDM domain.  This approximate diagonalization,
 analyzed in detail in
 Ref.~\cite{cornish_nonstationary_wdm}, provides the WDM-domain
 analogue of the familiar diagonal Fourier-domain covariance for
-stationary noise and underlies WDM Whittle-type likelihoods. A clear one-to-one correspondence between equations and their implementation is often missing in existing literature and codebases \cite{Cornish_WDM_Transform,Digman_WDMWaveletTransforms,Moore_WDM_GW_wavelets,cWB_software}:
+stationary noise and underlies WDM Whittle-type likelihoods. A clear one-to-one correspondence between equations and their implementation is often missing in existing literature and codebases \cite{Cornish_WDM_Transform,Digman_WDMWaveletTransforms,Moore_WDM_GW_wavelets,cWB_software,Farr:2025wdm}:
 We address this gap here.
+\gm{In this way it may sound a bit to harsh? How about \textit{While the WDM transform has been carefully developed and implemented across several works \cite{Cornish_WDM_Transform,Digman_WDMWaveletTransforms,Moore_WDM_GW_wavelets,cWB_software,Farr:2025wdm}, here we place particular emphasis on making the correspondence between the equations and their implementation fully explicit and self-consistent.} Please note that I also quoted Farr}
 
 The present manuscript does not claim to introduce the WDM transform,
 to replace these foundational analyses, or to outperform existing
