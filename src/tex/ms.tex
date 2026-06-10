@@ -19,7 +19,8 @@
 \usepackage{mathtools}
 \usepackage{xcolor}
 
-\newcommand{\codelink}[1]{\,\href{#1}{\scalebox{0.65}{\faGithub}}}
+\DeclareRobustCommand{\codelink}[1]{\,\href{#1}{\mbox{\scalebox{0.65}{\faGithub}}}}
+
 
 \newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
 
