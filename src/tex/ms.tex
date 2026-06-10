@@ -272,14 +272,14 @@ fixed by the data, while $N_t$ is a free user choice subject only to
 $1 \le N_t \le N$ (and consequently $1 \le N_f \le N$).
 Given that choice we can define the spacing in both time and frequency with respect to the underlying tiling with area $N = N_{t}N_{f}$
 \begin{align}\label{DTDF}
-  \Delta T&\equiv\frac{T_{\text{obs}}}{N_t}\; \qquad \text{grid time
+  \Delta T&\equiv\frac{T}{N_t}\; \qquad \text{grid time
   spacing},\nonumber\\
   \Delta F&\equiv\frac{f_{\rm max}}{N_f} \qquad \text{grid frequency spacing}\,.
 \end{align}
 One immediately sees that
 \begin{align}
 \label{eq:timefreq-resolution}
-  \Delta T &= \frac{T_{\text{obs}}}{N_{t}} = \frac{N\Delta t}{N_{t}}
+  \Delta T &= \frac{T}{N_{t}} = \frac{N\Delta t}{N_{t}}
   = N_{f}\Delta t, \\
   \Delta F &= \frac{f_{\text{max}}}{N_{f}} = \frac{1}{2N_{f}\Delta t}=\frac{N_t\Delta f}{2} = \frac{1}{2\Delta T}.
 \end{align}
@@ -297,7 +297,7 @@ Relaxing the evenness requirement is left to future work.
     \caption{
         Schematic illustration of the WDM forward transform.
         (a)~Time-domain atoms $g_{nm}(t)$ for two representative WDM cells,
-        labeled A and B. The higher-frequency cell B has a more rapidly
+        labeled i and ii. The higher-frequency cell ii has a more rapidly
         oscillating atom.
         (b)~Frequency-domain magnitudes $|\tilde{g}_{nm}(f)|$ for the same
         two cells, showing their localization around different frequency
@@ -456,7 +456,7 @@ Assuming that the noise process is wide-sense stationary,
 %(\tilde{\boldsymbol{\Sigma}})_{l,l'} = \frac{NS[l]}{2\Delta t}\delta_{ll'}\,.
 %\end{equation}
 %
-\qb{I removed the FD diagonal assumption here}\ob{fine by me}
+% \qb{I removed the FD diagonal assumption here}\ob{fine by me}
 we show in appendix \ref{app:stats} that, as a first-order approximation, the covariance matrix reads
 %
 \begin{align}\label{eq:Sigma_W_diagonal}
@@ -555,7 +555,7 @@ same $\pm N_t/2$ offsets seen in panel (a) are the empirical signature of
 the edge-channel redundancy: $w_{n,0}$ and $w_{n + N_t/2,\,0}$ (and likewise
 for $m = N_f$) are linearly dependent copies of the same underlying real
 degree of freedom, so their Pearson correlation is identically $\pm 1$ for
-any input.\gm{Sorry, Avi, could you please do $g\to \tilde g$ in the titles of the two figures?}\ob{This plot is so good!}
+any input.\gm{Sorry, Avi, could you please do $g\to \tilde g$ in the titles of the two figures?}
 }
   \label{fig:wdm_orthogonality_decorrelation}
   \script{wdm_orthogonality_decorrelation.py}
@@ -714,7 +714,7 @@ to numerical precision.
 \paragraph{Data and source model.}
 The analysis grid spans $(10^{-4},\,3\times10^{-3})\,\mathrm{Hz}$ with cadence
 $\Delta t = 166.7\,\mathrm{s}$. For each TDI~1.5 A,E,T channel we simulate
-approximately 8 months ($T_{\rm obs}\approx253\,\mathrm{d}$, $N = 131072$
+approximately 8 months ($T\approx253\,\mathrm{d}$, $N = 131072$
 samples) of independent stationary
 instrumental noise, using the PSD model of
 Ref.~\cite{LISACosmologyWorkingGroup:2022kbp}, and inject a galactic binary
@@ -732,12 +732,12 @@ We assume a search has localized the source to a small sky patch, so we fix the
 sky position and orientation at their injected values and sample only
 $(f_0,\dot f,A,\phi_0)$. The $(f_0,\dot f)$ priors are Gaussian, recentered on
 the injected search-estimate values, with widths set in units of the resolution
-elements $1/T_{\rm obs}$ and $1/T_{\rm obs}^2$ so the setup is
+elements $1/T$ and $1/T^2$ so the setup is
 baseline-independent. The $f_0$ prior is narrow,
-$\sigma_{f_0}=0.32/T_{\rm obs}\approx1.5\times10^{-8}\,\mathrm{Hz}$, reflecting
+$\sigma_{f_0}=0.32/T\approx1.5\times10^{-8}\,\mathrm{Hz}$, reflecting
 that the search has already localized $f_0$ to within a frequency bin, while the
 $\dot f$ prior is deliberately broad,
-$\sigma_{\dot f}=10/T_{\rm obs}^2\approx2.1\times10^{-14}\,\mathrm{Hz\,s^{-1}}$,
+$\sigma_{\dot f}=10/T^2\approx2.1\times10^{-14}\,\mathrm{Hz\,s^{-1}}$,
 so that $\dot f$ is constrained by the data rather than the prior.
 
 For numerical conditioning we replace $(A,\phi_0)$ by the Cartesian amplitude
@@ -767,7 +767,7 @@ Fourier band centered on the source prior support,
 \end{equation}
 where $\tilde d^c[l]$ and $\tilde h^c[l;\boldsymbol{\theta}]$ are the data and
 template Fourier modes in channel $c$ and bin $l$, and $S^c[l]$ is the stationary
-PSD. The WDM analysis starts from the same local Fourier patch, embeds the
+PSD. The WDM analysis starts from the same Fourier patch, embeds the
 template into it, and applies the WDM transform with $N_t=32, N_f = 4096$, $a=1/3$, and
 $d=1$, giving
 \begin{equation}
@@ -819,7 +819,7 @@ inference.
     injected source, with the analysis band shaded. Bottom: zooms of the source
     band in the frequency domain (left) and in the whitened WDM time-frequency
     plane (right), where amplitude is shown in units of the per-pixel noise
-    standard deviation. \gm{Sorry again Avi, could you please make $S_h\to S^c$ or $S^A$ in the y axis? To be consistent with the notation in the text. And similarly $S_{nm}^c$ or $S_{nm}^A$. Thank you!}}
+    standard deviation. \gm{Sorry again Avi, could you please make  $S^A$ in the y axis? To be consistent with the notation in the text. And similarly $S_{nm}^A$ $w_{nm}^A$. Thank you!}}
   \label{fig:lisa_gb_data}
   \script{lisa_gb_data.py}
 \end{figure}
@@ -831,7 +831,9 @@ inference.
     Overlaid corner plot for the two analyses of the same realization, with
     frequency in blue and WDM in orange, the injected truth marked, and the
     prior shown for reference. The two posteriors overlap closely in
-    $(f_0,\dot f,A,\phi_0)$, and both are far narrower than the prior.}
+    $(f_0,\dot f,A,\phi_0)$, and both are far narrower than the prior.
+    \avi{logA axes labels and axes ticks are overlapping.}
+    }
   \label{fig:lisa_gb_corner}
   \script{lisa_gb_corner.py}
 \end{figure}
@@ -894,7 +896,11 @@ without any additional differentiation work by the user. Future work should focu
 
 \section*{Data and Software Availability}
 The software developed for this research is available on GitHub at
-\url{https://github.com/pywavelet/wdm_transform}. Documentation and
+\url{https://github.com/pywavelet/wdm_transform}. 
+The package is also
+available on PyPI as \package\ and can be installed with
+\texttt{pip install wdm\_transform}.
+Documentation and
 worked examples are available in the repository documentation at
 \url{https://github.com/pywavelet/wdm_transform/tree/main/docs}.
 The online documentation includes minimal examples demonstrating the
@@ -921,7 +927,7 @@ line numbers remain valid as the codebase evolves.
 \appendix
 \onecolumngrid
 
-\section{Normality condition of the \texorpdfstring{$g_{nm}$}{g_{nm}} basis}\label{app:normality_condition}
+\section{Orthonormality condition of the \texorpdfstring{$g_{nm}$}{g_{nm}} basis}\label{app:normality_condition}
 %
 To remind the reader, We introduce the basis $\tilde g_{nm}(f)$, given by eq.\eqref{eq:gnm_full_discrete}, 
 %
@@ -1131,7 +1137,7 @@ those frequencies for interior channels. We therefore obtain
 \begin{align}\label{eq:app_wnm_general}
   w_{nm}&=\sqrt{2}\,\Re\sum_{l=1}^{N/2-1} \tilde{x}[l]\, e^{2\pi
   iln/N_t}\,C_{nm}^*\,\tilde{\varphi}\!\left[l-\tfrac{mN_t}{2}\right]\nonumber\\
-  &=\sqrt{2}\,(-1)^{nm}\,\Re\sum_{l'=-N_t/2}^{N_t/2}
+  &=\sqrt{2}\,(-1)^{nm}\,\Re\sum_{l'=-N_t/2}^{N_t/2-1}
   \tilde{x}[l'+mN_t/2]\, e^{2\pi
   il'n/N_t}\,C_{nm}^*\,\tilde{\varphi}[l']\,,
 \end{align}
@@ -1180,24 +1186,24 @@ assuming an even value for $N_f$.
 
 \subsection{The inverse transform}\label{app:inverse_transform}
 
-We write the inverse transform of the $w_{nm}$ coefficients to recover the signal $x[l]$ for $l\geq 0$ since we know that for $l<0$ the reality condition holds ($x[-l]=x^*[l]$):
+We write the inverse transform of the $w_{nm}$ coefficients to recover the signal $\tilde x[l]$ for $l\geq 0$ since we know that for $l<0$ the reality condition holds ($\tilde x[-l]=\tilde x^*[l]$):
 %
 \begin{align}
-x[l]=\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}w_{nm}g_{nm}[l]&=\frac{1}{\sqrt{2}}\sum_{n}\sum_{0<m<N_f}w_{nm}e^{-2\pi iln/N_t}\left[C_{nm}\tilde{\varphi}\!\left[l-\tfrac{mN_t}{2}\right]+C^*_{nm}\tilde{\varphi}\!\left[l+\tfrac{mN_t}{2}\right]\right]\nonumber\\
+\tilde x[l]=\sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}w_{nm}g_{nm}[l]&=\frac{1}{\sqrt{2}}\sum_{n}\sum_{0<m<N_f}w_{nm}e^{-2\pi iln/N_t}\left[C_{nm}\tilde{\varphi}\!\left[l-\tfrac{mN_t}{2}\right]+C^*_{nm}\tilde{\varphi}\!\left[l+\tfrac{mN_t}{2}\right]\right]\nonumber\\
 &+\frac{1}{\sqrt{2}}\sum_{n}w_{n0}e^{-4\pi iln/N_t}\tilde{\varphi}[l]+\frac{1}{\sqrt{2}}\sum_{n}w_{nN_f}e^{-4\pi iln/N_t}\left[\tilde{\varphi}\!\left[l-\tfrac{N}{2}\right]+\tilde{\varphi}\!\left[l+\tfrac{N}{2}\right]\right]=\nonumber\\
 &=\begin{cases}
-x_0[l]\qquad\qquad\qquad \qquad l<N_t/2\\
-x_m[l]\qquad\qquad\qquad m N_t/2\leq l<(m+1)N_t/2\\
-x_{N_f}[l]\qquad\qquad\qquad l \geq N/2-N_t/2
+\tilde x_0[l]\qquad\qquad\qquad \qquad l<N_t/2\\
+\tilde x_m[l]\qquad\qquad\qquad m N_t/2\leq l<(m+1)N_t/2\\
+\tilde x_{N_f}[l]\qquad\qquad\qquad l \geq N/2-N_t/2
 \end{cases}
 \end{align}
 %
 where we note that for each value of $l$, the inverse transform depends on which of the $m$ bands the $l$ value belongs, in particular
 %
 \begin{align}
-x_0[l]&=\frac{1}{\sqrt{2}}\sum_{n}w_{n1}e^{-2\pi iln/N_t}C_{n1}\tilde{\varphi}\!\left[l-\tfrac{N_t}{2}\right]+\frac{1}{\sqrt{2}}\sum_{n}w_{n0}e^{-4\pi iln/N_t}\tilde{\varphi}[l]\nonumber\\
-x_m[l]&=\frac{1}{\sqrt{2}}\sum_n w_{nm}e^{-2\pi iln/N_t}C_{nm}\tilde{\varphi}\!\left[l-\tfrac{mN_t}{2}\right]+\frac{1}{\sqrt{2}}\sum_n w_{n(m+1)}e^{-2\pi iln/N_t}C_{n(m+1)}\tilde{\varphi}\!\left[l-\tfrac{(m+1)N_t}{2}\right]\nonumber\\
-x_{N_f}[l]&=\frac{1}{\sqrt{2}}\sum_n w_{n(N_f-1)}e^{-2\pi iln/N_t}C_{n(N_f-1)}\tilde{\varphi}\!\left[l-\tfrac{N}{2}+\tfrac{N_t}{2}\right]+\frac{1}{\sqrt{2}}\sum_n w_{n N_f}e^{-4\pi iln/N_t}\tilde{\varphi}\!\left[l-\tfrac{N}{2}\right]
+\tilde x_0[l]&=\frac{1}{\sqrt{2}}\sum_{n}w_{n1}e^{-2\pi iln/N_t}C_{n1}\tilde{\varphi}\!\left[l-\tfrac{N_t}{2}\right]+\frac{1}{\sqrt{2}}\sum_{n}w_{n0}e^{-4\pi iln/N_t}\tilde{\varphi}[l]\nonumber\\
+\tilde x_m[l]&=\frac{1}{\sqrt{2}}\sum_n w_{nm}e^{-2\pi iln/N_t}C_{nm}\tilde{\varphi}\!\left[l-\tfrac{mN_t}{2}\right]+\frac{1}{\sqrt{2}}\sum_n w_{n(m+1)}e^{-2\pi iln/N_t}C_{n(m+1)}\tilde{\varphi}\!\left[l-\tfrac{(m+1)N_t}{2}\right]\nonumber\\
+\tilde x_{N_f}[l]&=\frac{1}{\sqrt{2}}\sum_n w_{n(N_f-1)}e^{-2\pi iln/N_t}C_{n(N_f-1)}\tilde{\varphi}\!\left[l-\tfrac{N}{2}+\tfrac{N_t}{2}\right]+\frac{1}{\sqrt{2}}\sum_n w_{n N_f}e^{-4\pi iln/N_t}\tilde{\varphi}\!\left[l-\tfrac{N}{2}\right]
 \end{align}
 Which can be written in a slightly more convenient form:
 
@@ -1327,10 +1333,10 @@ The atoms from the Wilson basis $\tilde{g}_{nm}$ are peaked around the frequency
 %
 \begin{align}
 \label{eq:wdm-covariance-stationary}
-(\boldsymbol{\Sigma}_w)_{(n,m),(p,q)} & \approx \frac{N}{2\Delta t} S\left[(m+q) N_t/ 4\right]\sum_{l=-N/2}^{N/2 - 1}\tilde{g}_{nm}[l] \tilde{g}_{pq}^{*}[l]=\frac{N}{2\Delta t} S\left[m N_t/ 2\right].
+(\boldsymbol{\Sigma}_w)_{(n,m),(p,q)} & \approx \frac{N}{2\Delta t} S\left[(m+q) N_t/ 4\right]\sum_{l=-N/2}^{N/2 - 1}\tilde{g}_{nm}[l] \tilde{g}_{pq}^{*}[l]=\frac{N}{2\Delta t} S\left[m N_t/ 2\right]\delta_{np}\delta_{mq}.
 \end{align}
 %
-where the last equality follows from Eq.~\eqref{eq:orthonormality}.
+where the last equality follows from Eq.~\eqref{eq:orthonormality}, in the general case $0<m<N_f$.
 
 \bibliographystyle{apsrev4-2}
 \bibliography{bib}
