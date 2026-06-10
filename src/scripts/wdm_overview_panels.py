@@ -598,7 +598,7 @@ def draw_wnm(ax, *, nt: int = 8, nf: int = 6) -> None:
     ax.text(n0 - 0.44, m0 + 0.5, r"$\Delta F$",
             ha="right", va="center", fontsize=FS["sub"], color=COL["text_dim"])
 
-    ax.annotate(r"$w_{nm}=\mathrm{Re}[C^*_{nm}\,x_m[n]]$",
+    ax.annotate(r"$w_{nm}=\sqrt{2}\,(-1)^{nm}\,\mathrm{Re}[C^*_{nm}\,x_m[n]]$",
                 xy=(EXAMPLES[1]["n"] + 0.5, EXAMPLES[1]["m"] + 0.5),
                 xytext=(nt + 0.38, EXAMPLES[1]["m"] + 0.25),
                 ha="left", va="center", fontsize=FS["sub"],
