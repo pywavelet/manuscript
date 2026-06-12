@@ -14,8 +14,8 @@ try:
 except Exception:
     fft_data = pd.read_csv("docs/_static/benchmark_fft_data.csv")
 
-data["batch_s"] = data["batch_ms"] / 1000.0
-fft_data["batch_s"] = fft_data["batch_ms"] / 1000.0
+data["scalar_s"] = data["scalar_ms"] / 1000.0
+fft_data["scalar_s"] = fft_data["scalar_ms"] / 1000.0
 data["speedup_batch_vs_serial"] = data["serial_ms"] / data["batch_ms"]
 
 def make_label(row):
@@ -78,7 +78,7 @@ fig, (ax, ax_sp) = plt.subplots(
 )
 
 # -----------------------
-# Top panel: batched runtime
+# Top panel: single-transform (scalar) runtime
 # -----------------------
 for label in order:
     df = data[data["label"] == label].sort_values("N")
@@ -87,7 +87,7 @@ for label in order:
 
     ax.loglog(
         df["N"],
-        df["batch_s"],
+        df["scalar_s"],
         marker="o",
         ms=3.2,
         lw=1.6,
@@ -102,7 +102,7 @@ for label in order:
         continue
     ax.loglog(
         df["N"],
-        df["batch_s"],
+        df["scalar_s"],
         marker="s",
         ms=2.8,
         lw=1.2,
@@ -121,7 +121,7 @@ style_handles = [
 # N log Nt reference, anchored to final NumPy CPU point
 ref_df = data[data["label"] == "NumPy"].sort_values("N")
 N_ref = ref_df["N"].to_numpy()
-t_ref = ref_df["batch_s"].to_numpy()
+t_ref = ref_df["scalar_s"].to_numpy()
 Nt_ref = np.asarray([find_factorization(int(n))[0] for n in N_ref])
 ref = N_ref * np.log2(Nt_ref)
 ref = ref / ref[-1] * t_ref[-1]
