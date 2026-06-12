@@ -222,7 +222,7 @@ Note that $N_t$ and $N_f$ are required to be even — they need not be powers of
 
 For a given DFT frequency series $\tilde x[l]$, the WDM transform represents the data through the WDM coefficients $w_{nm}$
 \begin{align}\label{wnm_def}
-w_{nm}&=\sum_{l=-N/2}^{N/2-1}\tilde x[l]\tilde g^*_{nm}[l]\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L225}
+w_{nm}&=\sum_{l=-N/2}^{N/2-1}\tilde x[l]\tilde g^*_{nm}[l]\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/transforms/xp_backend.py\#L225}
 \end{align}
 where $n$ corresponds to the time index and $m$ corresponds to the
 frequency-channel.
@@ -238,16 +238,16 @@ e^{-4\pi i n l/N_t}\, \tilde{\varphi}[l], & m=0, \\[6pt]
 e^{-2\pi i n l/N_t}\Big(C_{nm}\,\tilde{\varphi}[l - mN_t/2] + C_{nm}^*\,\tilde{\varphi}[l + mN_t/2]\Big), & 0 < m < N_f, \\[6pt]
 e^{-4\pi i n l/N_t}\Big(\tilde{\varphi}[l - N/2] + \tilde{\varphi}[l + N/2]\Big), & m = N_f, 
 \end{cases}
-\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/windows.py\#L129}\\
+\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/windows.py\#L129}\\
 \text{\textbf{Daubechies--Meyer:}} \quad  \tilde\varphi[l]&=\sqrt{\frac{2}{N_t}}\begin{cases}
 1 & |l_r|<A \\
 \cos \left[\frac{\pi}{2}\,\left(
 \frac{|l_r|-A}{B}\right)\right] & A \leq|l_r| < A+B\,, \\
 0 & \text{otherwise}\,,
-\end{cases} \qquad l_r =l\frac{2}{N_t}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/windows.py\#L71} \label{eq:DM_window_discrete}\\
+\end{cases} \qquad l_r =l\frac{2}{N_t}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/windows.py\#L71} \label{eq:DM_window_discrete}\\
   C_{nm}&=e^{\frac{i\pi}{4}(1-(-1)^{n+m})} =
   \begin{cases} 1 & n+m \text{ even,} \\ i & n+m \text{ odd.}\label{eq:c_nm_def}
-\end{cases}\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/windows.py\#L58}
+\end{cases}\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/windows.py\#L58}
 \end{align}
 \begin{equation}\label{eq:A_B_condition}
 B = 1 - 2A \,, \quad \text{for}\ A\in(0,1/2)\,. 
@@ -362,7 +362,7 @@ Appendix~\ref{app:forward_derivation} for details), giving
 \begin{equation}\label{eq:wnm_interior}
 \begin{split}
   w_{nm} = \sqrt{2}&\,(-1)^{nm}\,\Re\Bigl[C_{nm}^*\\
-  &\times\sum_{l'=-N_t/2}^{N_t/2-1}\tilde{x}[l'{+}mN_t/2]\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\Bigr],\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L92-L102}
+  &\times\sum_{l'=-N_t/2}^{N_t/2-1}\tilde{x}[l'{+}mN_t/2]\,e^{2\pi i l'n/N_t}\,\tilde{\varphi}[l']\Bigr],\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/transforms/xp_backend.py\#L92-L102}
 \end{split}
 \end{equation}
 where $l' = l - mN_t/2$ and $\Delta f = 1/T$.
@@ -391,7 +391,7 @@ factor in the basis definition~\eqref{eq:gnm_full_discrete}. Following the
 same Fourier-domain evaluation yields
 \begin{align}\label{eq:wn0}
   w_{n0} = \sqrt{2\,}\Re\left[\sum_{l=1}^{N_t/2-1}\tilde{x}[l]\,e^{4\pi i l
-  n/N_t}\,\tilde{\varphi}[l]\right] + \frac{1}{\sqrt{2}}\tilde{x}[0]\,\tilde{\varphi}[0].\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L80-L90}
+  n/N_t}\,\tilde{\varphi}[l]\right] + \frac{1}{\sqrt{2}}\tilde{x}[0]\,\tilde{\varphi}[0].\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/transforms/xp_backend.py\#L80-L90}
 \end{align}
 Note the factor of $4\pi$ in the exponent (versus $2\pi$ for interior
 channels): the DC basis element oscillates at twice the rate in the
@@ -410,7 +410,7 @@ as the interior channels, with the frequency shift set to $mN_t/2 = N/2$.
   w_{nN_f} &= \sqrt{2}\,\Re\!\left[\sum_{l=N/2-N_t/2}^{N/2-1}
     \tilde{x}[l]\,e^{4\pi i l n/N_t}\,\tilde{\varphi}[l-N/2]\right]
     \nonumber\\
-  &\quad + \frac{1}{\sqrt{2}}\,\tilde{x}[N/2]\,\tilde{\varphi}[0]\,.\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L104-L114}
+  &\quad + \frac{1}{\sqrt{2}}\,\tilde{x}[N/2]\,\tilde{\varphi}[0]\,.\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/transforms/xp_backend.py\#L104-L114}
 \end{align}
 
 Collecting the results of each of the $w_{nm}$ coefficients above, the forward transform reads
@@ -428,7 +428,7 @@ w_{nm} = \sqrt{2}(-1)^{mn}\Re\,
 + \dfrac{1}{2}\, \tilde{x}[N/2]\, \tilde{\varphi}[0],
 & m = N_f,
 \end{cases}
-\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L65-L116}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/transforms/xp_backend.py\#L65-L116}
 \end{align}
 \end{widetext}
 holding true for $N_f \in 2\mathbb{N}$.
@@ -438,9 +438,8 @@ holding true for $N_f \in 2\mathbb{N}$.
 From the orthogonality condition of the Wilson basis, the inverse WDM transform for the Fourier domain $\tilde{x}$ is immediate
 
 \begin{align}\label{eq:inverse_fourier}
-  \tilde{x}[l] = \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}_{nm}[l]\,w_{nm}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L366}
+  \tilde{x}[l] = \sum_{n=0}^{N_t-1}\sum_{m=0}^{N_f}\tilde{g}_{nm}[l]\,w_{nm}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/transforms/xp_backend.py\#L451}
 \end{align}
-\ls{I think that the above link is the WDM to time, instead maybe this is the link? \codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L451}}
 found via direct computation
 %
 \begin{align}
@@ -464,7 +463,7 @@ produces $N_t\delta_{ll'}$ factors via the discrete orthogonality of the complex
 \tilde{\varphi}[l - N/2]\, \displaystyle\sum_{n=0}^{N_t - 1} w_{nN_f}\, e^{-4\pi i n l / N_t},
 & m = N_f,\ \ N/2 - N_t/2 \le l \le N/2,
 \end{cases}
-\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/transforms/xp_backend.py\#L119-L176}
+\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/transforms/xp_backend.py\#L119-L176}
 \end{align}
 \end{widetext}
 where the original Fourier domain expression $\tilde{x}[l]$ on the output data is given via
@@ -559,7 +558,7 @@ Assuming that the noise process is wide-sense stationary, we show in appendix \r
 %
 \begin{align}\label{eq:Sigma_W_diagonal}
 (\boldsymbol{\Sigma}_w)_{(n,m),(p,q)} &= \frac{N}{2\Delta t} S[mN_t/2]\delta_{np}\delta_{mq}\,, \\
-& = \delta_{np}\delta_{mq}S_{nm}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/signal_processing.py\#L97-L152} 
+& = \delta_{np}\delta_{mq}S_{nm}\,,\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/signal_processing.py\#L117-L172} 
 \end{align}
 %
 for $0 < m < N_f$, where we define the per-pixel spectral level $S_{nm}~\equiv~\frac{N}{2\Delta t} S[mN_t/2]$. For stationary noise, $S_{nm}$ carries no dependence on the time index $n$; for locally stationary noise it generalizes to the evolutionary spectrum evaluated at the pixel centre, $S_{nm} \propto S[n, mN_t/2]$, in agreement with \cite{cornish_nonstationary_wdm}.
@@ -580,10 +579,9 @@ similarly agreeing with \cite{cornish_nonstationary_wdm}. We remark here that if
 In a similar way to a frequency domain analysis, under the assumptions in Appendix \ref{app:stats} we obtain the approximated expression for the noise-weighted inner product in the WDM domain:
 \begin{align}
     (a|b)_{\mathrm{WDM}} &= \boldsymbol{w_a}^T(\boldsymbol{\Sigma}_w^{\rm int})^{-1}\boldsymbol{w_b} \\
-    & = \sum_{\substack{n \\ m\in\mathrm{int}}} \frac{w_{a,nm}\,w_{b,nm}} {S_{nm}}\,,\label{eq:wdm_inner}\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.4.2/src/wdm_transform/signal_processing.py\#L79-L94}
+    & = \sum_{\substack{n \\ m\in\mathrm{int}}} \frac{w_{a,nm}\,w_{b,nm}} {S_{nm}}\,,\label{eq:wdm_inner}\codelink{https://github.com/pywavelet/wdm_transform/blob/v0.5.0/src/wdm_transform/signal_processing.py\#L79-L101}
 \end{align}
 %
-\ls{The above link brings to the SNR formula not the inner product, I could not find the inner product in that file}
 which reduces to the frequency domain inner product via matrix algebra
 %
 \begin{align*}
@@ -658,13 +656,13 @@ remains at the level of double-precision floating-point roundoff, $\epsilon_{\rm
   \caption{\textbf{Forward WDM runtime versus input length.}
     \emph{Top}: median wall-clock runtime over 7 runs after one warmup
     call; shaded bands span the 16th--84th percentile interval.  The
-    black dashed line shows the $N\log_2 N$ reference scaling.
+    thin solid black line shows the $N\log_2 N_t$ reference scaling.
     \emph{Bottom}: batched-execution speedup
-    $t_\mathrm{serial}/t_\mathrm{batch}$, where the serial baseline
-    applies the kernel independently to each of three channels and the
-    batched call processes all three simultaneously.  Reported timings
-    exclude JAX JIT compilation and host--device data transfer.
-    \ls{Legend overlapping, add batch size number in caption}
+    $t_\mathrm{serial}/t_\mathrm{batch}$ for a batch size of $B=3$,
+    where the serial baseline applies the kernel independently to each
+    of the three channels and the batched call processes all three
+    simultaneously.  Reported timings exclude JAX JIT compilation and
+    host--device data transfer.
     }
   \label{fig:runtime_forward}
   \script{benchmark_runtime_snapshot.py}
@@ -672,12 +670,11 @@ remains at the level of double-precision floating-point roundoff, $\epsilon_{\rm
 
 All timings are drawn from the benchmark suite included in the package documentation. Each data point reports the median wall-clock time over 7 repeated runs in 64-bit floating-point arithmetic; JAX JIT compilation is excluded via a single warmup evaluation, and GPU timings assume arrays already resident on the device (host--device transfer is not included). Benchmarks were performed on Google Colab using a CPU node (2$\times$ Intel Xeon vCPU, 2.0--2.2\,GHz, 12.7\,GB RAM) and a GPU node (NVIDIA T4, 16\,GB VRAM).
 
-Figure~\ref{fig:runtime_forward} shows the forward-kernel runtime as a function of input size $N$ for the NumPy (CPU), JAX (CPU), and JAX (GPU) backends, together with the batched-execution speedup $t_\mathrm{serial}/t_\mathrm{batch}$. Here, $t_\mathrm{serial}$ is the wall-clock time for three independent single-channel calls and $t_\mathrm{batch}$ is the time for a single call that processes all three channels simultaneously.
+Figure~\ref{fig:runtime_forward} shows the forward-kernel runtime as a function of input size $N$ for the NumPy (CPU), JAX (CPU), and JAX (GPU) backends, together with the batched-execution speedup $t_\mathrm{serial}/t_\mathrm{batch}$. We use a batch size of $B=3$, matching the number of time-delay-interferometry data streams (e.g.\ the $A$, $E$, $T$ channels) transformed per likelihood evaluation in a LISA analysis. Here, $t_\mathrm{serial}$ is the wall-clock time for $B$ independent single-channel calls and $t_\mathrm{batch}$ is the time for a single call that processes all $B$ channels simultaneously; larger batches (e.g.\ template banks or ensemble samplers) would benefit further until the device saturates.
 
 At large $N$ all three backends approach $\mathcal{O}(N\log N)$ scaling, consistent with the dominant length-$N$ FFT in the forward transform.  Deviations at small $N$ reflect different overhead regimes: per-call Python and memory-allocation costs for NumPy, and kernel-dispatch latency for JAX.  The JAX GPU runtime is nearly flat below $N \approx 10^5$, indicating that transforms at those sizes are dominated by kernel-launch overhead rather than arithmetic throughput; beyond this threshold GPU efficiency improves and, at $N = 10^6$, the GPU scalar runtime (${\approx}\,13\,\mathrm{ms}$) is roughly $35\times$ lower than NumPy (${\approx}\,460\,\mathrm{ms}$).
 
 The speedup panel shows that batched execution yields no measurable benefit for NumPy ($t_\mathrm{serial}/t_\mathrm{batch} \approx 1$ throughout), as NumPy does not exploit the extra batch dimension for additional parallelism.  JAX (CPU) recovers $1.5$--$3\times$ via JIT-compiled vectorisation over the batch axis.
-\ls{what is the batch size chosen?}
 JAX (GPU) achieves up to ${\sim}\,4\times$ at small $N$, where all three channels fit simultaneously into the device pipeline; the speedup decreases to ${\approx}\,1.5\times$ at $N = 10^6$ as individual transforms approach device saturation.  The $\epsilon_{\rm rt} \lesssim 10^{-16}$ round-trip errors established above hold for all backends and sizes; the runtime differences therefore reflect implementation efficiency rather than any loss of numerical fidelity.
 
 These benchmarks characterise the present NumPy and JAX implementations under the conventions used in this paper, rather than providing an exhaustive comparison with existing pipeline-specific WDM codes. The main conclusion is that the JAX backend can substantially reduce the cost of large WDM transforms while preserving the same floating-point reconstruction accuracy as the NumPy implementation.
