@@ -68,14 +68,11 @@ European Space Agency (ESA), European Space Research and Technology Centre (ESTE
 \affiliation{Leiden Observatory, Leiden University, P.O. Box 9513, 2300 RA Leiden, the Netherlands}
 
 \begin{abstract}
-The 
-% WDM 
-Wilson--Daubechies--Meyer (WDM) time-frequency
+The Wilson--Daubechies--Meyer (WDM) time-frequency
 transform has been widely used in gravitational-wave astronomy, yet a self-contained, mathematically explicit reference for practitioners remains lacking. This is especially true for those wishing to adopt the transform in modern Python and JAX inference workflows.
-We present \package, a self-contained, open-source Python package implementing the WDM wavelet-packet time-frequency transform. 
-We document \package, including its mathematical foundations, statistical properties, and practical implementation for gravitational-wave data analysis.
+We present \package, an open-source Python package implementing the WDM wavelet-packet time-frequency transform, and document its mathematical foundations, statistical properties, and practical implementation for gravitational-wave data analysis.
 The package supplies NumPy and JAX backends, both round-trip validated to floating-point precision, with the JAX backend enabling GPU-accelerated transforms of million-point data streams in tens of milliseconds. As a worked example we verify that the WDM-domain Whittle likelihood reproduces frequency-domain posteriors for a resolved LISA galactic binary under a shared stationary noise model, confirming numerical equivalence of the two representations in that controlled setting.
-This work paves the way for systematic optimisation of WDM tilings and direct comparisons with alternative time–frequency representations necessary for the challenges of future gravitational wave data analysis.
+This work paves the way for systematic optimisation of WDM tilings and direct comparisons with alternative time–frequency representations necessary for the challenges of future gravitational-wave data analysis.
 \end{abstract}
 
 \maketitle
@@ -104,7 +101,7 @@ This makes the WDM domain an excellent domain of choice for burst like sources, 
 Another important
 difference between the two is the following. 
 % the two lies elsewhere. 
-The STFT is not \textit{critically sampled} as defined in Ref.~\cite{Cornish:2020odn}: it represents $N$ data points with $2N$ coefficients, retaining both $m>0$ and $m<0$ indices, in direct analogy with the full FFT relative to the real FFT. The WDM instead uses the minimal number of degrees of freedom, producing $N$ coefficients (only $m>0$) for $N$ samples. Both bases are orthonormal and admit an exact inverse transform\footnote{Strictly speaking this is only true only if STFTs use either overlapping segments with smooth tapers or non-overlapping segments with rectangular windows -- information will always be lost at the edge points, making the inverse transform to the un-windowed signal impossible.}, so faithful round-trip reconstruction are possible in either case; only the WDM, however, achieves this without redundancy.
+The STFT is not \textit{critically sampled} as defined in Ref.~\cite{Cornish:2020odn}: it represents $N$ data points with $2N$ coefficients, retaining both $m>0$ and $m<0$ indices, in direct analogy with the full FFT relative to the real FFT. The WDM instead uses the minimal number of degrees of freedom, producing $N$ coefficients (only $m>0$) for $N$ samples. Both bases are orthonormal and admit an exact inverse transform\footnote{Strictly speaking this is only true if STFTs use either overlapping segments with smooth tapers or non-overlapping segments with rectangular windows -- information will always be lost at the edge points, making the inverse transform to the un-windowed signal impossible.}, so faithful round-trip reconstruction is possible in either case; only the WDM, however, achieves this without redundancy.
 In a similar way to real FFTs, the property of WDM being \textit{critically sampled} allows a faster computation (by a factor of 2, as discussed above) of the transforms, and a cheaper memory demand.
 Therefore, for practical purposes, the WDM transform is largely comparable to a STFT, but still a different representation of the data that may be more suitable for the analyst depending on the sources they wish to analyse and the windows adopted. For example -- massive black holes may be more suited for WDM transforms, galactic binaries for STFT with appropriate windowing.
 
@@ -654,9 +651,9 @@ remains at the level of double-precision floating-point roundoff, $\epsilon_{\rm
   \centering
   \includegraphics[width=1\linewidth]{figures/runtimes.pdf}
   \caption{\textbf{Forward WDM runtime versus input length.}
-    \emph{Top}: median wall-clock runtime over 7 runs after one warmup
-    call; shaded bands span the 16th--84th percentile interval.  The
-    thin solid black line shows the $N\log_2 N_t$ reference scaling.
+    \emph{Top}: median single-transform wall-clock runtime over 7 runs
+    after one warmup call.  The thin solid black line shows the
+    $N\log_2 N_t$ reference scaling.
     \emph{Bottom}: batched-execution speedup
     $t_\mathrm{serial}/t_\mathrm{batch}$ for a batch size of $B=3$,
     where the serial baseline applies the kernel independently to each
@@ -667,6 +664,7 @@ remains at the level of double-precision floating-point roundoff, $\epsilon_{\rm
   \label{fig:runtime_forward}
   \script{benchmark_runtime_snapshot.py}
 \end{figure}
+
 
 All timings are drawn from the benchmark suite included in the package documentation. Each data point reports the median wall-clock time over 7 repeated runs in 64-bit floating-point arithmetic; JAX JIT compilation is excluded via a single warmup evaluation, and GPU timings assume arrays already resident on the device (host--device transfer is not included). Benchmarks were performed on Google Colab using a CPU node (2$\times$ Intel Xeon vCPU, 2.0--2.2\,GHz, 12.7\,GB RAM) and a GPU node (NVIDIA T4, 16\,GB VRAM).
 
@@ -705,7 +703,7 @@ The frequency-domain analysis evaluates the Whittle likelihood in a local A/E/T
 Fourier band centered on the source prior support,
 \begin{widetext}
 \begin{equation}
-  \log \mathcal{L}_{\rm freq}(\boldsymbol{\theta}) \propto {} -\frac{2N}{\Delta t}
+  \log \mathcal{L}_{\rm freq}(\boldsymbol{\theta}) \propto {} -\frac{2\Delta t}{N}
   \sum_{c\in\{A,E,T\}} \sum_{l = 1}^{N/2 - 1}  \frac{\bigl|\tilde d^c[l]-\tilde h^c[l;\boldsymbol{\theta}]\bigr|^2}
            {S^c[l]},
 \end{equation}
@@ -790,7 +788,7 @@ Because the JAX backend is fully differentiable, gradient-based samplers (HMC, N
 \section*{Data and Software Availability}
 The software developed for this research is available on GitHub at
 \url{https://github.com/pywavelet/wdm_transform}. The package is also available on PyPI as \package\ and can be installed with \texttt{pip install wdm\_transform}. Documentation and worked examples are available in the repository documentation at \url{https://github.com/pywavelet/wdm_transform/tree/main/docs}.
-The online documentation includes minimal examples demonstrating the construction of a WDM tiling, application of the forward transform, and round-trip reconstruction with the inverse transform. The in-text code links (\scalebox{0.65}{\faGithub}) are pinned to the tagged release \texttt{v0.4.2} of the package, so that the referenced line numbers remain valid as the codebase evolves.
+The online documentation includes minimal examples demonstrating the construction of a WDM tiling, application of the forward transform, and round-trip reconstruction with the inverse transform. The in-text code links (\scalebox{0.65}{\faGithub}) are pinned to the tagged release \texttt{v0.5.0} of the package, so that the referenced line numbers remain valid as the codebase evolves.
 
 \begin{acknowledgments}
     The authors thank Matthew Digman, Neil Cornish, Will Farr, and Aaron Johnson for discussions.
