@@ -7,7 +7,7 @@ import paths
 # -----------------------
 # Load data
 # -----------------------
-BASE_URL = "https://raw.githubusercontent.com/pywavelet/wdm_transform/refs/heads/main/docs/_static"
+BASE_URL = "https://raw.githubusercontent.com/pywavelet/wdm_transform/v0.5.0/docs/_static"
 data = pd.read_csv(f"{BASE_URL}/benchmark_data.csv")
 try:
     fft_data = pd.read_csv(f"{BASE_URL}/benchmark_fft_data.csv")
@@ -139,20 +139,18 @@ ax.loglog(
 ax.set_ylabel(r"runtime [s]")
 ax.grid(True, which="major", ls=":", lw=0.5, alpha=0.45)
 ax.grid(False, which="minor")
+# Single combined legend above the axes to avoid overlapping the curves
 backend_handles, backend_labels = ax.get_legend_handles_labels()
-leg1 = ax.legend(
-    backend_handles,
-    backend_labels,
-    frameon=False,
-    loc="upper left",
-    handlelength=2.2,
-)
-ax.add_artist(leg1)
 ax.legend(
-    handles=style_handles,
+    backend_handles + style_handles,
+    backend_labels + [h.get_label() for h in style_handles],
     frameon=False,
-    loc="lower right",
-    handlelength=2.2,
+    loc="lower center",
+    bbox_to_anchor=(0.5, 1.0),
+    ncol=3,
+    columnspacing=1.2,
+    handlelength=1.8,
+    borderaxespad=0.2,
 )
 
 # -----------------------
