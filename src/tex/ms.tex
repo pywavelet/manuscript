@@ -636,6 +636,7 @@ remains at the level of double-precision floating-point roundoff, $\epsilon_{\rm
   \centering
   \includegraphics[width=1\linewidth]{figures/runtimes.pdf}
   \caption{\textbf{Forward WDM runtime versus input length.}
+    All transforms use a fixed tiling with $N_t=1024$ time bins and $N_f=N/N_t$ frequency channels.
     \emph{Top}: median single-transform wall-clock runtime over 7 runs
     after one warmup call.  The thin solid black line shows the
     $N\log_2 N$ reference scaling.
