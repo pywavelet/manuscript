@@ -375,7 +375,7 @@ def plot_pp(pp: PPData, out: Path) -> Path:
     for j, lab in enumerate(pp.labels):
         # Lower alpha on the solid (WDM) curves so the near-identical dashed
         # (frequency) curves remain visible underneath where they overlap.
-        for dom, ls, alpha, lw in (("wdm", "-", 0.6, 1.6), ("freq", "..", 0.9, 1.3)):
+        for dom, ls, alpha, lw in (("wdm", "-", 0.6, 1.6), ("freq", "dashed", 0.9, 1.3)):
             r = np.sort(ranks[dom][:, j])
             cdf = np.searchsorted(r, x, side="right") / n
             ax.plot(x, cdf, ls=ls, color=colors[lab], lw=lw, alpha=alpha,
