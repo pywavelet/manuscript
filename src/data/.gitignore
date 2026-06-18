@@ -3,3 +3,5 @@
 !.gitignore
 !lisa_gb_demo.npz
 !lisa_gb_pp.npz
+!benchmark_data.csv
+!benchmark_fft_data.csv

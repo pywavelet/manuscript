@@ -357,20 +357,28 @@ def plot_corner(demo: DemoData, out: Path) -> Path:
 def plot_pp(pp: PPData, out: Path) -> Path:
     import matplotlib.pyplot as plt
 
+    from scipy.stats import binom
+
     fig, ax = plt.subplots(figsize=(4.5, 4.5))
-    x = np.linspace(0, 1, 200)
+    x = np.linspace(0, 1, 500)
     colors = {lab: f"C{i}" for i, lab in enumerate(pp.labels)}
     n = pp.n_seeds
-    band = np.sqrt(x * (1 - x) / n) * 1.96  # ~95% pointwise band for uniform
-    ax.fill_between(x, np.clip(x - band, 0, 1), np.clip(x + band, 0, 1),
-                    color="0.85", alpha=0.6, lw=0, zorder=0)
+    # Nested 1/2/3-sigma pointwise confidence bands under the uniform null:
+    # the count below each credible level is Binomial(n, x). Draw widest-first
+    # so the darker inner bands sit on top.
+    for ci, shade in ((0.9973, "0.90"), (0.9545, "0.82"), (0.6827, "0.72")):
+        lo = binom.ppf(0.5 - ci / 2, n, x) / n
+        hi = binom.ppf(0.5 + ci / 2, n, x) / n
+        ax.fill_between(x, lo, hi, color=shade, lw=0, zorder=0)
     ax.plot([0, 1], [0, 1], color="0.4", lw=0.9, ls=":", zorder=1)
     ranks = {"wdm": pp.ranks_wdm, "freq": pp.ranks_freq}
     for j, lab in enumerate(pp.labels):
-        for dom, ls in (("wdm", "-"), ("freq", "--")):
+        # Lower alpha on the solid (WDM) curves so the near-identical dashed
+        # (frequency) curves remain visible underneath where they overlap.
+        for dom, ls, alpha, lw in (("wdm", "-", 0.6, 1.6), ("freq", "..", 0.9, 1.3)):
             r = np.sort(ranks[dom][:, j])
             cdf = np.searchsorted(r, x, side="right") / n
-            ax.plot(x, cdf, ls=ls, color=colors[lab], lw=1.6,
+            ax.plot(x, cdf, ls=ls, color=colors[lab], lw=lw, alpha=alpha,
                     label=(LATEX[lab] if dom == "wdm" else None))
     ax.set_xlabel("credible level")
     ax.set_ylabel("fraction of truths below")

@@ -7,12 +7,20 @@ import paths
 # -----------------------
 # Load data
 # -----------------------
+# Prefer the manuscript-local benchmark CSVs (src/data) so the build is
+# self-contained and reproducible; fall back to the pinned release copies.
 BASE_URL = "https://raw.githubusercontent.com/pywavelet/wdm_transform/v0.5.0/docs/_static"
-data = pd.read_csv(f"{BASE_URL}/benchmark_data.csv")
-try:
-    fft_data = pd.read_csv(f"{BASE_URL}/benchmark_fft_data.csv")
-except Exception:
-    fft_data = pd.read_csv("docs/_static/benchmark_fft_data.csv")
+
+
+def _load_benchmark(name: str) -> pd.DataFrame:
+    local = paths.data / name
+    if local.exists():
+        return pd.read_csv(local)
+    return pd.read_csv(f"{BASE_URL}/{name}")
+
+
+data = _load_benchmark("benchmark_data.csv")
+fft_data = _load_benchmark("benchmark_fft_data.csv")
 
 data["scalar_s"] = data["scalar_ms"] / 1000.0
 fft_data["scalar_s"] = fft_data["scalar_ms"] / 1000.0
@@ -33,17 +41,6 @@ fft_data["label"] = fft_data.apply(make_label, axis=1)
 
 order = ["NumPy", "JAX [CPU]", "JAX [GPU]"]
 
-
-def find_factorization(n):
-    """Match the benchmark suite's even-even factorization n = nt * nf."""
-    sqrt_n = int(np.sqrt(n))
-    for nt in range(sqrt_n, 1, -1):
-        if n % nt != 0:
-            continue
-        nf = n // nt
-        if nt % 2 == 0 and nf % 2 == 0:
-            return nt, nf
-    raise ValueError(f"No even-even factorization found for N={n}")
 
 # -----------------------
 # Paper-style plotting
@@ -118,12 +115,12 @@ style_handles = [
     Line2D([0], [0], color="0.25", lw=1.2, ls="--", label="FFT"),
 ]
 
-# N log Nt reference, anchored to final NumPy CPU point
+# N log2 N reference (the dominant length-N FFT term at fixed nt), anchored to
+# the final NumPy CPU point.
 ref_df = data[data["label"] == "NumPy"].sort_values("N")
 N_ref = ref_df["N"].to_numpy()
 t_ref = ref_df["scalar_s"].to_numpy()
-Nt_ref = np.asarray([find_factorization(int(n))[0] for n in N_ref])
-ref = N_ref * np.log2(Nt_ref)
+ref = N_ref * np.log2(N_ref)
 ref = ref / ref[-1] * t_ref[-1]
 
 ax.loglog(
@@ -133,7 +130,7 @@ ax.loglog(
     ls="-",
     lw=1.0,
     alpha=0.75,
-    label=r"$N\log_2 N_t$",
+    label=r"$N\log_2 N$",
 )
 
 ax.set_ylabel(r"runtime [s]")
